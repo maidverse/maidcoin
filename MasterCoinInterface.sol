@@ -5,8 +5,6 @@ interface MasterCoinInterface {
 
     event Transfer(address indexed from, address indexed to, uint256 amount);
     event Approval(address indexed owner, address indexed spender, uint256 amount);
-    event Burn(address indexed owner, uint256 amount);
-    event Mint(address indexed owner, uint256 amount);
 
     function name() external view returns (string memory);
     function symbol() external view returns (string memory);
@@ -19,6 +17,6 @@ interface MasterCoinInterface {
     function approve(address spender, uint256 amount) external returns (bool success);
     function allowance(address owner, address spender) external view returns (uint256 remaining);
 
-    function burn(address to, uint256 amount) external;
-    function mint(uint256 amount) external;
+    function subsidyOf(address owner) external;
+    function claim() external;
 }

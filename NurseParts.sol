@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "./MaidItemInterface.sol";
+import "./NursePartsInterface.sol";
 
-contract MaidItem is MaidItemInterface {
+contract NurseParts is NursePartsInterface {
 
     mapping(uint256 => mapping(address => uint256)) private balances;
     mapping(address => mapping(address => bool)) private allowed;
