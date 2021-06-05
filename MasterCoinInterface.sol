@@ -19,6 +19,6 @@ interface MasterCoinInterface {
     function approve(address spender, uint256 amount) external returns (bool success);
     function allowance(address owner, address spender) external view returns (uint256 remaining);
 
-    function claimAmountOf(address owner) external returns (uint256);
+    function claimAmountOf(address owner) external view returns (uint256);
     function claim() external;
 }

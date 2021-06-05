@@ -2,12 +2,49 @@
 pragma solidity ^0.8.4;
 
 import "./CloneNursesInterface.sol";
+import "./NursePartsInterface.sol";
 import "./ERC721TokenReceiver.sol";
 
 contract CloneNurses is CloneNursesInterface {
 
     uint256 immutable public genesisBlock;
     
+	address public override masters;
+	NursePartsInterface public override nurseParts;
+	address public override maidCoin;
+	address public override lpToken;
+    
+	constructor() {
+		masters = msg.sender;
+	}
+
+	function changeMasters(address newMasters) external {
+		require(msg.sender == masters);
+		masters = newMasters;
+	}
+
+	function changeNurseParts(address newNurseParts) external {
+		require(msg.sender == masters);
+		nurseParts = NursePartsInterface(newNurseParts);
+	}
+    
+	function changeMaidCoin(address newMaidCoin) external {
+		require(msg.sender == masters);
+		maidCoin = newMaidCoin;
+	}
+    
+	function changeLPToken(address newLPToken) external {
+		require(msg.sender == masters);
+		lpToken = newLPToken;
+	}
+
+	struct NurseType {
+		uint256 partsCount;
+		uint256 destroyReturn;
+	}
+
+	NurseType[] public nurseTypes;
+
 	mapping(uint256 => address) public nurseIdToOwner;
 	mapping(address => uint256[]) public ownerToNurseIds;
 	mapping(uint256 => uint256) internal nurseIdToNurseIdsIndex;
@@ -17,21 +54,14 @@ contract CloneNurses is CloneNursesInterface {
     constructor() {
         genesisBlock = block.number;
     }
-    
-    function nurseParts() external override view returns (address) {
 
-    }
-
-    function maidCoin() external override view returns (address) {
-
-    }
-
-    function lpToken() external override view returns (address) {
-
-    }
-
-    function createNurseType(uint256 nurseType, uint256 partsCount, uint256 destroyReturn) external override {
-        
+    function createNurseType(uint256 partsCount, uint256 destroyReturn) external override returns (uint256) {
+        uint256 nurseType = nurseTypes.length;
+		nurseTypes.push(NurseType({
+			partsCount: partsCount,
+			destroyReturn: destroyReturn
+		}));
+		return nurseType;
     }
     
     function balanceOf(address owner) public override view returns (uint256) {
@@ -70,10 +100,10 @@ contract CloneNurses is CloneNursesInterface {
 		delete nurseIdToApproved[nurseId];
 		emit Approval(from, address(0), nurseId);
 		
-		uint index = nurseIdToNurseIdsIndex[nurseId];
-		uint lastIndex = balanceOf(from) - 1;
+		uint256 index = nurseIdToNurseIdsIndex[nurseId];
+		uint256 lastIndex = balanceOf(from) - 1;
 		
-		uint lastItemId = ownerToNurseIds[from][lastIndex];
+		uint256 lastItemId = ownerToNurseIds[from][lastIndex];
 		ownerToNurseIds[from][index] = lastItemId;
 		
 		delete ownerToNurseIds[from][lastIndex];
@@ -116,18 +146,26 @@ contract CloneNurses is CloneNursesInterface {
     }
     
     function assemble(uint256 nurseType) external override {
-        
+        //TODO:
     }
     
     function destroy(uint256 nurseId) external override {
-        
+        //TODO:
     }
 
     function support(uint256 nurseId, uint256 lpTokenAmount) external override {
-        
+        //TODO:
     }
     
     function desupport(uint256 nurseId, uint256 lpTokenAmount) external override {
-        
+        //TODO:
+    }
+    
+    function claimAmountOf(uint256 nurseId) external view returns (uint256) {
+        //TODO:
+    }
+    
+    function claim(uint256 nurseId) external {
+        //TODO:
     }
 }

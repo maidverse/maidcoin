@@ -8,6 +8,7 @@ interface NursePartsInterface {
     event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
     event URI(string value, uint256 indexed id);
     
+    function masters() external view returns (address);
     function nurseRaids() external view returns (address);
     function cloneNurses() external view returns (address);
 
@@ -18,5 +19,5 @@ interface NursePartsInterface {
     function setApprovalForAll(address operator, bool approved) external;
     function isApprovedForAll(address owner, address operator) external view returns (bool);
     
-    function mint(address to, uint256 count) external;
+    function mint(address to, uint256 id, uint256 value) external;
 }
