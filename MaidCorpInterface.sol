@@ -9,6 +9,8 @@ interface MaidCorpInterface {
     function maidCoin() external view returns (address);
     function lpToken() external view returns (address);
     
+    function subsidyAt(uint256 blockNumber) external view returns (uint256 amount);
+    
     function deposit(uint256 amount) external;
     function withdraw(uint256 amount) external;
 }

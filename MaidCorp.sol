@@ -5,4 +5,9 @@ import "./MaidCorpInterface.sol";
 
 contract MaidCorp is MaidCorpInterface {
 
+    uint256 immutable public genesisBlock;
+
+    constructor() {
+        genesisBlock = block.number;
+    }
 }
