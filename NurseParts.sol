@@ -2,6 +2,7 @@
 pragma solidity ^0.8.4;
 
 import "./NursePartsInterface.sol";
+import "./ERC1155TokenReceiver.sol";
 
 contract NurseParts is NursePartsInterface {
     
