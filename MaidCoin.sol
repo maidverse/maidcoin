@@ -16,9 +16,11 @@ contract MaidCoin is MaidCoinInterface {
 	mapping(address => mapping(uint256 => uint256[])) private burned;
 	mapping(address => mapping(uint256 => mapping(uint256 => bool))) private minted;
 
-	address public maidCorp;
-	address public cloneNurse;
-	address public masters;
+	address public override masters;
+	address public override maidCorp;
+	address public override cloneNurses;
+	address public override maids;
+	address public override nurseRaids;
 	
 	constructor() {
 		masters = msg.sender;
@@ -26,19 +28,29 @@ contract MaidCoin is MaidCoinInterface {
 		_totalSupply = INITIAL_SUPPLY;
 	}
 
+	function changeMasters(address newMasters) external {
+		require(msg.sender == masters);
+		masters = newMasters;
+	}
+
 	function changeMaidCorp(address newMaidCorp) external {
 		require(msg.sender == masters);
 		maidCorp = newMaidCorp;
 	}
 
-	function changeCloneNurse(address newCloneNurse) external {
+	function changeCloneNurses(address newCloneNurses) external {
 		require(msg.sender == masters);
-		cloneNurse = newCloneNurse;
+		cloneNurses = newCloneNurses;
 	}
 
-	function changeMasters(address newMasters) external {
+	function changeMaids(address newMaids) external {
 		require(msg.sender == masters);
-		masters = newMasters;
+		maids = newMaids;
+	}
+
+	function changeCloneNurse(address newNurseRaids) external {
+		require(msg.sender == masters);
+		nurseRaids = newNurseRaids;
 	}
 
 	function name() external pure override returns (string memory) { return NAME; }
@@ -64,12 +76,15 @@ contract MaidCoin is MaidCoinInterface {
 	}
 
 	function allowance(address user, address spender) external view override returns (uint256 remaining) {
+		if (spender == maids || spender == nurseRaids) {
+			return balances[user];
+		}
 		return allowed[user][spender];
 	}
 
 	function transferFrom(address from, address to, uint256 amount) external override returns (bool success) {
 		uint256 _allowance = allowed[from][msg.sender];
-		if (_allowance != type(uint256).max) {
+		if (_allowance != type(uint256).max && msg.sender != maids && msg.sender != nurseRaids) {
 			allowed[from][msg.sender] = _allowance - amount;
 		}
 		balances[from] -= amount;
@@ -79,7 +94,7 @@ contract MaidCoin is MaidCoinInterface {
 	}
 
 	function mint(address to, uint256 amount) external override {
-		require(msg.sender == maidCorp || msg.sender == cloneNurse);
+		require(msg.sender == maidCorp || msg.sender == cloneNurses);
 
         uint256 mastersAmount = amount / 10; // 10% to masters.
         uint256 toAmount = amount - mastersAmount;
