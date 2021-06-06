@@ -31,9 +31,10 @@ interface CloneNursesInterface {
     function getApproved(uint256 id) external view returns (address);
     function isApprovedForAll(address owner, address operator) external view returns (bool);
 
-    function assemble(uint256 nurseType) external;
+    function assemble(uint256 nurseType, bool supportable) external;
+    function changeSupportable(uint256 id, bool supportable) external;
     function destroy(uint256 id, uint256 symbolTo) external;
-
+    function moveSupporters(uint256 from, uint256 to, uint256 number) external;
     function support(uint256 id, uint256 lpTokenAmount) external;
     function desupport(uint256 id, uint256 lpTokenAmount) external;
     

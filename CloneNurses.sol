@@ -61,18 +61,18 @@ contract CloneNurses is CloneNursesInterface {
 		uint256 lastRewardBlock;
 		uint256 accCoinForOwner;
 		uint256 accCoinPerSupporter;
+
+		bool supportable;
 	}
 	Nurse[] public nurses;
 
 	struct Supporter {
+		address addr;
 		uint256 lpTokenAmount;
 		uint256 rewardDebt;
 	}
-
-	uint256[] public symbols;
-	mapping(uint256 => uint256[]) internal idToSymbols;
-	mapping(uint256 => uint256) internal symbolToIdIndex;
-	mapping(uint256 => uint256[]) internal supporterToSymbols;
+    mapping(uint256 => Supporter[]) public supporters;
+    mapping(uint256 => mapping(uint256 => uint256)) public addrToSupporter;
 
 	mapping(uint256 => address) public idToOwner;
 	mapping(address => uint256[]) public ownerToIds;
@@ -175,37 +175,80 @@ contract CloneNurses is CloneNursesInterface {
         return ownerToOperators[owner][operator] == true;
     }
     
-    function assemble(uint256 nurseType) external override {
+    function assemble(uint256 nurseType, bool supportable) external override {
         nurseParts.burn(msg.sender, nurseType, nurseTypes[nurseType].partsCount);
 
 		NurseClass memory nurseClass = nurseClasses[nurseType];
 		
-		uint id = nurses.length;
+		uint256 id = nurses.length;
 		nurses.push(Nurse({
 			type: nurseType,
 			originPower: nurseClass.originPower,
 			supportPower: 0,
 			accCoinForOwner: 0,
-			accCoinForSupporter: 0
+			accCoinForSupporter: 0,
+			supportable: supportable
 		}));
 
-		uint256 symbol = symbols.length;
-		symbols.push(id);
-		idToSymbols[id].push(symbol);
-		symbolToIdIndex[symbol] = idToSymbols[id].length - 1;
-
 		idToOwner[id] = msg.sender;
+
         ownerToIds[msg.sender].push(id);
 		idToOwnerIndex[id] = ownerToIds[msg.sender].length - 1;
 		
 		emit Transfer(address(0), msg.sender, id);
     }
+	
+    function changeSupportable(uint256 id, bool supportable) external override {
+		require(msg.sender == ownerOf(id));
+		nurses[id].supportable = supportable;
+	}
+
+	function updateAccCoin(Nurse storage nurse) internal {
+		uint256 multiplier = block.number - nurse.lastRewardBlock;
+		uint256 power = nurse.originPower + nurse.supportPower;
+        uint256 reward = multiplier * COIN_PER_BLOCK * power / totalPower;
+        maidCoin.mint(address(this), reward);
+		uint256 accCoin = reward * 1e12 / power;
+		nurse.accCoinForOwner += accCoin * nurse.originPower / power;
+		nurse.accCoinPerSupporter += accCoin * nurse.supportPower / power;
+        nurse.lastRewardBlock = block.number;
+	}
+
+	function moveSupporters(uint256 from, uint256 to, uint256 number) public override {
+
+		require(msg.sender == ownerOf(from) && from != to);
+
+		Nurse storage fromNurse = nurses[from];
+		Nurse storage toNurse = nurses[to];
+		
+		Supporter[] storage fromSup = supporters[from];
+		Supporter[] storage toSup = supporters[to];
+
+		mapping(uint256 => uint256) storage fromAddrToSup = addrToSupporter[from];
+		mapping(uint256 => uint256) storage toAddrToSup = addrToSupporter[to];
+
+		uint256 supportPower = 0;
+
+		require(fromSup.length <= number);
+		for (uint256 i = number - 1; i >= 0; i -= 1) {
+			Supporter memory supporter = fromSup[i];
+			delete fromAddrToSup[supporter.addr];
+			toAddrToSup[supporter.addr] = toSub.length;
+			toSup.push(supporter);
+			supportPower += supporter.lpTokenAmount;
+		}
+		fromSup.length -= number;
+
+		from.supportPower -= supportPower;
+		to.supportPower += supportPower;
+		
+		updateAccCoin(from);
+		updateAccCoin(to);
+	}
     
     function destroy(uint256 id, uint256 supportersTo) external override {
 		
-        address owner = ownerOf(id);
-
-		require(msg.sender == owner && supportersTo != id);
+		require(msg.sender == ownerOf(id) && supportersTo != id);
 		
 		delete idToApproved[id];
 		emit Approval(msg.sender, address(0), id);
@@ -226,20 +269,9 @@ contract CloneNurses is CloneNursesInterface {
 
 		emit Transfer(msg.sender, address(0), id);
 
-		//TODO: need to move supporters to another nurse
+		// need to move supporters to another nurse
+		moveSupporters(id, supportersTo, supporters[id].length);
     }
-
-	function update(uint256 id) internal {
-		Nurse storage nurse = nurses[id];
-		uint256 multiplier = block.number - nurse.lastRewardBlock;
-		uint256 power = nurse.originPower + nurse.supportPower;
-        uint256 reward = multiplier * COIN_PER_BLOCK * power / totalPower;
-        maidCoin.mint(address(this), reward);
-		uint256 accCoin = reward * 1e12 / power;
-		nurse.accCoinForOwner += accCoin * nurse.originPower / power;
-		nurse.accCoinPerSupporter += accCoin * nurse.supportPower / power;
-        nurse.lastRewardBlock = block.number;
-	}
 
     function support(uint256 id, uint256 lpTokenAmount) external override {
         //TODO:
