@@ -2,93 +2,94 @@
 pragma solidity ^0.8.4;
 
 import "./MaidsInterface.sol";
+import "./ERC721TokenReceiver.sol";
 
 contract Maids is MaidsInterface {
 
-	mapping(uint256 => address) public maidIdToOwner;
-	mapping(address => uint256[]) public ownerToMaidIds;
-	mapping(uint256 => uint256) internal maidIdToMaidIdsIndex;
-	mapping(uint256 => address) private maidIdToApproved;
-	mapping(address => mapping(address => bool)) private ownerToOperatorToApprovedForAll;
+	mapping(uint256 => address) public idToOwner;
+	mapping(address => uint256[]) public ownerToIds;
+	mapping(uint256 => uint256) internal idToOwnerIndex;
+	mapping(uint256 => address) private idToApproved;
+	mapping(address => mapping(address => bool)) private ownerToOperators;
 
     function balanceOf(address owner) public override view returns (uint256) {
-		return ownerToMaidIds[owner].length;
+		return ownerToIds[owner].length;
     }
 
-    function ownerOf(uint256 maidId) public override view returns (address) {
-        return maidIdToOwner[maidId];
+    function ownerOf(uint256 id) public override view returns (address) {
+        return idToOwner[id];
     }
     
-    function safeTransferFrom(address from, address to, uint256 maidId, bytes memory data) public override {
-        transferFrom(from, to, maidId);
+    function safeTransferFrom(address from, address to, uint256 id, bytes memory data) public override {
+        transferFrom(from, to, id);
         uint32 size;
 		assembly { size := extcodesize(to) }
 		if (size > 0) {
-			require(ERC721TokenReceiver(to).onERC721Received(msg.sender, from, maidId, data) == 0x150b7a02);
+			require(ERC721TokenReceiver(to).onERC721Received(msg.sender, from, id, data) == 0x150b7a02);
 		}
     }
     
-    function safeTransferFrom(address from, address to, uint256 maidId) external override {
-        safeTransferFrom(from, to, maidId, "");
+    function safeTransferFrom(address from, address to, uint256 id) external override {
+        safeTransferFrom(from, to, id, "");
     }
     
-    function transferFrom(address from, address to, uint256 maidId) public override {
+    function transferFrom(address from, address to, uint256 id) public override {
 
-        address owner = ownerOf(maidId);
+        address owner = ownerOf(id);
 
         require(
 			msg.sender == owner ||
-			msg.sender == getApproved(maidId) ||
-			isApprovedForAll(ownerOf(maidId), msg.sender) == true
+			msg.sender == getApproved(id) ||
+			isApprovedForAll(ownerOf(id), msg.sender) == true
 		);
         
 		require(from == owner && to != owner);
 		
-		delete maidIdToApproved[maidId];
-		emit Approval(from, address(0), maidId);
+		delete idToApproved[id];
+		emit Approval(from, address(0), id);
 		
-		uint256 index = maidIdToMaidIdsIndex[maidId];
+		uint256 index = idToOwnerIndex[id];
 		uint256 lastIndex = balanceOf(from) - 1;
 		
-		uint256 lastItemId = ownerToMaidIds[from][lastIndex];
-		ownerToMaidIds[from][index] = lastItemId;
+		uint256 lastId = ownerToIds[from][lastIndex];
+		ownerToIds[from][index] = lastId;
 		
-		delete ownerToMaidIds[from][lastIndex];
+		delete ownerToIds[from][lastIndex];
 
-        uint256[] storage maidIds = ownerToMaidIds[from];
-		maidIds.length -= 1;
+        uint256[] storage ids = ownerToIds[from];
+		ids.length -= 1;
 		
-		maidIdToMaidIdsIndex[lastItemId] = index;
-		maidIdToOwner[maidId] = to;
+		idToOwnerIndex[lastId] = index;
+		idToOwner[id] = to;
 
-        ownerToMaidIds[to].push(maidId);
-		maidIdToMaidIdsIndex[maidId] = ownerToMaidIds[to].length - 1;
+        ownerToIds[to].push(id);
+		idToOwnerIndex[id] = ownerToIds[to].length - 1;
 		
-		emit Transfer(from, to, maidId);
+		emit Transfer(from, to, id);
     }
     
-    function approve(address approved, uint256 maidId) external override {
-		address owner = ownerOf(maidId);
+    function approve(address approved, uint256 id) external override {
+		address owner = ownerOf(id);
 		require(msg.sender == owner && approved != owner);
-		maidIdToApproved[maidId] = approved;
-		emit Approval(owner, approved, maidId);
+		idToApproved[id] = approved;
+		emit Approval(owner, approved, id);
     }
     
     function setApprovalForAll(address operator, bool approved) external override {
 		require(operator != msg.sender);
 		if (approved == true) {
-			ownerToOperatorToApprovedForAll[msg.sender][operator] = true;
+			ownerToOperators[msg.sender][operator] = true;
 		} else {
-			delete ownerToOperatorToApprovedForAll[msg.sender][operator];
+			delete ownerToOperators[msg.sender][operator];
 		}
 		emit ApprovalForAll(msg.sender, operator, approved);
     }
     
-    function getApproved(uint256 maidId) public override view returns (address) {
-        return maidIdToApproved[maidId];
+    function getApproved(uint256 id) public override view returns (address) {
+        return idToApproved[id];
     }
     
     function isApprovedForAll(address owner, address operator) public override view returns (bool) {
-        return ownerToOperatorToApprovedForAll[owner][operator] == true;
+        return ownerToOperators[owner][operator] == true;
     }
 }

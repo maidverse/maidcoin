@@ -7,6 +7,8 @@ interface NursePartsInterface {
     event TransferBatch(address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] values);
     event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
     event URI(string value, uint256 indexed id);
+    event Mint(address indexed to, uint256 indexed id, uint256 value);
+    event Burn(address indexed owner, uint256 indexed id, uint256 value);
     
     function masters() external view returns (address);
     function nurseRaids() external view returns (address);
@@ -20,4 +22,5 @@ interface NursePartsInterface {
     function isApprovedForAll(address owner, address operator) external view returns (bool);
     
     function mint(address to, uint256 id, uint256 value) external;
+    function burn(address owner, uint256 id, uint256 value) external;
 }

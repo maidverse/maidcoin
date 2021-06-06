@@ -34,6 +34,7 @@ contract NurseParts is NursePartsInterface {
 
     function safeTransferFrom(address from, address to, uint256 id, uint256 value, bytes calldata data) override external {
         require(from == msg.sender || isApprovedForAll(from, msg.sender));
+        
         balances[id][from] -= value;
         balances[id][to] += value;
         emit TransferSingle(msg.sender, from, to, id, amount);
@@ -98,5 +99,16 @@ contract NurseParts is NursePartsInterface {
 		if (size > 0) {
 			require(ERC1155TokenReceiver(to).onERC1155Received(msg.sender, address(0), id, value, data) == 0xf23a6e61);
 		}
+
+        emit Mint(to, id, value);
+    }
+    
+    function burn(address owner, uint256 id, uint256 value) external {
+        require(msg.sender == cloneNurses);
+        
+        balances[id][owner] -= value;
+        emit TransferSingle(msg.sender, owner, address(0), id, amount);
+
+        emit Burn(owner, id, value);
     }
 }
