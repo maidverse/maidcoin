@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+import "./MaidCoinInterface.sol";
+
 interface MasterCoinInterface {
 
     event Transfer(address indexed from, address indexed to, uint256 amount);
     event Approval(address indexed owner, address indexed spender, uint256 amount);
 
-    function maidCoin() external view returns (address);
+    function maidCoin() external view returns (MaidCoinInterface);
     
     function name() external view returns (string memory);
     function symbol() external view returns (string memory);
@@ -19,6 +21,6 @@ interface MasterCoinInterface {
     function approve(address spender, uint256 amount) external returns (bool success);
     function allowance(address owner, address spender) external view returns (uint256 remaining);
 
-    function claimAmountOf(address owner) external view returns (uint256);
+    function claimCoinAmount() external view returns (uint256);
     function claim() external;
 }

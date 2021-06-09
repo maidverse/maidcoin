@@ -1,1 +1,4 @@
-# maidcoin-contracts
+# MaidCoin Contracts
+
+## License
+[MIT](LICENSE)

@@ -37,7 +37,7 @@ contract NurseParts is NursePartsInterface {
         
         balances[id][from] -= value;
         balances[id][to] += value;
-        emit TransferSingle(msg.sender, from, to, id, amount);
+        emit TransferSingle(msg.sender, from, to, id, value);
         
         uint32 size;
 		assembly { size := extcodesize(to) }
@@ -92,12 +92,12 @@ contract NurseParts is NursePartsInterface {
         require(msg.sender == nurseRaids);
 
         balances[id][to] += value;
-        emit TransferSingle(msg.sender, address(0), to, id, amount);
+        emit TransferSingle(msg.sender, address(0), to, id, value);
         
         uint32 size;
 		assembly { size := extcodesize(to) }
 		if (size > 0) {
-			require(ERC1155TokenReceiver(to).onERC1155Received(msg.sender, address(0), id, value, data) == 0xf23a6e61);
+			require(ERC1155TokenReceiver(to).onERC1155Received(msg.sender, address(0), id, value, "") == 0xf23a6e61);
 		}
 
         emit Mint(to, id, value);
@@ -107,7 +107,7 @@ contract NurseParts is NursePartsInterface {
         require(msg.sender == cloneNurses);
         
         balances[id][owner] -= value;
-        emit TransferSingle(msg.sender, owner, address(0), id, amount);
+        emit TransferSingle(msg.sender, owner, address(0), id, value);
 
         emit Burn(owner, id, value);
     }

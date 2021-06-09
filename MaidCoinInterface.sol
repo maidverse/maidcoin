@@ -16,6 +16,7 @@ interface MaidCoinInterface {
     function symbol() external view returns (string memory);
     function decimals() external view returns (uint8);
     function totalSupply() external view returns (uint256);
+    function initialSupply() external view returns (uint256);
 
     function balanceOf(address owner) external view returns (uint256 balance);
     function transfer(address to, uint256 amount) external returns (bool success);

@@ -10,6 +10,7 @@ contract CloneNurses is CloneNursesInterface {
     uint8   constant public DECIMALS = 8;
     uint256 constant public COIN = 10 ** uint256(DECIMALS);
     uint256 constant public COIN_PER_BLOCK = 100;
+	uint256 constant public HALVING_INTERVAL = 210000 * 20;
     
 	address public override masters;
 	NursePartsInterface public override nurseParts;
@@ -280,8 +281,12 @@ contract CloneNurses is CloneNursesInterface {
     function desupport(uint256 id, uint256 lpTokenAmount) external override {
         //TODO:
     }
+	
+    function accCoinAt(uint256 blockNumber) internal view returns (uint256) {
+		//TODO:
+	}
     
-    function claimAmountOf(uint256 id) external view returns (uint256) {
+    function claimCoinOf(uint256 id) external view returns (uint256) {
         //TODO:
     }
     

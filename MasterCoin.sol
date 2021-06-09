@@ -2,6 +2,7 @@
 pragma solidity ^0.8.4;
 
 import "./MasterCoinInterface.sol";
+import "./MaidCoinInterface.sol";
 
 contract MasterCoin is MasterCoinInterface {
 
@@ -16,7 +17,10 @@ contract MasterCoin is MasterCoinInterface {
     mapping(address => mapping(uint256 => uint256[])) private burned;
     mapping(address => mapping(uint256 => mapping(uint256 => bool))) private minted;
 
-    constructor() {
+	MaidCoinInterface public override maidCoin;
+
+    constructor(address maidCoinAddr) {
+		maidCoin = MaidCoinInterface(maidCoinAddr);
 		balances[msg.sender] = INITIAL_SUPPLY;
 		_totalSupply = INITIAL_SUPPLY;
 	}
@@ -56,5 +60,13 @@ contract MasterCoin is MasterCoinInterface {
         balances[to] += amount;
         emit Transfer(from, to, amount);
         return true;
+    }
+    
+    function claimCoinAmount() external view returns (uint256) {
+        //TODO: amount - maidCoin.initialSupply();
+    }
+
+    function claim() external {
+        //TODO: amount - maidCoin.initialSupply();
     }
 }

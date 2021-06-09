@@ -38,6 +38,6 @@ interface CloneNursesInterface {
     function support(uint256 id, uint256 lpTokenAmount) external;
     function desupport(uint256 id, uint256 lpTokenAmount) external;
     
-    function claimAmountOf(uint256 id) external view returns (uint256);
+    function claimCoinOf(uint256 id) external view returns (uint256);
     function claim(uint256 id) external;
 }

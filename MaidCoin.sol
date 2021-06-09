@@ -57,6 +57,7 @@ contract MaidCoin is MaidCoinInterface {
 	function symbol() external pure override returns (string memory) { return SYMBOL; }
 	function decimals() external pure override returns (uint8) { return DECIMALS; }
 	function totalSupply() external view override returns (uint256) { return _totalSupply; }
+	function initialSupply() external view override returns (uint256) { return INITIAL_SUPPLY; }
 
 	function balanceOf(address user) external view override returns (uint256 balance) {
 		return balances[user];

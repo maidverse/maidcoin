@@ -3,14 +3,15 @@ pragma solidity ^0.8.4;
 
 interface MaidCorpInterface {
 
-    event Deposit(address indexed owner, uint256 amount);
-    event Withdraw(address indexed owner, uint256 amount);
+    event Deposit(address indexed owner, uint256 lpTokenAmount);
+    event Withdraw(address indexed owner, uint256 lpTokenAmount);
 
     function maidCoin() external view returns (address);
     function lpToken() external view returns (address);
     
-    function subsidyAt(uint256 blockNumber) external view returns (uint256 amount);
+    function deposit(uint256 lpTokenAmount) external;
+    function withdraw(uint256 lpTokenAmount) external;
     
-    function deposit(uint256 amount) external;
-    function withdraw(uint256 amount) external;
+    function claimCoinAmount() external view returns (uint256 coinAmount);
+    function claim(uint256 id) external;
 }

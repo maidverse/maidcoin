@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-interface NurseRaidInterface {
+interface NurseRaidsInterface {
 
     function maidCoin() external view returns (address);
     function maids() external view returns (address);
