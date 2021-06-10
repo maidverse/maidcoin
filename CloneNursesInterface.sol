@@ -10,14 +10,14 @@ interface CloneNursesInterface {
     event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
     event Assemble(address indexed owner, uint256 indexed id, uint256 nurseType, bool supportable);
     event Destroy(address indexed owner, uint256 indexed id);
-    event Support(address indexed supporter, uint256 indexed id, uint256 lpTokenAmount)
-    event Desupport(address indexed supporter, uint256 indexed id, uint256 lpTokenAmount)
+    event Support(address indexed supporter, uint256 indexed id, uint256 lpTokenAmount);
+    event Desupport(address indexed supporter, uint256 indexed id, uint256 lpTokenAmount);
     event Claim(address indexed owner, uint256 indexed id, uint256 coinAmount);
 
     function masters() external view returns (address);
     function nurseParts() external view returns (NursePartsInterface);
     function maidCoin() external view returns (address);
-    function lpToken() external view returns (address);
+    function lpToken() external view returns (LPTokenInterface);
 
     function createNurseType(uint256 partsCount, uint256 destroyReturn, uint256 defaultPower) external returns (uint256);
     

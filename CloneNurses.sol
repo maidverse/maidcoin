@@ -3,6 +3,7 @@ pragma solidity ^0.8.4;
 
 import "./CloneNursesInterface.sol";
 import "./NursePartsInterface.sol";
+import "./LPTokenInterface.sol";
 import "./ERC721TokenReceiver.sol";
 
 contract CloneNurses is CloneNursesInterface {
@@ -20,7 +21,7 @@ contract CloneNurses is CloneNursesInterface {
 	address public override masters;
 	NursePartsInterface public override nurseParts;
 	address public override maidCoin;
-	address public override lpToken;
+	LPTokenInterface public override lpToken;
 	
     uint256 immutable public startBlock;
     
@@ -46,7 +47,7 @@ contract CloneNurses is CloneNursesInterface {
     
 	function changeLPToken(address newLPToken) external {
 		require(msg.sender == masters);
-		lpToken = newLPToken;
+		lpToken = LPTokenInterface(newLPToken);
 	}
 
     uint256 public accCoinBlock;
@@ -84,7 +85,7 @@ contract CloneNurses is CloneNursesInterface {
 		uint256 rewardDebt;
 	}
     mapping(uint256 => Supporter[]) public supporters;
-    mapping(uint256 => mapping(uint256 => uint256)) public addrToSupporter;
+    mapping(uint256 => mapping(address => uint256)) public addrToSupporter;
 
 	mapping(uint256 => address) public idToOwner;
 	mapping(address => uint256[]) public ownerToIds;
@@ -193,14 +194,25 @@ contract CloneNurses is CloneNursesInterface {
 		NurseClass memory nurseClass = nurseClasses[nurseType];
 		
 		uint256 id = nurses.length;
+        uint256 _accCoin = update();
+
 		nurses.push(Nurse({
 			type: nurseType,
 			originPower: nurseClass.originPower,
 			supportPower: 0,
-			accCoinForOwner: 0,
+			accCoinForOwner: _accCoin * nurseClass.originPower / PRECISION,
 			accCoinForSupporter: 0,
 			supportable: supportable
 		}));
+
+		supporters[id].push(Supporter({
+			addr: address(0),
+			lpTokenAmount: 0,
+			rewardBlock: 0,
+			rewardDebt: 0
+		}));
+
+		totalPower += nurseClass.originPower;
 
 		idToOwner[id] = msg.sender;
 
@@ -216,11 +228,14 @@ contract CloneNurses is CloneNursesInterface {
 	}
 
 	function updateAccCoin(Nurse storage nurse) internal {
-		uint256 multiplier = block.number - nurse.lastRewardBlock;
+
+        uint256 _accCoin = update();
+
 		uint256 power = nurse.originPower + nurse.supportPower;
-        uint256 reward = multiplier * COIN_PER_BLOCK * power / totalPower;
+        uint256 reward = _accCoin * power / PRECISION - (nurse.accCoinForOwner + nurse.accCoinForSupporter);
         maidCoin.mint(address(this), reward);
-		uint256 accCoin = reward * 1e12 / power;
+		
+		uint256 accCoin = _accCoin * power / PRECISION;
 		nurse.accCoinForOwner += accCoin * nurse.originPower / power;
 		nurse.accCoinPerSupporter += accCoin * nurse.supportPower / power;
         nurse.lastRewardBlock = block.number;
@@ -242,7 +257,7 @@ contract CloneNurses is CloneNursesInterface {
 		uint256 supportPower = 0;
 
 		require(fromSup.length <= number);
-		for (uint256 i = number - 1; i >= 0; i -= 1) {
+		for (uint256 i = number - 1; i > 0; i -= 1) {
 			Supporter memory supporter = fromSup[i];
 			delete fromAddrToSup[supporter.addr];
 			toAddrToSup[supporter.addr] = toSub.length;
@@ -278,6 +293,11 @@ contract CloneNurses is CloneNursesInterface {
 		
 		idToOwnerIndex[lastId] = index;
 		idToOwner[id] = address(0);
+
+		Nurse memory nurse = nurses[id];
+
+		totalPower -= nurse.originPower;
+		maidCoin.mint(msg.sender, nurseClasses[nurse.type].destroyReturn);
 
 		emit Transfer(msg.sender, address(0), id);
 
@@ -316,39 +336,116 @@ contract CloneNurses is CloneNursesInterface {
     }
 
     function support(uint256 id, uint256 lpTokenAmount) external override {
-        //TODO:
+
+		uint256 supporterId = addrToSupporter[id][msg.sender];
+		if (supporterId == 0) { // new supporter
+
+			Supporter[] sups = supporters[id];
+			supporterId = sups.length;
+
+			sups.push(Supporter({
+				addr: msg.sender,
+				lpTokenAmount: lpTokenAmount,
+				rewardBlock: block.number,
+				rewardDebt: 0
+			}));
+
+			addrToSupporter[id][msg.sender] = supporterId;
+
+			emit Support(msg.sender, id, lpTokenAmount);
+
+			return supporterId;
+
+		} else { // add amount
+			supporters[id][supporterId].lpTokenAmount += lpTokenAmount;
+		}
+
+		Nurse storage nurse = nurses[id];
+		updateAccCoin(nurse);
+		
+		nurse.supportPower += lpTokenAmount;
+		totalPower += lpTokenAmount;
+
+		// need approve
+		lpToken.transferFrom(msg.sender, address(this), lpTokenAmount);
+		
+		emit Support(msg.sender, id, lpTokenAmount);
     }
     
     function desupport(uint256 id, uint256 lpTokenAmount) external override {
-        //TODO:
+        
+		uint256 supporterId = addrToSupporter[id][msg.sender];
+		require(supporterId > 0);
+
+		supporters[id][supporterId].lpTokenAmount -= lpTokenAmount;
+
+		Nurse storage nurse = nurses[id];
+		updateAccCoin(nurse);
+		
+		nurse.supportPower -= lpTokenAmount;
+		totalPower -= lpTokenAmount;
+
+		lpToken.transferFrom(address(this), msg.sender, lpTokenAmount);
+
+		emit Desupport(msg.sender, id, lpTokenAmount);
     }
     
     function claimCoinOf(uint256 id) external view returns (uint256) {
-        //TODO: check owner/supporter
 
         Nurse memory nurse = nurses[id];
         if (nurse.owner == address(0)) {
             return 0;
         }
-        return calculateAccCoin() * nurse.power / PRECISION - nurse.accCoin;
+
+		uint256 power = nurse.originPower + nurse.supportPower;
+		uint256 accCoin = calculateAccCoin() * power / PRECISION;
+		uint256 claimCoin = 0;
+
+		// owner
+		if (nurse.owner == msg.sender) {
+			claimCoin += accCoin * nurse.originPower / power - nurse.accCoinForOwner;
+		}
+
+		// supporter
+		uint256 supporterId = addrToSupporter[id][msg.sender];
+		if (supporterId != 0) {
+			uint256 accCoinPerSupporter = accCoin * nurse.supportPower / power - nurse.accCoinPerSupporter;
+			Supporter supporter = supporters[id][supporterId];
+			claimCoin += accCoinPerSupporter * supporter.lpTokenAmount / nurse.supportPower - supporter.rewardDebt;
+		}
+
+		return claimCoin;
     }
     
     function claim(uint256 id) external {
-        //TODO: check owner/supporter
 		
-        Nurse memory nurse = nurses[id];
-        require(nurse.owner == msg.sender);
-        uint256 power = nurse.originPower + nurse.supportPower;
+        Nurse storage nurse = nurses[id];
+        require(nurse.owner != address(0));
 
-        uint256 _accCoin = update();
-        uint256 coin = _accCoin * power / PRECISION - nurse.accCoin;
-        if (coin > 0) {
-            mint(msg.sender, coin);
-        }
+		updateAccCoin(nurse);
+		uint256 claimCoin = 0;
 
-        nurse.accCoin = _accCoin * power / PRECISION;
-        emit Claim(msg.sender, id, coin);
-        return coin;
+		// owner
+		if (nurse.owner == msg.sender) {
+			uint256 dept = (nurse.accCoinForOwner - nurse.ownerRewardDept) * (block.number - nurse.ownerRewardBlock);
+			nurse.ownerRewardDept += dept;
+			nurse.ownerRewardBlock = block.number;
+			claimCoin += dept;
+		}
+
+		// supporter
+		uint256 supporterId = addrToSupporter[id][msg.sender];
+		if (supporterId != 0) {
+			Supporter storage supporter = supporters[id][supporterId];
+			uint256 dept = (nurse.accCoinPerSupporter * supporter.lpTokenAmount / nurse.supportPower - supporter.rewardDebt) * (block.number - supporter.rewardBlock);
+			supporter.rewardDept += dept;
+			supporter.rewardBlock = block.number;
+			claimCoin += dept;
+		}
+
+		maidCoin.transfer(msg.sender, claimCoin);
+
+		emit Claim(msg.sender, id, claimCoin);
     }
 
     function update() internal returns (uint256 _accCoin) {

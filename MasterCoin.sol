@@ -126,4 +126,13 @@ contract MasterCoin is MasterCoinInterface {
     function voteNurseRaid(uint256 proposalId) external override {
         //TODO:
     }
+
+    function proposeRNG(address rgnAddr) external override returns (uint256 proposalId) {
+        require(balanceOf(msg.sender) > 0);
+        //TODO:
+    }
+
+    function voteRNG(uint256 proposalId) external override {
+        //TODO:
+    }
 }
