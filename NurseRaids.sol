@@ -9,6 +9,13 @@ contract NurseRaids is NurseRaidsInterface {
 	address public override maidCoin;
 	address public override maids;
 
+	struct Raid {
+		uint256 entranceFee;
+		uint256 nurseType;
+		uint256 endBlock;
+	}
+	Raid[] public raids;
+
 	constructor() {
 		masters = msg.sender;
 	}
@@ -28,8 +35,15 @@ contract NurseRaids is NurseRaidsInterface {
 		maids = newMaids;
 	}
 
-    function createRaid(uint256 entranceFee, uint256 nurseType, uint256 duration) external {
-        //TODO:
+    function createRaid(uint256 entranceFee, uint256 nurseType, uint256 endBlock) external override returns (uint256) {
+		require(msg.sender == masters);
+		uint256 raidId = raids.length;
+		raids.push(Raid({
+			entranceFee: entranceFee,
+			nurseType: nurseType,
+			endBlock: endBlock
+		}));
+		return raidId;
     }
     
     function removeRaid(uint256 raidId) external {

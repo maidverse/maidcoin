@@ -8,11 +8,11 @@ interface CloneNursesInterface {
     event Transfer(address indexed from, address indexed to, uint256 indexed id);
     event Approval(address indexed owner, address indexed approved, uint256 indexed id);
     event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
-    event Assemble
-    event Destroy
-    event Support
-    event Desupport
-    event Claim
+    event Assemble(address indexed owner, uint256 indexed id, uint256 nurseType, bool supportable);
+    event Destroy(address indexed owner, uint256 indexed id);
+    event Support(address indexed supporter, uint256 indexed id, uint256 lpTokenAmount)
+    event Desupport(address indexed supporter, uint256 indexed id, uint256 lpTokenAmount)
+    event Claim(address indexed owner, uint256 indexed id, uint256 coinAmount);
 
     function masters() external view returns (address);
     function nurseParts() external view returns (NursePartsInterface);

@@ -8,8 +8,9 @@ contract MasterCoin is MasterCoinInterface {
 
     string constant private NAME = "MasterCoin";
     string constant private SYMBOL = "MASTER";
-    uint8 constant private DECIMALS = 18;
-	uint256 constant private INITIAL_SUPPLY = 100 * (10 ** uint(DECIMALS));
+	uint8 constant private DECIMALS = 18;
+    uint256 constant public COIN = 10 ** uint256(DECIMALS);
+	uint256 constant private INITIAL_SUPPLY = 100 * COIN;
     
     uint256 private _totalSupply;
     mapping(address => uint256) private balances;
@@ -18,6 +19,35 @@ contract MasterCoin is MasterCoinInterface {
     mapping(address => mapping(uint256 => mapping(uint256 => bool))) private minted;
 
 	MaidCoinInterface public override maidCoin;
+
+    struct MaidProposal {
+		uint256 power;
+        uint256 price;
+        uint256 voteAmount;
+        uint256 voteEndBlock;
+	}
+	MaidProposal[] public maidProposals;
+    mapping(uint256 => mapping(address => bool)) public maidProposalVoted;
+
+    struct NurseClassProposal {
+		uint256 partsCount;
+		uint256 destroyReturn;
+		uint256 originPower;
+        uint256 voteAmount;
+        uint256 voteEndBlock;
+	}
+	NurseClassProposal[] public nurseClassProposals;
+    mapping(uint256 => mapping(address => bool)) public nurseClassProposalVoted;
+
+    struct NurseRaidProposal {
+		uint256 entranceFee;
+        uint256 nurseType;
+        uint256 endBlock;
+        uint256 voteAmount;
+        uint256 voteEndBlock;
+	}
+	NurseRaidProposal[] public nurseRaidProposals;
+    mapping(uint256 => mapping(address => bool)) public nurseRaidProposalVoted;
 
     constructor(address maidCoinAddr) {
 		maidCoin = MaidCoinInterface(maidCoinAddr);
@@ -62,11 +92,38 @@ contract MasterCoin is MasterCoinInterface {
         return true;
     }
     
-    function claimCoinAmount() external view returns (uint256) {
+    function claimCoinAmount() external override view returns (uint256) {
         //TODO: amount - maidCoin.initialSupply();
     }
 
-    function claim() external {
+    function claim() external override {
         //TODO: amount - maidCoin.initialSupply();
+    }
+
+    function proposeMaid(uint256 power, uint256 price) external override returns (uint256 proposalId) {
+        require(balanceOf(msg.sender) > 0);
+        //TODO:
+    }
+
+    function voteMaid(uint256 proposalId) external override {
+        //TODO:
+    }
+
+    function proposeNurseClass(uint256 partsCount, uint256 destroyReturn, uint256 originPower) external override returns (uint256 proposalId) {
+        require(balanceOf(msg.sender) > 0);
+        //TODO:
+    }
+
+    function voteNurseClass(uint256 proposalId) external override {
+        //TODO:
+    }
+
+    function proposeNurseRaid(uint256 entranceFee, uint256 nurseType, uint256 endBlock) external override returns (uint256 proposalId) {
+        require(balanceOf(msg.sender) > 0);
+        //TODO:
+    }
+
+    function voteNurseRaid(uint256 proposalId) external override {
+        //TODO:
     }
 }

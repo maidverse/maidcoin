@@ -7,10 +7,15 @@ import "./ERC721TokenReceiver.sol";
 
 contract CloneNurses is CloneNursesInterface {
 	
-    uint8   constant public DECIMALS = 8;
+	uint8 constant private DECIMALS = 18;
     uint256 constant public COIN = 10 ** uint256(DECIMALS);
-    uint256 constant public COIN_PER_BLOCK = 100;
+    
+	//TODO: need to update
+	uint256 constant public COIN_PER_BLOCK = 100 * COIN;
+    uint256 constant public MIN_COIN_PER_BLOCK = 1 * COIN;
+
 	uint256 constant public HALVING_INTERVAL = 210000 * 20;
+    uint256 constant public PRECISION = 1e12;
     
 	address public override masters;
 	NursePartsInterface public override nurseParts;
@@ -44,6 +49,8 @@ contract CloneNurses is CloneNursesInterface {
 		lpToken = newLPToken;
 	}
 
+    uint256 public accCoinBlock;
+    uint256 public accCoin;
 	uint256 public totalPower = 0;
 
 	struct NurseClass {
@@ -51,7 +58,7 @@ contract CloneNurses is CloneNursesInterface {
 		uint256 destroyReturn;
 		uint256 originPower;
 	}
-	NurseClass[] public NurseClasses;
+	NurseClass[] public nurseClasses;
 
 	struct Nurse {
 		
@@ -59,9 +66,12 @@ contract CloneNurses is CloneNursesInterface {
 		uint256 originPower;
 		uint256 supportPower;
 		
-		uint256 lastRewardBlock;
+        uint256 accCoinBlock;
 		uint256 accCoinForOwner;
 		uint256 accCoinPerSupporter;
+		
+        uint256 ownerRewardBlock;
+        uint256 ownerRewardDept;
 
 		bool supportable;
 	}
@@ -70,6 +80,7 @@ contract CloneNurses is CloneNursesInterface {
 	struct Supporter {
 		address addr;
 		uint256 lpTokenAmount;
+		uint256 rewardBlock;
 		uint256 rewardDebt;
 	}
     mapping(uint256 => Supporter[]) public supporters;
@@ -274,6 +285,36 @@ contract CloneNurses is CloneNursesInterface {
 		moveSupporters(id, supportersTo, supporters[id].length);
     }
 
+	function coinAt(uint256 blockNumber) public view override returns (uint256 coinAmount) {
+        uint256 era = (blockNumber - startBlock) / HALVING_INTERVAL;
+        coinAmount = COIN_PER_BLOCK / (2 ** era);
+		if (coinAmount < MIN_COIN_PER_BLOCK) {
+			coinAmount = MIN_COIN_PER_BLOCK;
+		}
+    }
+
+    function calculateAccCoin() internal view returns (uint256) {
+        uint256 _accCoinBlock = accCoinBlock;
+        uint256 coin = 0;
+        uint256 era1 = (_accCoinBlock - genesisEthBlock) / HALVING_INTERVAL;
+        uint256 era2 = (block.number - genesisEthBlock) / HALVING_INTERVAL;
+
+        if (era1 == era2) {
+            coin = (block.number - _accCoinBlock) * coinAt(block.number);
+        } else {
+            uint256 boundary = (era1 + 1) * HALVING_INTERVAL + genesisEthBlock;
+            coin = (boundary - _accCoinBlock) * coinAt(_accCoinBlock);
+            uint256 span = era2 - era1;
+            for (uint256 i = 1; i < span; i += 1) {
+                boundary = (era1 + 1 + i) * HALVING_INTERVAL + genesisEthBlock;
+                coin += HALVING_INTERVAL * coinAt(_accCoinBlock + HALVING_INTERVAL * i);
+            }
+            coin += (block.number - boundary) * coinAt(block.number);
+        }
+
+        return accCoin + coin * PRECISION / totalPower;
+    }
+
     function support(uint256 id, uint256 lpTokenAmount) external override {
         //TODO:
     }
@@ -281,16 +322,42 @@ contract CloneNurses is CloneNursesInterface {
     function desupport(uint256 id, uint256 lpTokenAmount) external override {
         //TODO:
     }
-	
-    function accCoinAt(uint256 blockNumber) internal view returns (uint256) {
-		//TODO:
-	}
     
     function claimCoinOf(uint256 id) external view returns (uint256) {
-        //TODO:
+        //TODO: check owner/supporter
+
+        Nurse memory nurse = nurses[id];
+        if (nurse.owner == address(0)) {
+            return 0;
+        }
+        return calculateAccCoin() * nurse.power / PRECISION - nurse.accCoin;
     }
     
     function claim(uint256 id) external {
-        //TODO:
+        //TODO: check owner/supporter
+		
+        Nurse memory nurse = nurses[id];
+        require(nurse.owner == msg.sender);
+        uint256 power = nurse.originPower + nurse.supportPower;
+
+        uint256 _accCoin = update();
+        uint256 coin = _accCoin * power / PRECISION - nurse.accCoin;
+        if (coin > 0) {
+            mint(msg.sender, coin);
+        }
+
+        nurse.accCoin = _accCoin * power / PRECISION;
+        emit Claim(msg.sender, id, coin);
+        return coin;
+    }
+
+    function update() internal returns (uint256 _accCoin) {
+        if (accCoinBlock != block.number) {
+            _accCoin = calculateAccCoin();
+            accCoin = _accCoin;
+            accCoinBlock = block.number;
+        } else {
+            _accCoin = accCoin;
+        }
     }
 }
