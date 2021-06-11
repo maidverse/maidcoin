@@ -2,6 +2,7 @@
 pragma solidity ^0.8.4;
 
 import "./MaidsInterface.sol";
+import "./LPTokenInterface.sol";
 import "./ERC721TokenReceiver.sol";
 
 contract Maids is MaidsInterface {
@@ -11,6 +12,29 @@ contract Maids is MaidsInterface {
 	mapping(uint256 => uint256) internal idToOwnerIndex;
 	mapping(uint256 => address) private idToApproved;
 	mapping(address => mapping(address => bool)) private ownerToOperators;
+	
+	address public override masters;
+	address public override nurseRaids;
+	LPTokenInterface public override lpToken;
+
+	constructor() {
+		masters = msg.sender;
+	}
+
+	function changeMasters(address newMasters) external {
+		require(msg.sender == masters);
+		masters = newMasters;
+	}
+
+	function changeNurseRaids(address newNurseRaids) external {
+		require(msg.sender == masters);
+		nurseRaids = newNurseRaids;
+	}
+    
+	function changeLPToken(address lpTokenAddress) external {
+		require(msg.sender == masters);
+		lpToken = LPTokenInterface(lpTokenAddress);
+	}
 
     function balanceOf(address owner) public override view returns (uint256) {
 		return ownerToIds[owner].length;
@@ -92,4 +116,12 @@ contract Maids is MaidsInterface {
     function isApprovedForAll(address owner, address operator) public override view returns (bool) {
         return ownerToOperators[owner][operator] == true;
     }
+	
+    function support(uint256 id, uint256 lpTokenAmount) external override {
+		//TODO:
+	}
+
+    function desupport(uint256 id, uint256 lpTokenAmount) external override {
+		//TODO:
+	}
 }

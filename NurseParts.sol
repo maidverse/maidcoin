@@ -24,7 +24,7 @@ contract NurseParts is NursePartsInterface {
 		nurseRaids = newNurseRaids;
 	}
 
-	function changeNurseRaids(address newCloneNurses) external {
+	function changeCloneNurse(address newCloneNurses) external {
 		require(msg.sender == masters);
 		cloneNurses = newCloneNurses;
 	}

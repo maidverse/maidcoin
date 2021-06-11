@@ -7,7 +7,10 @@ interface MaidsInterface {
     event Approval(address indexed owner, address indexed approved, uint256 indexed id);
     event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
 
-    function lpToken() external view returns (address);
+    function masters() external view returns (address);
+    function nurseRaids() external view returns (address);
+    function lpToken() external view returns (LPTokenInterface);
+
     function createMaid(uint256 power, uint256 price) external;
     function buyMaid(uint256 id) external;
     

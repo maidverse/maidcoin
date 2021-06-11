@@ -7,7 +7,11 @@ contract MaidCorp is MaidCorpInterface {
 	
     uint8   constant public DECIMALS = 8;
     uint256 constant public COIN = 10 ** uint256(DECIMALS);
-    uint256 constant public COIN_PER_BLOCK = 10;
+    
+	//TODO: need to update
+	uint256 constant public COIN_PER_BLOCK = 10 * COIN;
+    uint256 constant public MIN_COIN_PER_BLOCK = 1 * COIN;
+
 	uint256 constant public HALVING_INTERVAL = 210000 * 20;
 
 	address public override masters;
