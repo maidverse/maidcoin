@@ -377,6 +377,7 @@ contract CloneNurses is CloneNursesInterface {
 		uint256 supporterId = addrToSupporter[id][msg.sender];
 		require(supporterId > 0);
 
+		uint256 originAmount = supporters[id][supporterId].lpTokenAmount;
 		supporters[id][supporterId].lpTokenAmount -= lpTokenAmount;
 
 		Nurse storage nurse = nurses[id];
@@ -388,6 +389,11 @@ contract CloneNurses is CloneNursesInterface {
 		lpToken.transferFrom(address(this), msg.sender, lpTokenAmount);
 
 		emit Desupport(msg.sender, id, lpTokenAmount);
+
+		if (originAmount == lpTokenAmount) {
+			delete supporters[id][supporterId];
+			addrToSupporter[id][msg.sender] = 0;
+		}
     }
     
     function claimCoinOf(uint256 id) external view returns (uint256) {

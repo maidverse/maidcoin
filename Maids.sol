@@ -43,6 +43,14 @@ contract Maids is MaidsInterface {
     function ownerOf(uint256 id) public override view returns (address) {
         return idToOwner[id];
     }
+
+    function powerOf(uint256 id) public override view returns (uint256) {
+		//TODO:
+    }
+
+    function totalPowerOf(address owner) public override view returns (uint256) {
+		//TODO:
+    }
     
     function safeTransferFrom(address from, address to, uint256 id, bytes memory data) public override {
         transferFrom(from, to, id);
