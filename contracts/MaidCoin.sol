@@ -157,6 +157,11 @@ contract MaidCoin is Ownable, ERC20("MaidCoin", "$MAID"), IMaidCoin {
         
         return accReward;
     }
+    
+    function mintForCloneNurseDestruction(address to, uint256 amount) external override {
+		require(msg.sender == cloneNurse);
+        mint(to, amount);
+	}
 
     function burn(address from, uint amount) override external {
 		require(msg.sender == maid || msg.sender == nurseRaid);

@@ -24,5 +24,6 @@ interface IMaidCoin is IERC20 {
     
     function mintForMaidCorp() external returns (uint);
     function mintForCloneNurse() external returns (uint);
+    function mintForCloneNurseDestruction(address to, uint256 amount) external;
     function burn(address from, uint amount) external;
 }

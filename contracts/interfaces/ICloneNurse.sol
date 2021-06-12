@@ -21,7 +21,7 @@ interface ICloneNurse is IERC721 {
     function assemble(uint nursePart, bool supportable) external returns (uint id);
     function changeSupportable(uint id, bool supportable) external;
     function moveSupporters(uint from, uint to, uint256 number) external;
-    function destroy(uint id, uint symbolTo) external;
+    function destroy(uint id, uint supportersTo) external;
     
     function support(uint id, uint lpTokenAmount) external;
     function desupport(uint id, uint lpTokenAmount) external;
