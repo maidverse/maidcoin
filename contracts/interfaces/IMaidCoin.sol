@@ -16,6 +16,6 @@ interface IMaidCoin is IERC20 {
     function maid() external view returns (address);
     function nurseRaid() external view returns (address);
     
-    function mint(uint amount) external;
-    function burn(uint amount) external;
+    function mint(address to, uint amount) external;
+    function burn(address from, uint amount) external;
 }

@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./interfaces/IMaidCoin.sol";
 
-contract MaidCoin is Ownable, ERC20("MaidCoin", "MAID"), IMaidCoin {
+contract MaidCoin is Ownable, ERC20("MaidCoin", "$MAID"), IMaidCoin {
     
 	uint constant public INITIAL_SUPPLY = 30000 * 1e18;
     
@@ -43,21 +43,21 @@ contract MaidCoin is Ownable, ERC20("MaidCoin", "MAID"), IMaidCoin {
 		return true;
 	}
 
-	function mint(uint amount) override external {
+	function mint(address to, uint amount) override external {
 		require(msg.sender == maidCorp || msg.sender == cloneNurse);
 
         uint mastersAmount = amount / 10; // 10% to masters.
         uint toAmount = amount - mastersAmount;
         
 		_mint(masters, mastersAmount);
-		_mint(msg.sender, toAmount);
+		_mint(to, toAmount);
 		
-        emit Mint(msg.sender, toAmount);
+        emit Mint(to, toAmount);
 	}
 
-    function burn(uint amount) override external {
+    function burn(address from, uint amount) override external {
 		require(msg.sender == maid || msg.sender == nurseRaid);
-        _burn(msg.sender, amount);
-        emit Burn(msg.sender, amount);
+        _burn(from, amount);
+        emit Burn(from, amount);
     }
 }

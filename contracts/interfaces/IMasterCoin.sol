@@ -9,6 +9,7 @@ interface IMasterCoin is IERC20 {
     event Claim(address indexed master, uint amount);
     
     function maidCoin() external view returns (IMaidCoin);
+    
     function claimAmount(address master) external view returns (uint);
     function claim(address master) external;
 }
