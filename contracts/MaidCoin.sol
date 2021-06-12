@@ -114,7 +114,7 @@ contract MaidCoin is Ownable, ERC20("MaidCoin", "$MAID"), IMaidCoin {
         return _maidCorpAccReward + reward - reward / 10; // 10% to masters.
     }
 	
-    function mintToMaidCorp() override external returns (uint) {
+    function mintForMaidCorp() override external returns (uint) {
         require(msg.sender == maidCorp);
         uint share = _update();
         
@@ -140,7 +140,7 @@ contract MaidCoin is Ownable, ERC20("MaidCoin", "$MAID"), IMaidCoin {
         return _nurseRaidAccReward + reward - reward / 10; // 10% to masters.
     }
     
-    function mintToCloneNurse() override external returns (uint) {
+    function mintForCloneNurse() override external returns (uint) {
         require(msg.sender == nurseRaid);
         uint share = _update();
         

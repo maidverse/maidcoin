@@ -51,8 +51,9 @@ contract MaidCorp is Ownable, IMaidCorp {
     }
     
     function _update() internal returns (uint result) {
-        result = accRewardPerShare();
+        result = _accRewardPerShare;
         if (lastUpdateBlock != block.number) {
+            result += maidCoin.mintForMaidCorp() * 1e18 / totalLPTokenAmount;
             _accRewardPerShare = result;
             lastUpdateBlock = block.number;
         }
@@ -63,7 +64,7 @@ contract MaidCorp is Ownable, IMaidCorp {
     }
     
     function claim() override public {
-        uint reward = claimAmount();
+        uint reward = _update() * lpTokenAmounts[msg.sender] / 1e18 - accRewards[msg.sender];
         maidCoin.transfer(msg.sender, reward);
         accRewards[msg.sender] += reward;
     }

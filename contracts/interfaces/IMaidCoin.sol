@@ -22,7 +22,7 @@ interface IMaidCoin is IERC20 {
     function maid() external view returns (address);
     function nurseRaid() external view returns (address);
     
-    function mintToMaidCorp() external returns (uint);
-    function mintToCloneNurse() external returns (uint);
+    function mintForMaidCorp() external returns (uint);
+    function mintForCloneNurse() external returns (uint);
     function burn(address from, uint amount) external;
 }
