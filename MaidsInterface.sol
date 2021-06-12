@@ -3,6 +3,9 @@ pragma solidity ^0.8.4;
 
 interface MaidsInterface {
 
+    event CreateMaid(uint256 indexed id, uint256 power, uint256 price);
+    event BuyMaid(address indexed owner, uint256 indexed id);
+    
     event Transfer(address indexed from, address indexed to, uint256 indexed id);
     event Approval(address indexed owner, address indexed approved, uint256 indexed id);
     event ApprovalForAll(address indexed owner, address indexed operator, bool approved);

@@ -23,16 +23,4 @@ interface MasterCoinInterface {
 
     function claimCoinAmount() external view returns (uint256);
     function claim() external;
-
-    function proposeMaid(uint256 power, uint256 price) external returns (uint256 proposalId);
-    function voteMaid(uint256 proposalId) external;
-
-    function proposeNurseClass(uint256 partsCount, uint256 destroyReturn, uint256 originPower) external returns (uint256 proposalId);
-    function voteNurseClass(uint256 proposalId) external;
-
-    function proposeNurseRaid(uint256 entranceFee, uint256 nurseType, uint256 endBlock) external returns (uint256 proposalId);
-    function voteNurseRaid(uint256 proposalId) external;
-
-    function proposeRNG(address rgnAddr) external returns (uint256 proposalId);
-    function voteRNG(uint256 proposalId) external;
 }

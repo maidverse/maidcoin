@@ -17,6 +17,14 @@ contract Maids is MaidsInterface {
 	address public override nurseRaids;
 	LPTokenInterface public override lpToken;
 
+	struct Maid {
+		address owner;
+		uint256 originPower;
+		uint256 supportPower;
+        uint256 initPrice;
+	}
+	Nurse[] public nurses;
+
 	constructor() {
 		masters = msg.sender;
 	}
@@ -36,6 +44,40 @@ contract Maids is MaidsInterface {
 		lpToken = LPTokenInterface(lpTokenAddress);
 	}
 
+	function createMaid(uint256 power, uint256 price) external {
+		require(msg.sender == masters);
+
+		uint256 maidId = maids.length;
+		maids.push(Maid({
+			owner: address(0),
+			originPower: power,
+			supportPower: 0,
+			initPrice: price
+		}));
+
+		emit CreateMaid(id, power, price);
+
+		return maidId;
+	}
+	
+    function buyMaid(uint256 id) external {
+
+		Maid memory maid = maids[id];
+
+		require(maid.owner == address(0));
+		maidCoin.burn(msg.sender, maid.initPrice);
+
+		maids[id].owner = msg.sender;
+
+		idToOwner[id] = msg.sender;
+
+        ownerToIds[msg.sender].push(id);
+		idToOwnerIndex[id] = ownerToIds[msg.sender].length - 1;
+		
+		emit Transfer(address(0), msg.sender, id);
+		emit BuyMaid(msg.sender, id);
+	}
+
     function balanceOf(address owner) public override view returns (uint256) {
 		return ownerToIds[owner].length;
     }
@@ -45,11 +87,18 @@ contract Maids is MaidsInterface {
     }
 
     function powerOf(uint256 id) public override view returns (uint256) {
-		//TODO:
+		Maid memory maid = maids[id];
+		return maid.originPower + maid.supportPower;
     }
 
     function totalPowerOf(address owner) public override view returns (uint256) {
-		//TODO:
+		uint256[] memory ids = ownerToIds[msg.sender];
+		uint256 length = ids.length;
+		uint256 totalPower = 0;
+		for (uint256 i = 0; i < length; i += 1) {
+			totalPower += maid.originPower + maid.supportPower;
+		}
+		return totalPower;
     }
     
     function safeTransferFrom(address from, address to, uint256 id, bytes memory data) public override {
@@ -126,10 +175,18 @@ contract Maids is MaidsInterface {
     }
 	
     function support(uint256 id, uint256 lpTokenAmount) external override {
-		//TODO:
+		Maid memory maid = maids[id];
+		require(maid.owner == msg.sender);
+		maids[id].supportPower += lpTokenAmount;
+
+		// need approve
+		lpToken.transferFrom(msg.sender, address(this), lpTokenAmount);
 	}
 
     function desupport(uint256 id, uint256 lpTokenAmount) external override {
-		//TODO:
+		Maid memory maid = maids[id];
+		require(maid.owner == msg.sender);
+		maids[id].supportPower -= lpTokenAmount;
+		lpToken.transferFrom(address(this), msg.sender, lpTokenAmount);
 	}
 }

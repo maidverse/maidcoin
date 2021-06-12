@@ -99,40 +99,4 @@ contract MasterCoin is MasterCoinInterface {
     function claim() external override {
         //TODO: amount - maidCoin.initialSupply();
     }
-
-    function proposeMaid(uint256 power, uint256 price) external override returns (uint256 proposalId) {
-        require(balanceOf(msg.sender) > 0);
-        //TODO:
-    }
-
-    function voteMaid(uint256 proposalId) external override {
-        //TODO:
-    }
-
-    function proposeNurseClass(uint256 partsCount, uint256 destroyReturn, uint256 originPower) external override returns (uint256 proposalId) {
-        require(balanceOf(msg.sender) > 0);
-        //TODO:
-    }
-
-    function voteNurseClass(uint256 proposalId) external override {
-        //TODO:
-    }
-
-    function proposeNurseRaid(uint256 entranceFee, uint256 nurseType, uint256 endBlock) external override returns (uint256 proposalId) {
-        require(balanceOf(msg.sender) > 0);
-        //TODO:
-    }
-
-    function voteNurseRaid(uint256 proposalId) external override {
-        //TODO:
-    }
-
-    function proposeRNG(address rgnAddr) external override returns (uint256 proposalId) {
-        require(balanceOf(msg.sender) > 0);
-        //TODO:
-    }
-
-    function voteRNG(uint256 proposalId) external override {
-        //TODO:
-    }
 }

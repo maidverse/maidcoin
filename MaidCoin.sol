@@ -107,5 +107,16 @@ contract MaidCoin is MaidCoinInterface {
 		emit Transfer(address(0), masters, mastersAmount);
 
 		_totalSupply += amount;
+		
+        emit Mint(msg.sender, amount);
 	}
+
+    function burn(uint256 from, uint256 amount) external override {
+        
+        balances[msg.sender] -= amount;
+        _totalSupply -= amount;
+        emit Transfer(msg.sender, address(0), amount);
+        
+        emit Burn(msg.sender, amount);
+    }
 }

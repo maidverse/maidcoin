@@ -5,6 +5,8 @@ interface MaidCoinInterface {
 
     event Transfer(address indexed from, address indexed to, uint256 amount);
     event Approval(address indexed owner, address indexed spender, uint256 amount);
+    event Mint(address indexed owner, uint256 amount);
+    event Burn(address indexed owner, uint256 amount);
     
     function masters() external view returns (address);
     function maidCorp() external view returns (address);
@@ -25,4 +27,5 @@ interface MaidCoinInterface {
     function allowance(address owner, address spender) external view returns (uint256 remaining);
 
     function mint(address to, uint256 amount) external;
+    function burn(address from, uint256 amount) external;
 }
