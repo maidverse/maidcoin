@@ -5,15 +5,14 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./interfaces/IMasterCoin.sol";
 import "./interfaces/IMaidCoin.sol";
 
-contract MasterCoin is ERC20("MasterCoin", "MASTER"), IMasterCoin {
+contract MasterCoin is ERC20("MasterCoin", "$MASTER"), IMasterCoin {
     
 	uint constant public INITIAL_SUPPLY = 100 * 1e18;
     
 	IMaidCoin override public maidCoin;
 	
-	uint private lastRewardBlock;
+	uint private lastRewardAddedBlock;
     uint private accRewardPerShare;
-	uint private accRewarded;
 	
 	mapping(address => uint) private accRewards;
     
@@ -22,18 +21,11 @@ contract MasterCoin is ERC20("MasterCoin", "MASTER"), IMasterCoin {
 		maidCoin = IMaidCoin(maidCoinAddr);
 	}
 	
-	function _calculateAccRewardPerShare() internal view returns (uint) {
-	    return (maidCoin.balanceOf(address(this)) - maidCoin.initialSupply() + accRewarded) / 100;
-	}
-	
-	function _update() internal returns (uint _accRewardPerShare) {
-	    if (lastRewardBlock != block.number) {
-	        _accRewardPerShare = _calculateAccRewardPerShare();
-            accRewardPerShare = _accRewardPerShare;
-            lastRewardBlock = block.number;
-	    } else {
-            _accRewardPerShare = accRewardPerShare;
-        }
+	function addReward(uint reward) override public {
+	    if (lastRewardAddedBlock != block.number) {
+            accRewardPerShare += reward / 100;
+            lastRewardAddedBlock = block.number;
+	    }
 	}
 
 	function transfer(address to, uint256 amount) override(ERC20, IERC20) public returns (bool) {
@@ -46,13 +38,12 @@ contract MasterCoin is ERC20("MasterCoin", "MASTER"), IMasterCoin {
 		return super.transferFrom(from, to, amount);
 	}
     
-    function claimAmount(address master) override external view returns (uint) {
-        return _calculateAccRewardPerShare() * balanceOf(master) / 1e18 - accRewards[master];
+    function claimAmount(address master) override public view returns (uint) {
+        return accRewardPerShare * balanceOf(master) / 1e18 - accRewards[master];
     }
 
     function claim(address master) override public {
-        uint _accRewardPerShare = _update();
-        uint reward = _accRewardPerShare * balanceOf(master) / 1e18 - accRewards[master];
+        uint reward = claimAmount(master);
         maidCoin.transfer(master, reward);
         accRewards[master] += reward;
     }

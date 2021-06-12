@@ -11,6 +11,8 @@ import "./interfaces/IRNG.sol";
 
 contract NurseRaid is Ownable, INurseRaid {
     
+	uint constant public MAX_MAIDS_PER_RAID = 5;
+    
 	IRatio override public ratio;
 	IMaid override public maid;
 	IMaidCoin override public maidCoin;
@@ -58,6 +60,7 @@ contract NurseRaid is Ownable, INurseRaid {
         
 		Raid memory raid = raids[id];
 		require(block.number < raid.endBlock);
+		require(maids.length < MAX_MAIDS_PER_RAID);
 		
         require(challengers[id][msg.sender].enterBlock == 0);
         challengers[id][msg.sender] = Challenger({

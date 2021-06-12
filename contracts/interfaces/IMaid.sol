@@ -15,7 +15,6 @@ interface IMaid is IERC721 {
     function maidCoin() external view returns (IMaidCoin);
     function lpToken() external view returns (IERC20);
     
-    function mint(uint power, uint initialPrice) external returns (uint id);
     function firstBuy(uint id) external;
     
     function powerOf(uint id) external view returns (uint);

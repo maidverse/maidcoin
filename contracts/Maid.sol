@@ -29,7 +29,7 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), IMaid {
 	}
 	MaidInfo[] public maids;
 	
-    function mint(uint power, uint initialPrice) onlyOwner override external returns (uint id) {
+    function mint(uint power, uint initialPrice) onlyOwner external returns (uint id) {
         id = maids.length;
 		maids.push(MaidInfo({
 			originPower: power,
