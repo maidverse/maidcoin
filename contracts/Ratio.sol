@@ -6,28 +6,36 @@ import "./interfaces/IRatio.sol";
 
 contract Ratio is Ownable, IRatio {
     
-    uint private _lpTokenToMaidPower = 1;
-    uint private _lpTokenToNursePower = 1;
-    uint private _corpRewardToNurseReward = 10;
+    uint override public lpTokenToMaidPower = 1;
+    uint override public maidPowerToRaidReducedBlock = 1;
+    uint override public lpTokenToNursePower = 1;
+    uint override public nursePowerToRewardAmount = 1;
+    uint override public corpRewardToNurseReward = 10;
     
     function precision() override external pure returns (uint) { return 1e18; }
     
-    function lpTokenToMaidPower() override external view returns (uint) { return _lpTokenToMaidPower; }
-    function lpTokenToNursePower() override external view returns (uint) { return _lpTokenToNursePower; }
-    function corpRewardToNurseReward() override external view returns (uint) { return _corpRewardToNurseReward; }
-    
     function changeLPTokenToMaidPower(uint value) onlyOwner external {
-        _lpTokenToMaidPower = value;
+        lpTokenToMaidPower = value;
         emit ChangeLPTokenToMaidPower(value);
     }
     
+    function changeMaidPowerToRaidReducedBlock(uint value) onlyOwner external {
+        maidPowerToRaidReducedBlock = value;
+        emit ChangeMaidPowerToRaidReducedBlock(value);
+    }
+    
     function changeLPTokenToNursePower(uint value) onlyOwner external {
-        _lpTokenToNursePower = value;
+        lpTokenToNursePower = value;
         emit ChangeLPTokenToNursePower(value);
     }
     
+    function changeNursePowerToRewardAmount(uint value) onlyOwner external {
+        nursePowerToRewardAmount = value;
+        emit ChangeNursePowerToRewardAmount(value);
+    }
+    
     function changeCorpRewardToNurseReward(uint value) onlyOwner external {
-        _corpRewardToNurseReward = value;
+        corpRewardToNurseReward = value;
         emit ChangeCorpRewardToNurseReward(value);
     }
 }
