@@ -1,12 +1,9 @@
 # MaidCoin Contracts
 
-## Publish Order
-1. MaidCoin
-1. Maids
-1. CloneNurses
-1. NurseParts
-1. NurseRaids
-1. MasterCoin
+## Popcateum Deployed Contracts
+- RGN: 0x332813f7CB45C092724398fBc0536CAfb38c5c11
+- Ratio: 0x6d18C45043DDA7e6c514ea35C1962aac2Fd01F48
+- MaidCoin: 0xAD73E30E0959F97FfF7817d655Fa2625063Eb71D
 
 ## License
 [MIT](LICENSE)
