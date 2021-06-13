@@ -17,3 +17,6 @@ typechain/
 # Coverage
 coverage/
 coverage.json
+
+# VSCode
+.history
