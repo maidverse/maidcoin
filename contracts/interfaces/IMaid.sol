@@ -7,18 +7,20 @@ import "./IRatio.sol";
 import "./IMaidCoin.sol";
 
 interface IMaid is IERC721 {
-    
-    event Support(uint indexed id, uint lpTokenAmount);
-    event Desupport(uint indexed id, uint lpTokenAmount);
-    
+    event Support(uint256 indexed id, uint256 lpTokenAmount);
+    event Desupport(uint256 indexed id, uint256 lpTokenAmount);
+
     function ratio() external view returns (IRatio);
+
     function maidCoin() external view returns (IMaidCoin);
+
     function lpToken() external view returns (IERC20);
-    
-    function firstBuy(uint id) external;
-    
-    function powerOf(uint id) external view returns (uint);
-    
-    function support(uint id, uint lpTokenAmount) external;
-    function desupport(uint id, uint lpTokenAmount) external;
+
+    function firstBuy(uint256 id) external;
+
+    function powerOf(uint256 id) external view returns (uint256);
+
+    function support(uint256 id, uint256 lpTokenAmount) external;
+
+    function desupport(uint256 id, uint256 lpTokenAmount) external;
 }

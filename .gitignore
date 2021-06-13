@@ -1,22 +1,19 @@
-# OS X
-.DS_Store*
-Icon?
-._*
+# Node
+node_modules/
 
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
+# Hardhat
+cache/
+artifacts/
 
-# Linux
-.directory
-*~
+# Deployments
+deployments/
 
-# npm
-node_modules
-package-lock.json
-*.log
-*.gz
+# Typechain
+typechain/
 
-# vscode
-.history
+# Env
+.env
+
+# Coverage
+coverage/
+coverage.json
