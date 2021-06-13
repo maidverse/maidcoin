@@ -5,36 +5,40 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IRatio.sol";
 
 contract Ratio is Ownable, IRatio {
-    
-    uint override public lpTokenToMaidPower = 1;
-    uint override public maidPowerToRaidReducedBlock = 1;
-    uint override public lpTokenToNursePower = 1;
-    uint override public nursePowerToRewardAmount = 1;
-    uint override public corpRewardToNurseReward = 10;
-    
-    function precision() override external pure returns (uint) { return 1e18; }
-    
-    function changeLPTokenToMaidPower(uint value) onlyOwner external {
+    uint256 public override lpTokenToMaidPower = 1;
+    uint256 public override maidPowerToRaidReducedBlock = 1;
+    uint256 public override lpTokenToNursePower = 1;
+    uint256 public override nursePowerToRewardAmount = 1;
+    uint256 public override corpRewardToNurseReward = 10;
+
+    function precision() external pure override returns (uint256) {
+        return 1e18;
+    }
+
+    function changeLPTokenToMaidPower(uint256 value) external onlyOwner {
         lpTokenToMaidPower = value;
         emit ChangeLPTokenToMaidPower(value);
     }
-    
-    function changeMaidPowerToRaidReducedBlock(uint value) onlyOwner external {
+
+    function changeMaidPowerToRaidReducedBlock(uint256 value)
+        external
+        onlyOwner
+    {
         maidPowerToRaidReducedBlock = value;
         emit ChangeMaidPowerToRaidReducedBlock(value);
     }
-    
-    function changeLPTokenToNursePower(uint value) onlyOwner external {
+
+    function changeLPTokenToNursePower(uint256 value) external onlyOwner {
         lpTokenToNursePower = value;
         emit ChangeLPTokenToNursePower(value);
     }
-    
-    function changeNursePowerToRewardAmount(uint value) onlyOwner external {
+
+    function changeNursePowerToRewardAmount(uint256 value) external onlyOwner {
         nursePowerToRewardAmount = value;
         emit ChangeNursePowerToRewardAmount(value);
     }
-    
-    function changeCorpRewardToNurseReward(uint value) onlyOwner external {
+
+    function changeCorpRewardToNurseReward(uint256 value) external onlyOwner {
         corpRewardToNurseReward = value;
         emit ChangeCorpRewardToNurseReward(value);
     }

@@ -8,24 +8,45 @@ import "./INursePart.sol";
 import "./IMaidCoin.sol";
 
 interface ICloneNurse is IERC721 {
-    
-    event ChangeSupportable(uint indexed id, bool supportable);
-    event Support(address indexed supporter, uint indexed id, uint lpTokenAmount);
-    event Desupport(address indexed supporter, uint indexed id, uint lpTokenAmount);
-    
+    event ChangeSupportable(uint256 indexed id, bool supportable);
+    event Support(
+        address indexed supporter,
+        uint256 indexed id,
+        uint256 lpTokenAmount
+    );
+    event Desupport(
+        address indexed supporter,
+        uint256 indexed id,
+        uint256 lpTokenAmount
+    );
+
     function ratio() external view returns (IRatio);
+
     function nursePart() external view returns (INursePart);
+
     function maidCoin() external view returns (IMaidCoin);
+
     function lpToken() external view returns (IERC20);
-    
-    function assemble(uint nursePart, bool supportable) external returns (uint id);
-    function changeSupportable(uint id, bool supportable) external;
-    function moveSupporters(uint from, uint to, uint256 number) external;
-    function destroy(uint id, uint supportersTo) external;
-    
-    function support(uint id, uint lpTokenAmount) external;
-    function desupport(uint id, uint lpTokenAmount) external;
-    
-    function claimAmountOf(uint id) external view returns (uint);
-    function claim(uint id) external;
+
+    function assemble(uint256 nursePart, bool supportable)
+        external
+        returns (uint256 id);
+
+    function changeSupportable(uint256 id, bool supportable) external;
+
+    function moveSupporters(
+        uint256 from,
+        uint256 to,
+        uint256 number
+    ) external;
+
+    function destroy(uint256 id, uint256 supportersTo) external;
+
+    function support(uint256 id, uint256 lpTokenAmount) external;
+
+    function desupport(uint256 id, uint256 lpTokenAmount) external;
+
+    function claimAmountOf(uint256 id) external view returns (uint256);
+
+    function claim(uint256 id) external;
 }

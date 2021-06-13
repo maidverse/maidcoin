@@ -6,17 +6,20 @@ import "./IRatio.sol";
 import "./IMaidCoin.sol";
 
 interface IMaidCorp {
+    event Deposit(address indexed user, uint256 lpTokenAmount);
+    event Withdraw(address indexed user, uint256 lpTokenAmount);
 
-    event Deposit(address indexed user, uint lpTokenAmount);
-    event Withdraw(address indexed user, uint lpTokenAmount);
-    
     function ratio() external view returns (IRatio);
+
     function maidCoin() external view returns (IMaidCoin);
+
     function lpToken() external view returns (IERC20);
-    
-    function deposit(uint lpTokenAmount) external;
-    function withdraw(uint lpTokenAmount) external;
-    
-    function claimAmount() external view returns (uint);
+
+    function deposit(uint256 lpTokenAmount) external;
+
+    function withdraw(uint256 lpTokenAmount) external;
+
+    function claimAmount() external view returns (uint256);
+
     function claim() external;
 }
