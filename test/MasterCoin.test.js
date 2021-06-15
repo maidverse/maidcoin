@@ -41,7 +41,7 @@ describe("MasterCoin", function () {
 
     it("should be that initial values of variations are right", async function () {
         const { alice, bob, carol, dan, maidCoin, token } = await setupTest();
-        
+
         const totalSupply = await token.TOTAL_SUPPLY();
 
         const tokenBalOfAlice = await token.balanceOf(alice.address);
@@ -71,15 +71,15 @@ describe("MasterCoin", function () {
         await mine();
         expect(await maidCoin.balanceOf(token.address)).to.be.lt(initialSupply);
         expect(await maidCoin.balanceOf(token.address)).to.be.equal(tokenAmount(13000));
-        
+
         expect(await maidCoin.balanceOf(alice.address)).to.be.equal(0);
         await token.claim(alice.address);
         expect(await maidCoin.balanceOf(alice.address)).to.be.equal(0);
-        
+
         expect(await maidCoin.balanceOf(bob.address)).to.be.equal(0);
         await token.claim(bob.address);
         expect(await maidCoin.balanceOf(bob.address)).to.be.equal(0);
-        
+
         await maidCoin.mint(token.address, tokenAmount(16000));
         await mine();
         expect(await maidCoin.balanceOf(token.address)).to.be.lt(initialSupply);
@@ -89,18 +89,17 @@ describe("MasterCoin", function () {
         await token.claim(alice.address);
         await mine();
         expect(await maidCoin.balanceOf(alice.address)).to.be.equal(0);
-        
 
         await maidCoin.mint(token.address, tokenAmount(2000));
         await mine();
         expect(await maidCoin.balanceOf(token.address)).to.be.gt(initialSupply);
         expect(await maidCoin.balanceOf(token.address)).to.be.equal(tokenAmount(31000));
-        
+
         expect(await maidCoin.balanceOf(alice.address)).to.be.equal(0);
         await token.claim(alice.address);
         await mine();
         expect(await maidCoin.balanceOf(alice.address)).to.be.equal(tokenAmount(100));
-        
+
         expect(await maidCoin.balanceOf(bob.address)).to.be.equal(0);
         await token.claim(bob.address);
         await mine();
@@ -115,13 +114,13 @@ describe("MasterCoin", function () {
         await maidCoin.mint(token.address, tokenAmount(15000));
         await mine();
         expect(await maidCoin.balanceOf(token.address)).to.be.lt(initialSupply);
-        
+
         await network.provider.send("evm_setAutomine", [true]);
         await expect(token.burnInitialSupply()).to.be.revertedWith("MasterCoin : not yet");
-        
+
         await maidCoin.mint(token.address, tokenAmount(20000));
         expect(await maidCoin.balanceOf(token.address)).to.be.gt(initialSupply);
-        
+
         await token.burnInitialSupply();
         await network.provider.send("evm_setAutomine", [false]);
     });
@@ -150,16 +149,16 @@ describe("MasterCoin", function () {
 
         await maidCoin.mint(token.address, tokenAmount(20000));
         await mine();
-        
+
         await maidCoin.mint(token.address, tokenAmount(27000));
         await mine();
 
         expect(await maidCoin.balanceOf(token.address)).to.be.equal(tokenAmount(47000));
         expect(await token.isInitialSupplyBurned()).to.be.false;
-        
+
         await token.burnInitialSupply();
         await mine();
-        
+
         expect(await token.isInitialSupplyBurned()).to.be.true;
         expect(await maidCoin.balanceOf(token.address)).to.be.equal(tokenAmount(17000));
     });
@@ -169,7 +168,7 @@ describe("MasterCoin", function () {
 
         await maidCoin.mint(token.address, tokenAmount(40000));
         await mine();
-        
+
         expect(await maidCoin.balanceOf(alice.address)).to.be.equal(0);
         expect(await maidCoin.balanceOf(bob.address)).to.be.equal(0);
         await token.claim(alice.address);
@@ -177,7 +176,7 @@ describe("MasterCoin", function () {
         await mine();
         expect(await maidCoin.balanceOf(alice.address)).to.be.equal(tokenAmount(1000));
         expect(await maidCoin.balanceOf(bob.address)).to.be.equal(tokenAmount(2000));
-        
+
         await maidCoin.mint(token.address, tokenAmount(10000));
         await mine();
 
@@ -229,7 +228,7 @@ describe("MasterCoin", function () {
 
         await maidCoin.mint(token.address, tokenAmount(40000));
         await mine();
-        
+
         expect(await token.claimableAmount(alice.address)).to.be.equal(tokenAmount(1000));
         expect(await token.claimableAmount(bob.address)).to.be.equal(tokenAmount(2000));
 
@@ -238,7 +237,7 @@ describe("MasterCoin", function () {
         await mine();
         expect(await maidCoin.balanceOf(alice.address)).to.be.equal(tokenAmount(1000));
         expect(await maidCoin.balanceOf(bob.address)).to.be.equal(tokenAmount(2000));
-        
+
         await maidCoin.mint(token.address, tokenAmount(10000));
         await mine();
 
@@ -253,10 +252,10 @@ describe("MasterCoin", function () {
         expect(await maidCoin.balanceOf(alice.address)).to.be.equal(tokenAmount(2000));
         expect(await maidCoin.balanceOf(bob.address)).to.be.equal(tokenAmount(4000));
         expect(await maidCoin.balanceOf(carol.address)).to.be.equal(tokenAmount(6000));
-        
+
         await maidCoin.mint(token.address, tokenAmount(10000));
         await mine();
-        
+
         expect(await token.claimableAmount(dan.address)).to.be.equal(tokenAmount(12000));
         await token.claim(dan.address);
         await mine();
@@ -265,7 +264,6 @@ describe("MasterCoin", function () {
         expect(await token.claimableAmount(dan.address)).to.be.equal(0);
         await mine();
         expect(await token.claimableAmount(dan.address)).to.be.equal(0);
-
     });
 
     it("should give users' reward well when transfer / transferFrom function is called", async function () {
@@ -279,7 +277,7 @@ describe("MasterCoin", function () {
         expect(await maidCoin.balanceOf(carol.address)).to.be.equal(0);
         expect(await maidCoin.balanceOf(dan.address)).to.be.equal(0);
 
-        await token.connect(bob).transfer(carol.address, tokenAmount(10));  //10%20%30%40% -> 10%10%40%40%
+        await token.connect(bob).transfer(carol.address, tokenAmount(10)); //10%20%30%40% -> 10%10%40%40%
         await mine();
         expect(await maidCoin.balanceOf(alice.address)).to.be.equal(0);
         expect(await maidCoin.balanceOf(bob.address)).to.be.equal(tokenAmount(2000));
@@ -298,7 +296,7 @@ describe("MasterCoin", function () {
         await mine();
         expect(await maidCoin.balanceOf(bob.address)).to.be.equal(tokenAmount(2000));
         expect(await maidCoin.balanceOf(carol.address)).to.be.equal(tokenAmount(3000));
-        
+
         await token.claim(alice.address);
         await mine();
         expect(await maidCoin.balanceOf(alice.address)).to.be.equal(tokenAmount(1000));
@@ -307,7 +305,7 @@ describe("MasterCoin", function () {
         expect(event[0].args[0]).to.be.equal(alice.address);
         expect(event[0].args[1]).to.be.equal(tokenAmount(1000));
 
-        await token.connect(alice).transfer(dan.address, tokenAmount(10));  //10%20%30%40% -> 0%10%40%50%
+        await token.connect(alice).transfer(dan.address, tokenAmount(10)); //10%20%30%40% -> 0%10%40%50%
         await mine();
         expect(await maidCoin.balanceOf(alice.address)).to.be.equal(tokenAmount(1000));
         expect(await maidCoin.balanceOf(dan.address)).to.be.equal(tokenAmount(4000));
@@ -318,8 +316,8 @@ describe("MasterCoin", function () {
 
         await maidCoin.mint(token.address, tokenAmount(10000));
         await mine();
-        
-        await token.connect(carol).transfer(alice.address, tokenAmount(20));  //0%10%40%50% -> 20%10%20%50%
+
+        await token.connect(carol).transfer(alice.address, tokenAmount(20)); //0%10%40%50% -> 20%10%20%50%
         await mine();
         expect(await maidCoin.balanceOf(alice.address)).to.be.equal(tokenAmount(1000));
         expect(await maidCoin.balanceOf(carol.address)).to.be.equal(tokenAmount(7000));
@@ -329,7 +327,7 @@ describe("MasterCoin", function () {
         expect(event[0].args[1]).to.be.equal(tokenAmount(4000));
 
         await token.connect(carol).approve(deployer.address, tokenAmount(1000000));
-        await token.transferFrom(carol.address, bob.address, tokenAmount(10));  //20%10%20%50% -> 20%20%10%50%
+        await token.transferFrom(carol.address, bob.address, tokenAmount(10)); //20%10%20%50% -> 20%20%10%50%
         await mine();
         expect(await maidCoin.balanceOf(bob.address)).to.be.equal(tokenAmount(3000));
         expect(await maidCoin.balanceOf(carol.address)).to.be.equal(tokenAmount(7000));
@@ -338,7 +336,7 @@ describe("MasterCoin", function () {
         expect(event[0].args[0]).to.be.equal(bob.address);
         expect(event[0].args[1]).to.be.equal(tokenAmount(1000));
 
-        await token.transferFrom(carol.address, dan.address, tokenAmount(5));  //20%20%10%50% -> 20%20%5%55%
+        await token.transferFrom(carol.address, dan.address, tokenAmount(5)); //20%20%10%50% -> 20%20%5%55%
         await mine();
         expect(await maidCoin.balanceOf(carol.address)).to.be.equal(tokenAmount(7000));
         expect(await maidCoin.balanceOf(dan.address)).to.be.equal(tokenAmount(9000));
@@ -357,7 +355,7 @@ describe("MasterCoin", function () {
         }
 
         async function transferToken(user1, user2, amount) {
-            await token.connect(user1).transfer(user2.address, tokenAmount(amount))
+            await token.connect(user1).transfer(user2.address, tokenAmount(amount));
         }
 
         async function checkTokenBalance(a, b, c, d) {
@@ -392,48 +390,48 @@ describe("MasterCoin", function () {
         await mintAndMining(2100);
         await token.claim(dan.address);
         await mine();
-        await checkTokenBalance(10,20,30,40);
-        await checkMaidCoinBalance(0,0,0,0);
-        await checkClaimableAmount(0,0,0,0);
-        
+        await checkTokenBalance(10, 20, 30, 40);
+        await checkMaidCoinBalance(0, 0, 0, 0);
+        await checkClaimableAmount(0, 0, 0, 0);
+
         await mintAndMining(18000);
         await transferToken(dan, alice, 10);
         await token.connect(bob).approve(deployer.address, tokenAmount(100000));
         await token.transferFrom(bob.address, carol.address, tokenAmount(10));
         await mine();
-        await checkTokenBalance(20,10,40,30);
+        await checkTokenBalance(20, 10, 40, 30);
         await mintAndMining(1800);
 
-        await checkClaimableAmount(0,0,0,0);
-        
+        await checkClaimableAmount(0, 0, 0, 0);
+
         await mintAndMining(5000);
-        await checkMaidCoinBalance(0,0,0,0);
-        await checkClaimableAmount(1000,500,2000,1500);
-        
+        await checkMaidCoinBalance(0, 0, 0, 0);
+        await checkClaimableAmount(1000, 500, 2000, 1500);
+
         await token.claim(bob.address);
         await token.claim(dan.address);
         await mine();
-        await checkMaidCoinBalance(0,500,0,1500);
-        await checkClaimableAmount(1000,0,2000,0);
-        
+        await checkMaidCoinBalance(0, 500, 0, 1500);
+        await checkClaimableAmount(1000, 0, 2000, 0);
+
         await mintAndMining(2000);
-        await checkMaidCoinBalance(0,500,0,1500);
-        await checkClaimableAmount(1400,200,2800,600);
-        
+        await checkMaidCoinBalance(0, 500, 0, 1500);
+        await checkClaimableAmount(1400, 200, 2800, 600);
+
         await token.claim(carol.address);
         await mine();
-        await checkMaidCoinBalance(0,500,2800,1500);
-        await checkClaimableAmount(1400,200,0,600);
-        
+        await checkMaidCoinBalance(0, 500, 2800, 1500);
+        await checkClaimableAmount(1400, 200, 0, 600);
+
         await token.claim(alice.address);
         await mine();
-        await checkMaidCoinBalance(1400,500,2800,1500);
-        await checkClaimableAmount(0,200,0,600);
-        
+        await checkMaidCoinBalance(1400, 500, 2800, 1500);
+        await checkClaimableAmount(0, 200, 0, 600);
+
         await mintAndMining(7000);
-        await checkMaidCoinBalance(1400,500,2800,1500);
-        await checkClaimableAmount(1400,900,2800,2700);
-        
+        await checkMaidCoinBalance(1400, 500, 2800, 1500);
+        await checkClaimableAmount(1400, 900, 2800, 2700);
+
         expect(await maidCoin.balanceOf(token.address)).to.be.equal(tokenAmount(37800));
         expect(await token.lastBalance()).to.be.equal(tokenAmount(30800));
         expect(await token.isInitialSupplyBurned()).to.be.false;
@@ -442,61 +440,61 @@ describe("MasterCoin", function () {
         expect(await maidCoin.balanceOf(token.address)).to.be.equal(tokenAmount(7800));
         expect(await token.lastBalance()).to.be.equal(tokenAmount(7800));
         expect(await token.isInitialSupplyBurned()).to.be.true;
-        
-        await checkTokenBalance(20,10,40,30);
+
+        await checkTokenBalance(20, 10, 40, 30);
         await maidCoin.mint(token.address, tokenAmount(2000));
         await transferToken(alice, bob, 20);
         await mine();
-        await checkTokenBalance(0,30,40,30);
-        await checkMaidCoinBalance(3200,1600,2800,1500);
-        await checkClaimableAmount(0,0,3600,3300);
+        await checkTokenBalance(0, 30, 40, 30);
+        await checkMaidCoinBalance(3200, 1600, 2800, 1500);
+        await checkClaimableAmount(0, 0, 3600, 3300);
 
         await mintAndMining(1000);
-        await checkMaidCoinBalance(3200,1600,2800,1500);
-        await checkClaimableAmount(0,300,4000,3600);
+        await checkMaidCoinBalance(3200, 1600, 2800, 1500);
+        await checkClaimableAmount(0, 300, 4000, 3600);
 
         await token.claim(bob.address);
         await mine();
-        await checkMaidCoinBalance(3200,1900,2800,1500);
-        await checkClaimableAmount(0,0,4000,3600);
-        
-        await checkTokenBalance(0,30,40,30);
+        await checkMaidCoinBalance(3200, 1900, 2800, 1500);
+        await checkClaimableAmount(0, 0, 4000, 3600);
+
+        await checkTokenBalance(0, 30, 40, 30);
         await transferToken(dan, bob, 30);
         await transferToken(bob, carol, 10);
         await mine();
-        await checkTokenBalance(0,50,50,0);
-        await checkMaidCoinBalance(3200,1900,6800,5100);
-        await checkClaimableAmount(0,0,0,0);
+        await checkTokenBalance(0, 50, 50, 0);
+        await checkMaidCoinBalance(3200, 1900, 6800, 5100);
+        await checkClaimableAmount(0, 0, 0, 0);
 
         await mintAndMining(10000);
-        await checkMaidCoinBalance(3200,1900,6800,5100);
-        await checkClaimableAmount(0,5000,5000,0);
+        await checkMaidCoinBalance(3200, 1900, 6800, 5100);
+        await checkClaimableAmount(0, 5000, 5000, 0);
 
-        await checkTokenBalance(0,50,50,0);
+        await checkTokenBalance(0, 50, 50, 0);
         await transferToken(bob, alice, 50);
         await maidCoin.mint(token.address, tokenAmount(100));
         await mine();
-        await checkTokenBalance(50,0,50,0);
-        await checkMaidCoinBalance(3200,6900,6800,5100);
-        await checkClaimableAmount(50,0,5050,0);
+        await checkTokenBalance(50, 0, 50, 0);
+        await checkMaidCoinBalance(3200, 6900, 6800, 5100);
+        await checkClaimableAmount(50, 0, 5050, 0);
 
-        await checkTokenBalance(50,0,50,0);
+        await checkTokenBalance(50, 0, 50, 0);
         await transferToken(alice, dan, 25);
         await mine();
-        await checkTokenBalance(25,0,50,25);
-        await checkMaidCoinBalance(3250,6900,6800,5100);
-        await checkClaimableAmount(0,0,5050,0);
+        await checkTokenBalance(25, 0, 50, 25);
+        await checkMaidCoinBalance(3250, 6900, 6800, 5100);
+        await checkClaimableAmount(0, 0, 5050, 0);
 
         await token.claim(bob.address);
         await mine();
-        await checkMaidCoinBalance(3250,6900,6800,5100);
-        await checkClaimableAmount(0,0,5050,0);
+        await checkMaidCoinBalance(3250, 6900, 6800, 5100);
+        await checkClaimableAmount(0, 0, 5050, 0);
 
-        await checkTokenBalance(25,0,50,25);
+        await checkTokenBalance(25, 0, 50, 25);
         await transferToken(alice, dan, 0);
         await mine();
-        await checkTokenBalance(25,0,50,25);
-        await checkMaidCoinBalance(3250,6900,6800,5100);
-        await checkClaimableAmount(0,0,5050,0);
+        await checkTokenBalance(25, 0, 50, 25);
+        await checkMaidCoinBalance(3250, 6900, 6800, 5100);
+        await checkClaimableAmount(0, 0, 5050, 0);
     });
 });

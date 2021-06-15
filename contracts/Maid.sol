@@ -6,24 +6,28 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "./interfaces/IMaid.sol";
 import "./interfaces/IERC1271.sol";
 
-contract Maid is Ownable, ERC721("Maid", "MAID"), IMaid {
+contract Maid is Ownable, ERC721("Maid", "MAID") {
+    event ChangeLPTokenToMaidPower(uint256 value);
+    event Support(uint256 indexed id, uint256 lpTokenAmount);
+    event Desupport(uint256 indexed id, uint256 lpTokenAmount);
+
     struct MaidInfo {
         uint256 originPower;
         uint256 supportedLPTokenAmount;
     }
 
-    bytes32 public immutable override DOMAIN_SEPARATOR;
+    bytes32 public immutable DOMAIN_SEPARATOR;
     // keccak256("Permit(address spender,uint256 tokenId,uint256 nonce,uint256 deadline)");
-    bytes32 public constant override PERMIT_TYPEHASH =
+    bytes32 public constant PERMIT_TYPEHASH =
         0x49ecf333e5b8c95c40fdafc95c1ad136e8914a8fb55e9dc8bb01eaa83a2df9ad;
-    mapping(uint256 => uint256) public override nonces;
+    mapping(uint256 => uint256) public nonces;
 
-    IERC20 public override lpToken;
-    uint256 public override lpTokenToMaidPower = 1;
-    MaidInfo[] public override maids;
+    IUniswapV2Pair public immutable lpToken;
+    uint256 public lpTokenToMaidPower = 1;
+    MaidInfo[] public maids;
 
     constructor(address lpTokenAddr) {
-        lpToken = IERC20(lpTokenAddr);
+        lpToken = IUniswapV2Pair(lpTokenAddr);
 
         uint256 chainId;
         assembly {
@@ -40,11 +44,6 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), IMaid {
         );
     }
 
-    function changeLPToken(address addr) external onlyOwner {
-        lpToken = IERC20(addr);
-        emit ChangeLPToken(addr);
-    }
-
     function changeLPTokenToMaidPower(uint256 value) external onlyOwner {
         lpTokenToMaidPower = value;
         emit ChangeLPTokenToMaidPower(value);
@@ -56,22 +55,32 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), IMaid {
         _mint(msg.sender, id);
     }
 
-    function powerOf(uint256 id) external view override returns (uint256) {
+    function powerOf(uint256 id) external view returns (uint256) {
         MaidInfo memory maid = maids[id];
         return maid.originPower + (maid.supportedLPTokenAmount * lpTokenToMaidPower) / 1e18;
     }
 
-    function support(uint256 id, uint256 lpTokenAmount) external override {
+    function support(uint256 id, uint256 lpTokenAmount) public {
         require(ownerOf(id) == msg.sender);
         maids[id].supportedLPTokenAmount += lpTokenAmount;
 
-        // need approve
         lpToken.transferFrom(msg.sender, address(this), lpTokenAmount);
-        
         emit Support(id, lpTokenAmount);
     }
 
-    function desupport(uint256 id, uint256 lpTokenAmount) external override {
+    function supportWithPermit(
+        uint256 id, 
+        uint256 lpTokenAmount, 
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external {
+        lpToken.permit(msg.sender, address(this), lpTokenAmount, deadline, v, r, s);
+        support(id, lpTokenAmount);
+    }
+
+    function desupport(uint256 id, uint256 lpTokenAmount) external {
         require(ownerOf(id) == msg.sender);
         maids[id].supportedLPTokenAmount -= lpTokenAmount;
         lpToken.transfer(msg.sender, lpTokenAmount);
@@ -86,7 +95,7 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), IMaid {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external override {
+    ) external {
         require(block.timestamp <= deadline);
 
         bytes32 digest = keccak256(

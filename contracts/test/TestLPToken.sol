@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.5;
+pragma solidity =0.5.16;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "../uniswapv2/UniswapV2ERC20.sol";
 
-contract TestLPToken is ERC20("TestLPToken", "TESTLP") {
+contract TestLPToken is UniswapV2ERC20("TestLPToken", "TESTLP") {
 
 	function mint(address to, uint amount) external {
 		_mint(to, amount);

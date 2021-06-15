@@ -3,20 +3,17 @@ pragma solidity ^0.8.5;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/INurseRaid.sol";
-import "./interfaces/IMaid.sol";
-import "./interfaces/IMaidCoin.sol";
-import "./interfaces/INursePart.sol";
-import "./interfaces/IRNG.sol";
 
 contract NurseRaid is Ownable, INurseRaid {
     uint256 public constant MAX_MAIDS_PER_RAID = 5;
+
+    uint256 public override maidPowerToRaidReducedBlock = 1;
 
     IMaid public override maid;
     IMaidCoin public override maidCoin;
     INursePart public override nursePart;
     IRNG public override rng;
-    uint256 public override maidPowerToRaidReducedBlock = 1;
-    
+
     constructor(
         address maidAddr,
         address maidCoinAddr,
@@ -27,6 +24,11 @@ contract NurseRaid is Ownable, INurseRaid {
         maidCoin = IMaidCoin(maidCoinAddr);
         nursePart = INursePart(nursePartAddr);
         rng = IRNG(rngAddr);
+    }
+
+    function changeMaidPowerToRaidReducedBlock(uint256 value) external onlyOwner {
+        maidPowerToRaidReducedBlock = value;
+        emit ChangeMaidPowerToRaidReducedBlock(value);
     }
 
     function changeRNG(address addr) external onlyOwner {
@@ -65,32 +67,35 @@ contract NurseRaid is Ownable, INurseRaid {
                 endBlock: endBlock
             })
         );
-        emit Create(
-            id,
-            entranceFee,
-            _nursePart,
-            maxRewardCount,
-            duration,
-            endBlock
-        );
+        emit Create(id, entranceFee, _nursePart, maxRewardCount, duration, endBlock);
     }
 
-    function enter(uint256 id, uint256[] calldata maids) external override {
+    function enterWithPermit(
+        uint256 id,
+        uint256[] calldata maids,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external override {
+        maid.permit(address(this), id, deadline, v, r, s);
+        enter(id, maids);
+    }
+
+    function enter(uint256 id, uint256[] calldata maids) public override {
         Raid memory raid = raids[id];
         require(block.number < raid.endBlock);
         require(maids.length < MAX_MAIDS_PER_RAID);
 
         require(challengers[id][msg.sender].enterBlock == 0);
-        challengers[id][msg.sender] = Challenger({
-            enterBlock: block.number,
-            maids: maids
-        });
+        challengers[id][msg.sender] = Challenger({enterBlock: block.number, maids: maids});
 
         uint256 maidsLength = maids.length;
         for (uint256 i = 0; i < maidsLength; i += 1) {
             maid.transferFrom(msg.sender, address(this), maids[i]);
         }
 
+        // maidCoin.transferFrom(msg.sender, );
         maidCoin.burn(raid.entranceFee);
         emit Enter(msg.sender, id, maids);
     }
@@ -105,12 +110,7 @@ contract NurseRaid is Ownable, INurseRaid {
             totalPower += maid.powerOf(challenger.maids[i]);
         }
 
-        return
-            block.number -
-                challenger.enterBlock +
-                totalPower *
-                maidPowerToRaidReducedBlock >=
-            raid.duration;
+        return block.number - challenger.enterBlock + totalPower * maidPowerToRaidReducedBlock >= raid.duration;
     }
 
     function exit(uint256 id) external override {
@@ -121,8 +121,7 @@ contract NurseRaid is Ownable, INurseRaid {
 
         // done
         if (checkDone(id) == true) {
-            uint256 rewardCount = (rng.generateRandomNumber(id) %
-                raid.maxRewardCount) + 1;
+            uint256 rewardCount = (rng.generateRandomNumber(id) % raid.maxRewardCount) + 1;
             nursePart.mint(msg.sender, raid.nursePart, rewardCount);
         }
 
