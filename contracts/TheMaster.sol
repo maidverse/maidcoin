@@ -62,11 +62,9 @@ contract TheMaster is Ownable, ITheMaster {
         if (block.number > pool.lastRewardBlock && supply != 0) {
             uint256 reward = ((block.number - pool.lastRewardBlock) * rewardPerBlock() * pool.allocPoint) /
                 totalAllocPoint;
-            if (pid == 1 && winningBonus > 0) {
-                reward -= winningBonus;
-            }
             accRewardPerShare = accRewardPerShare + (reward * PRECISION) / supply;
         }
+        if (pid == 1 && supply == 0) return 0;
         return ((user.amount * accRewardPerShare) / PRECISION) - user.rewardDebt;
     }
 
@@ -116,11 +114,8 @@ contract TheMaster is Ownable, ITheMaster {
             }
             return;
         }
-        if (pid == 1) {
-            reward -= winningBonus;
-        }
         maidCoin.mint(address(this), reward);
-        pool.accRewardPerShare = ((pool.accRewardPerShare + reward) * PRECISION) / supply;
+        pool.accRewardPerShare = pool.accRewardPerShare + (reward * PRECISION) / supply;
         pool.lastRewardBlock = block.number;
     }
 
