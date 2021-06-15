@@ -3,7 +3,6 @@ pragma solidity ^0.8.5;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./libraries/ERC1155.sol";
-import "./interfaces/INursePart.sol";
 import "./interfaces/IERC1271.sol";
 
 contract NursePart is

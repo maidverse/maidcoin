@@ -3,7 +3,7 @@ pragma solidity ^0.8.5;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "./interfaces/IMaid.sol";
+import "./uniswapv2/interfaces/IUniswapV2Pair.sol";
 import "./interfaces/IERC1271.sol";
 
 contract Maid is Ownable, ERC721("Maid", "MAID") {
