@@ -52,14 +52,6 @@ describe('Maid', () => {
     )
   })
 
-  it('changeLPToken', async () => {
-    expect(await contract.lpToken()).to.eq(testLPToken1.address)
-    await expect(contract.changeLPToken(testLPToken2.address))
-      .to.emit(contract, 'ChangeLPToken')
-      .withArgs(testLPToken2.address)
-    expect(await contract.lpToken()).to.eq(testLPToken2.address)
-  })
-
   it('changeLPTokenToMaidPower', async () => {
     expect(await contract.lpTokenToMaidPower()).to.eq(BigNumber.from(1))
     await expect(contract.changeLPTokenToMaidPower(BigNumber.from(2)))

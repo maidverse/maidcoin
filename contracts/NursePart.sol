@@ -8,16 +8,15 @@ import "./interfaces/IERC1271.sol";
 
 contract NursePart is
     Ownable,
-    ERC1155("https://maidcoin.org/api/nursepart/{id}.json"),
-    INursePart
+    ERC1155("https://maidcoin.org/api/nursepart/{id}.json")
 {
     string public constant name = "NursePart";
 
-    bytes32 public immutable override DOMAIN_SEPARATOR;
+    bytes32 public immutable DOMAIN_SEPARATOR;
     // keccak256("Permit(address owner,address spender,uint256 nonce,uint256 deadline)");
-    bytes32 public constant override PERMIT_TYPEHASH =
+    bytes32 public constant PERMIT_TYPEHASH =
         0xdaab21af31ece73a508939fedd476a5ee5129a5ed4bb091f3236ffb45394df62;
-    mapping(address => uint256) public override nonces;
+    mapping(address => uint256) public nonces;
     
     constructor() {
         uint256 chainId;
@@ -39,14 +38,14 @@ contract NursePart is
         address to,
         uint256 id,
         uint256 amount
-    ) external override onlyOwner {
+    ) external onlyOwner {
         _mint(to, id, amount, "");
     }
 
     function burn(
         uint256 id,
         uint256 amount
-    ) external override {
+    ) external {
         _burn(msg.sender, id, amount);
     }
     
@@ -57,7 +56,7 @@ contract NursePart is
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external override {
+    ) external {
         require(block.timestamp <= deadline);
         
         bytes32 digest = keccak256(

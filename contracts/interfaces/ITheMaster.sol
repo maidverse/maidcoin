@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.5;
+pragma solidity >=0.5.0;
 
-import "./IMasterCoin.sol";
+import "./IMaidCoin.sol";
 
 interface ITheMaster {
     event ChangeRewardCalculator(address calculator);
+    event Add(uint256 indexed pid, address addr, bool indexed delegate, uint256 allocPoint);
+    event Set(uint256 indexed pid, uint256 allocPoint);
     event Deposit(uint256 indexed userId, uint256 indexed pid, uint256 amount);
     event Withdraw(uint256 indexed userId, uint256 indexed pid, uint256 amount);
     event EmergencyWithdraw(address indexed user, uint256 indexed pid, uint256 amount);
+    event ClaimWinningBonus(uint256 indexed userId, uint256 amount);
 
     function WINNING_BONUS_TAKERS() external view returns (uint8);
 
@@ -34,6 +37,8 @@ interface ITheMaster {
         );
 
     function userInfo(uint256 pid, uint256 user) external view returns (uint256 amount, uint256 rewardDebt);
+
+    function pidByAddr(address addr) external view returns (uint256 pid);
 
     function totalAllocPoint() external view returns (uint256);
 

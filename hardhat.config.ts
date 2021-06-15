@@ -62,6 +62,10 @@ const config: HardhatUserConfig = {
       tags: ["local"],
     },
     hardhat: {
+      mining: {
+        auto: false,
+        interval: 0,
+      },
       // Seems to be a bug with this, even when false it complains about being unauthenticated.
       // Reported to HardHat team and fix is incoming
       forking: {
@@ -164,17 +168,30 @@ const config: HardhatUserConfig = {
     ),
   },
   solidity: {
-    version: "0.8.5",
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 200,
+    compilers: [
+      {
+        version: "0.5.16",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
       },
-    },
+      {
+        version: "0.8.5",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
+    ],
   },
   tenderly: {
-    project: process.env.TENDERLY_PROJECT,
-    username: process.env.TENDERLY_USERNAME,
+    project: "MaidCoin",
+    username: "Hanul",
   },
   watcher: {
     compile: {

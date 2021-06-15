@@ -4,9 +4,9 @@ pragma solidity ^0.8.5;
 import "../interfaces/IMaidCoin.sol";
 import "../interfaces/IMaid.sol";
 import "../interfaces/INursePart.sol";
-import "../interfaces/INursePart.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 contract PermitTest is IERC1155Receiver, ERC165 {
 

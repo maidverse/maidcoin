@@ -15,12 +15,11 @@ interface INurseRaid {
         uint256 duration,
         uint256 endBlock
     );
-    event Enter(
-        address indexed challenger,
-        uint256 indexed id,
-        uint256[] maids
-    );
+    event Enter(address indexed challenger, uint256 indexed id, uint256[] maids);
     event Exit(address indexed challenger, uint256 indexed id);
+    event ChangeMaidPowerToRaidReducedBlock(uint256 value);
+
+    function maidPowerToRaidReducedBlock() external view returns (uint256);
 
     function maid() external view returns (IMaid);
 
@@ -29,9 +28,7 @@ interface INurseRaid {
     function nursePart() external view returns (INursePart);
 
     function rng() external view returns (IRNG);
-    
-    function maidPowerToRaidReducedBlock() external view returns (uint256);
-    
+
     function create(
         uint256 entranceFee,
         uint256 nursePart,
@@ -39,6 +36,15 @@ interface INurseRaid {
         uint256 duration,
         uint256 endBlock
     ) external returns (uint256 id);
+
+    function enterWithPermit(
+        uint256 id,
+        uint256[] calldata maids,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external;
 
     function enter(uint256 id, uint256[] calldata maids) external;
 

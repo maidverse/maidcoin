@@ -4,64 +4,14 @@ pragma solidity ^0.8.5;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "./interfaces/ICloneNurse.sol";
-import "./interfaces/INursePart.sol";
+import "./interfaces/ITheMaster.sol";
 
 contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
-    INursePart public override nursePart;
-    IMaidCoin public override maidCoin;
-    IERC20 public override lpToken;
-    uint256 public override lpTokenToNursePower = 1;
-
-    constructor(
-        address nursePartAddr,
-        address maidCoinAddr,
-        address lpTokenAddr
-    ) {
-        nursePart = INursePart(nursePartAddr);
-        maidCoin = IMaidCoin(maidCoinAddr);
-        lpToken = IERC20(lpTokenAddr);
-    }
-
-    function changeLPToken(address addr) external onlyOwner {
-        lpToken = IERC20(addr);
-        emit ChangeLPToken(addr);
-    }
-
-    function changeLPTokenToNursePower(uint256 value) external onlyOwner {
-        lpTokenToNursePower = value;
-        emit ChangeLPTokenToNursePower(value);
-    }
-
     struct NurseType {
         uint256 partCount;
         uint256 destroyReturn;
         uint256 power;
     }
-    NurseType[] public nurseTypes;
-
-    function addNurseClass(
-        uint256 partCount,
-        uint256 destroyReturn,
-        uint256 power
-    ) external onlyOwner returns (uint256 nurseType) {
-        nurseType = nurseTypes.length;
-        nurseTypes.push(
-            NurseType({
-                partCount: partCount,
-                destroyReturn: destroyReturn,
-                power: power
-            })
-        );
-    }
-
-    function originPower(uint256 nurseType) internal view returns (uint256) {
-        return nurseTypes[nurseType].power;
-    }
-
-    uint256 private lastUpdateBlock;
-    uint256 private _accRewardPerShare;
-    uint256 private totalPower = 0;
-
     struct Nurse {
         uint256 nurseType;
         uint256 supportPower;
@@ -69,41 +19,83 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         uint256 supporterAccReward;
         bool supportable;
     }
-    Nurse[] public nurses;
-
     struct Supporter {
         address addr;
         uint256 lpTokenAmount;
         uint256 accReward;
     }
+
+    INursePart public override nursePart;
+    IMaidCoin public override maidCoin;
+    ITheMaster public override theMaster;
+    IERC20 public override lpToken;
+
+    uint256 public override lpTokenToNursePower = 1;
+
+    NurseType[] public override nurseTypes;
+    Nurse[] public override nurses;
+
     mapping(uint256 => Supporter[]) public supporters;
     mapping(uint256 => mapping(address => uint256)) public addrToSupporter;
 
-    function assemble(uint256 ntype, bool supportable)
-        external
-        override
-        returns (uint256 id)
-    {
+    uint256 private lastUpdateBlock;
+    uint256 private _accRewardPerShare;
+    uint256 private totalPower = 0;
+
+    constructor(
+        address nursePartAddr,
+        address maidCoinAddr,
+        address theMasterAddr,
+        address lpTokenAddr
+    ) {
+        nursePart = INursePart(nursePartAddr);
+        maidCoin = IMaidCoin(maidCoinAddr);
+        theMaster = ITheMaster(theMasterAddr);
+        lpToken = IERC20(lpTokenAddr);
+    }
+
+    function changeLPTokenToNursePower(uint256 value) external onlyOwner {
+        lpTokenToNursePower = value;
+        emit ChangeLPTokenToNursePower(value);
+    }
+
+    function addNurseType(
+        uint256 partCount,
+        uint256 destroyReturn,
+        uint256 power
+    ) external onlyOwner returns (uint256 typeId) {
+        typeId = nurseTypes.length;
+        nurseTypes.push(NurseType({partCount: partCount, destroyReturn: destroyReturn, power: power}));
+    }
+
+    function originPower(uint256 typeId) internal view returns (uint256) {
+        return nurseTypes[typeId].power;
+    }
+
+    function assemble(uint256 ntype, bool supportable) external override returns (uint256 id) {
         NurseType memory nurseType = nurseTypes[ntype];
 
         nursePart.burn(ntype, nurseType.partCount);
 
         uint256 power = originPower(ntype);
+        totalPower += power;
 
-        id = nurses.length;
-
+        uint256 masterAccReward = (_update() * power) / 1e18;
         nurses.push(
             Nurse({
                 nurseType: ntype,
                 supportPower: 0,
-                masterAccReward: (_update() * power) / 1e18,
+                masterAccReward: masterAccReward,
                 supporterAccReward: 0,
                 supportable: supportable
             })
         );
 
-        totalPower += power;
-
+        id = nurses.length;
+        theMaster.deposit(1, masterAccReward, id);
+        if (id < theMaster.WINNING_BONUS_TAKERS()) {
+            theMaster.claimWinningBonus(id);
+        }
         _mint(msg.sender, id);
     }
 
@@ -125,9 +117,7 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         Supporter[] storage fromSup = supporters[from];
         Supporter[] storage toSup = supporters[to];
 
-        mapping(address => uint256) storage fromAddrToSup = addrToSupporter[
-            from
-        ];
+        mapping(address => uint256) storage fromAddrToSup = addrToSupporter[from];
         mapping(address => uint256) storage toAddrToSup = addrToSupporter[to];
 
         uint256 totalLPTokenAmount = 0;
@@ -145,8 +135,7 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
             totalLPTokenAmount += supporter.lpTokenAmount;
         }
 
-        uint256 supportPower = (totalLPTokenAmount *
-            lpTokenToNursePower) / 1e18;
+        uint256 supportPower = (totalLPTokenAmount * lpTokenToNursePower) / 1e18;
 
         nurses[from].supportPower -= supportPower;
         nurses[to].supportPower += supportPower;
@@ -157,12 +146,9 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
 
         // need to move supporters to another nurse
         moveSupporters(id, supportersTo, supporters[id].length);
-        
-        //TODO: change to The Master
-        maidCoin.mint(
-            msg.sender,
-            nurseTypes[nurses[id].nurseType].destroyReturn
-        );
+
+        (uint256 amount, ) = theMaster.userInfo(1, id);
+        theMaster.withdraw(1, amount, id);
 
         totalPower -= originPower(id);
         _burn(id);
@@ -180,13 +166,7 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
 
             supporterId = sups.length;
 
-            sups.push(
-                Supporter({
-                    addr: msg.sender,
-                    lpTokenAmount: lpTokenAmount,
-                    accReward: 0
-                })
-            );
+            sups.push(Supporter({addr: msg.sender, lpTokenAmount: lpTokenAmount, accReward: 0}));
 
             addrToSupporter[id][msg.sender] = supporterId;
         } else {
@@ -194,8 +174,7 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
             supporters[id][supporterId].lpTokenAmount += lpTokenAmount;
         }
 
-        uint256 supportPower = (lpTokenAmount * lpTokenToNursePower) /
-            1e18;
+        uint256 supportPower = (lpTokenAmount * lpTokenToNursePower) / 1e18;
         nurses[id].supportPower += supportPower;
         totalPower += supportPower;
 
@@ -221,8 +200,7 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
             delete addrToSupporter[id][msg.sender];
         }
 
-        uint256 supportPower = (lpTokenAmount * lpTokenToNursePower) /
-            1e18;
+        uint256 supportPower = (lpTokenAmount * lpTokenToNursePower) / 1e18;
         nurses[id].supportPower -= supportPower;
         totalPower -= supportPower;
 
@@ -231,28 +209,16 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         emit Desupport(msg.sender, id, lpTokenAmount);
     }
 
-    function accRewardPerShare() internal view returns (uint256 result) {
-        result = _accRewardPerShare;
-        if (lastUpdateBlock != block.number) {
-            //TODO: result += (maidCoin.nurseRaidAccReward() * 1e18) / totalPower;
-        }
-    }
-
     function _update() internal returns (uint256 result) {
         result = _accRewardPerShare;
         if (lastUpdateBlock != block.number) {
-            //TODO: result += (maidCoin.mintForCloneNurse() * 1e18) / totalPower;
-            _accRewardPerShare = result;
+            (, , , , uint256 accRewardPerShare, ) = theMaster.poolInfo(1);
+            _accRewardPerShare = accRewardPerShare;
             lastUpdateBlock = block.number;
         }
     }
 
-    function claimAmountOf(uint256 id)
-        external
-        view
-        override
-        returns (uint256)
-    {
+    function claimAmountOf(uint256 id) external view override returns (uint256) {
         address master = ownerOf(id);
         if (master == address(0)) {
             return 0;
@@ -262,7 +228,8 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
 
         uint256 _originPower = originPower(nurse.nurseType);
         uint256 power = _originPower + nurse.supportPower;
-        uint256 acc = (accRewardPerShare() * power) / 1e18;
+        (, , , , uint256 accRewardPerShare, ) = theMaster.poolInfo(1);
+        uint256 acc = (accRewardPerShare * power) / 1e18;
         uint256 totalReward = 0;
 
         // owner
@@ -273,14 +240,10 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         // supporter
         uint256 supporterId = addrToSupporter[id][msg.sender];
         if (supporterId != 0) {
-            uint256 supporterAccReward = (acc * nurse.supportPower) /
-                power -
-                nurse.supporterAccReward;
+            uint256 supporterAccReward = (acc * nurse.supportPower) / power - nurse.supporterAccReward;
             Supporter memory supporter = supporters[id][supporterId];
             totalReward +=
-                (supporterAccReward *
-                    supporter.lpTokenAmount *
-                    lpTokenToNursePower) /
+                (supporterAccReward * supporter.lpTokenAmount * lpTokenToNursePower) /
                 1e18 /
                 nurse.supportPower -
                 supporter.accReward;
@@ -301,14 +264,10 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         uint256 acc = (_update() * power) / 1e18;
         uint256 totalReward = 0;
 
-        uint256 masterAccReward = (acc * _originPower) /
-            power -
-            nurse.masterAccReward;
+        uint256 masterAccReward = (acc * _originPower) / power - nurse.masterAccReward;
         nurse.masterAccReward += masterAccReward;
 
-        uint256 supporterAccReward = (acc * nurse.supportPower) /
-            power -
-            nurse.supporterAccReward;
+        uint256 supporterAccReward = (acc * nurse.supportPower) / power - nurse.supporterAccReward;
         nurse.supporterAccReward += supporterAccReward;
 
         // owner
@@ -322,9 +281,7 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         uint256 supporterId = addrToSupporter[id][msg.sender];
         if (supporterId != 0) {
             Supporter storage supporter = supporters[id][supporterId];
-            uint256 reward = (supporterAccReward *
-                supporter.lpTokenAmount *
-                lpTokenToNursePower) /
+            uint256 reward = (supporterAccReward * supporter.lpTokenAmount * lpTokenToNursePower) /
                 1e18 /
                 nurse.supportPower -
                 supporter.accReward;
