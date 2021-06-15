@@ -2,7 +2,7 @@
 pragma solidity ^0.8.5;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "../uniswapv2/interfaces/IUniswapV2Pair.sol";
 import "./INursePart.sol";
 import "./ITheMaster.sol";
 
@@ -18,7 +18,7 @@ interface ICloneNurse is IERC721 {
 
     function theMaster() external view returns (ITheMaster);
 
-    function lpToken() external view returns (IERC20);
+    function lpToken() external view returns (IUniswapV2Pair);
 
     function lpTokenToNursePower() external view returns (uint256);
 
@@ -55,6 +55,15 @@ interface ICloneNurse is IERC721 {
     function destroy(uint256 id, uint256 supportersTo) external;
 
     function support(uint256 id, uint256 lpTokenAmount) external;
+
+    function supportWithPermit(
+        uint256 id, 
+        uint256 lpTokenAmount, 
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external;
 
     function desupport(uint256 id, uint256 lpTokenAmount) external;
 

@@ -95,7 +95,6 @@ contract NurseRaid is Ownable, INurseRaid {
             maid.transferFrom(msg.sender, address(this), maids[i]);
         }
 
-        // maidCoin.transferFrom(msg.sender, );
         maidCoin.burn(raid.entranceFee);
         emit Enter(msg.sender, id, maids);
     }

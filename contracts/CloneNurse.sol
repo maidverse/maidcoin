@@ -3,6 +3,7 @@ pragma solidity ^0.8.5;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "./uniswapv2/interfaces/IUniswapV2Pair.sol";
 import "./interfaces/ICloneNurse.sol";
 import "./interfaces/ITheMaster.sol";
 
@@ -28,7 +29,7 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
     INursePart public override nursePart;
     IMaidCoin public override maidCoin;
     ITheMaster public override theMaster;
-    IERC20 public override lpToken;
+    IUniswapV2Pair public override lpToken;
 
     uint256 public override lpTokenToNursePower = 1;
 
@@ -51,7 +52,7 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         nursePart = INursePart(nursePartAddr);
         maidCoin = IMaidCoin(maidCoinAddr);
         theMaster = ITheMaster(theMasterAddr);
-        lpToken = IERC20(lpTokenAddr);
+        lpToken = IUniswapV2Pair(lpTokenAddr);
     }
 
     function changeLPTokenToNursePower(uint256 value) external onlyOwner {
@@ -154,7 +155,7 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         _burn(id);
     }
 
-    function support(uint256 id, uint256 lpTokenAmount) external override {
+    function support(uint256 id, uint256 lpTokenAmount) public override {
         claim(id);
 
         uint256 supporterId = addrToSupporter[id][msg.sender];
@@ -182,6 +183,18 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         lpToken.transferFrom(msg.sender, address(this), lpTokenAmount);
 
         emit Support(msg.sender, id, lpTokenAmount);
+    }
+
+    function supportWithPermit(
+        uint256 id, 
+        uint256 lpTokenAmount, 
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external override {
+        lpToken.permit(msg.sender, address(this), lpTokenAmount, deadline, v, r, s);
+        support(id, lpTokenAmount);
     }
 
     function desupport(uint256 id, uint256 lpTokenAmount) external override {
