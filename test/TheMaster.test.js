@@ -12,7 +12,7 @@ const mineToStartBlock = async () => {
 
 const rewardPool0 = (amount, multiplier = 1) => amount.mul(multiplier).div(10);
 const rewardPool1 = (amount, multiplier = 1, winningBonus = 0) =>
-    amount.mul(multiplier).mul(9).div(10).sub(winningBonus);
+  amount.mul(multiplier).mul(9).div(10).sub(winningBonus);
 
 const setupTest = async () => {
     const signers = await ethers.getSigners();
@@ -148,13 +148,13 @@ describe("TheMaster", function () {
         expect(await theMaster.pendingReward(0, alice.address)).to.be.equal(rewardPool0(rewardPerBlock, 17)); //57
         expect(await theMaster.pendingReward(0, alice.address)).to.be.equal(rewardPool0(rewardPerBlock, 17)); //57
         expect(await theMaster.pendingReward(1, alice.address)).to.be.equal(
-            rewardPool1(rewardPerBlock, 15, winningBonus)
+          rewardPool1(rewardPerBlock, 15, winningBonus)
         ); //57
 
         await mine(7); //64
         expect(await theMaster.pendingReward(0, alice.address)).to.be.equal(rewardPool0(rewardPerBlock, 24)); //64
         expect(await theMaster.pendingReward(1, alice.address)).to.be.equal(
-            rewardPool1(rewardPerBlock, 22, winningBonus)
+          rewardPool1(rewardPerBlock, 22, winningBonus)
         ); //64
     });
 
