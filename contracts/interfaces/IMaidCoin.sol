@@ -2,36 +2,27 @@
 pragma solidity ^0.8.5;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./IRatio.sol";
-import "./IMasterCoin.sol";
 
 interface IMaidCoin is IERC20 {
-    event Mint(address indexed to, uint256 amount);
-    event Burn(address indexed from, uint256 amount);
+    function DOMAIN_SEPARATOR() external view returns (bytes32);
 
-    function ratio() external view returns (IRatio);
+    function PERMIT_TYPEHASH() external pure returns (bytes32);
 
-    function masterCoin() external view returns (IMasterCoin);
+    function INITIAL_SUPPLY() external pure returns (uint256);
 
-    function initialSupply() external view returns (uint256);
+    function mint(address to, uint256 amount) external;
 
-    function maidCorpAccReward() external view returns (uint256);
+    function burn(uint256 amount) external;
 
-    function nurseRaidAccReward() external view returns (uint256);
+    function nonces(address owner) external view returns (uint256);
 
-    function maidCorp() external view returns (address);
-
-    function cloneNurse() external view returns (address);
-
-    function maid() external view returns (address);
-
-    function nurseRaid() external view returns (address);
-
-    function mintForMaidCorp() external returns (uint256);
-
-    function mintForCloneNurse() external returns (uint256);
-
-    function mintForCloneNurseDestruction(address to, uint256 amount) external;
-
-    function burn(address from, uint256 amount) external;
+    function permit(
+        address owner,
+        address spender,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external;
 }

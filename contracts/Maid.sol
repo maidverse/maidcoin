@@ -3,65 +3,62 @@ pragma solidity ^0.8.5;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/IMaid.sol";
-import "./interfaces/IRatio.sol";
-import "./interfaces/IMaidCoin.sol";
+import "./interfaces/IERC1271.sol";
 
 contract Maid is Ownable, ERC721("Maid", "MAID"), IMaid {
-    IRatio public override ratio;
-    IMaidCoin public override maidCoin;
-    IERC20 public override lpToken;
+    struct MaidInfo {
+        uint256 originPower;
+        uint256 supportedLPTokenAmount;
+    }
 
-    constructor(
-        address ratioAddr,
-        address maidCoinAddr,
-        address lpTokenAddr
-    ) {
-        ratio = IRatio(ratioAddr);
-        maidCoin = IMaidCoin(maidCoinAddr);
+    bytes32 public immutable override DOMAIN_SEPARATOR;
+    // keccak256("Permit(address spender,uint256 tokenId,uint256 nonce,uint256 deadline)");
+    bytes32 public constant override PERMIT_TYPEHASH =
+        0x49ecf333e5b8c95c40fdafc95c1ad136e8914a8fb55e9dc8bb01eaa83a2df9ad;
+    mapping(uint256 => uint256) public override nonces;
+
+    IERC20 public override lpToken;
+    uint256 public override lpTokenToMaidPower = 1;
+    MaidInfo[] public override maids;
+
+    constructor(address lpTokenAddr) {
         lpToken = IERC20(lpTokenAddr);
+
+        uint256 chainId;
+        assembly {
+            chainId := chainid()
+        }
+        DOMAIN_SEPARATOR = keccak256(
+            abi.encode(
+                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+                keccak256(bytes("Maid")),
+                keccak256(bytes("1")),
+                chainId,
+                address(this)
+            )
+        );
     }
 
     function changeLPToken(address addr) external onlyOwner {
         lpToken = IERC20(addr);
+        emit ChangeLPToken(addr);
     }
 
-    struct MaidInfo {
-        uint256 originPower;
-        uint256 initialPrice;
-        uint256 supportedLPTokenAmount;
+    function changeLPTokenToMaidPower(uint256 value) external onlyOwner {
+        lpTokenToMaidPower = value;
+        emit ChangeLPTokenToMaidPower(value);
     }
-    MaidInfo[] public maids;
 
-    function mint(uint256 power, uint256 initialPrice)
-        external
-        onlyOwner
-        returns (uint256 id)
-    {
+    function mint(uint256 power) external onlyOwner returns (uint256 id) {
         id = maids.length;
-        maids.push(
-            MaidInfo({
-                originPower: power,
-                initialPrice: initialPrice,
-                supportedLPTokenAmount: 0
-            })
-        );
-        _mint(address(this), id);
-    }
-
-    function firstBuy(uint256 id) external override {
-        require(ownerOf(id) == address(this));
-        _transfer(address(this), msg.sender, id);
-        maidCoin.burn(msg.sender, maids[id].initialPrice);
+        maids.push(MaidInfo({originPower: power, supportedLPTokenAmount: 0}));
+        _mint(msg.sender, id);
     }
 
     function powerOf(uint256 id) external view override returns (uint256) {
         MaidInfo memory maid = maids[id];
-        return
-            maid.originPower +
-            (maid.supportedLPTokenAmount * ratio.lpTokenToMaidPower()) /
-            ratio.precision();
+        return maid.originPower + (maid.supportedLPTokenAmount * lpTokenToMaidPower) / 1e18;
     }
 
     function support(uint256 id, uint256 lpTokenAmount) external override {
@@ -70,11 +67,48 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), IMaid {
 
         // need approve
         lpToken.transferFrom(msg.sender, address(this), lpTokenAmount);
+        
+        emit Support(id, lpTokenAmount);
     }
 
     function desupport(uint256 id, uint256 lpTokenAmount) external override {
         require(ownerOf(id) == msg.sender);
         maids[id].supportedLPTokenAmount -= lpTokenAmount;
         lpToken.transfer(msg.sender, lpTokenAmount);
+        
+        emit Desupport(id, lpTokenAmount);
+    }
+
+    function permit(
+        address spender,
+        uint256 id,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external override {
+        require(block.timestamp <= deadline);
+
+        bytes32 digest = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                DOMAIN_SEPARATOR,
+                keccak256(abi.encode(PERMIT_TYPEHASH, spender, id, nonces[id], deadline))
+            )
+        );
+        nonces[id] += 1;
+
+        address owner = ownerOf(id);
+        require(spender != owner);
+
+        if (Address.isContract(owner)) {
+            require(IERC1271(owner).isValidSignature(digest, abi.encodePacked(r, s, v)) == 0x1626ba7e);
+        } else {
+            address recoveredAddress = ecrecover(digest, v, r, s);
+            require(recoveredAddress != address(0));
+            require(recoveredAddress == owner);
+        }
+
+        _approve(spender, id);
     }
 }

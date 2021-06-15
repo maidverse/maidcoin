@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.5;
 
-import "./IRatio.sol";
 import "./IMaid.sol";
 import "./IMaidCoin.sol";
 import "./INursePart.sol";
@@ -23,8 +22,6 @@ interface INurseRaid {
     );
     event Exit(address indexed challenger, uint256 indexed id);
 
-    function ratio() external view returns (IRatio);
-
     function maid() external view returns (IMaid);
 
     function maidCoin() external view returns (IMaidCoin);
@@ -32,7 +29,9 @@ interface INurseRaid {
     function nursePart() external view returns (INursePart);
 
     function rng() external view returns (IRNG);
-
+    
+    function maidPowerToRaidReducedBlock() external view returns (uint256);
+    
     function create(
         uint256 entranceFee,
         uint256 nursePart,

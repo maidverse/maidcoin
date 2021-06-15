@@ -4,12 +4,12 @@ pragma solidity ^0.8.5;
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 interface INursePart is IERC1155 {
-    event Mint(address indexed to, uint256 indexed id, uint256 amount);
-    event Burn(address indexed from, uint256 indexed id, uint256 amount);
 
-    function nurseRaid() external view returns (address);
+    function DOMAIN_SEPARATOR() external view returns (bytes32);
 
-    function cloneNurse() external view returns (address);
+    function PERMIT_TYPEHASH() external view returns (bytes32);
+
+    function nonces(address owner) external view returns (uint256);
 
     function mint(
         address to,
@@ -18,8 +18,16 @@ interface INursePart is IERC1155 {
     ) external;
 
     function burn(
-        address from,
         uint256 id,
         uint256 amount
+    ) external;
+    
+    function permit(
+        address owner,
+        address spender,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
     ) external;
 }

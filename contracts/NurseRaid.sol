@@ -3,7 +3,6 @@ pragma solidity ^0.8.5;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/INurseRaid.sol";
-import "./interfaces/IRatio.sol";
 import "./interfaces/IMaid.sol";
 import "./interfaces/IMaidCoin.sol";
 import "./interfaces/INursePart.sol";
@@ -12,20 +11,18 @@ import "./interfaces/IRNG.sol";
 contract NurseRaid is Ownable, INurseRaid {
     uint256 public constant MAX_MAIDS_PER_RAID = 5;
 
-    IRatio public override ratio;
     IMaid public override maid;
     IMaidCoin public override maidCoin;
     INursePart public override nursePart;
     IRNG public override rng;
-
+    uint256 public override maidPowerToRaidReducedBlock = 1;
+    
     constructor(
-        address ratioAddr,
         address maidAddr,
         address maidCoinAddr,
         address nursePartAddr,
         address rngAddr
     ) {
-        ratio = IRatio(ratioAddr);
         maid = IMaid(maidAddr);
         maidCoin = IMaidCoin(maidCoinAddr);
         nursePart = INursePart(nursePartAddr);
@@ -94,7 +91,7 @@ contract NurseRaid is Ownable, INurseRaid {
             maid.transferFrom(msg.sender, address(this), maids[i]);
         }
 
-        maidCoin.burn(msg.sender, raid.entranceFee);
+        maidCoin.burn(raid.entranceFee);
         emit Enter(msg.sender, id, maids);
     }
 
@@ -112,7 +109,7 @@ contract NurseRaid is Ownable, INurseRaid {
             block.number -
                 challenger.enterBlock +
                 totalPower *
-                ratio.maidPowerToRaidReducedBlock() >=
+                maidPowerToRaidReducedBlock >=
             raid.duration;
     }
 
