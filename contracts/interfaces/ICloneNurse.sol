@@ -8,9 +8,22 @@ import "./ITheMaster.sol";
 
 interface ICloneNurse is IERC721 {
     event ChangeSupportable(uint256 indexed id, bool supportable);
-    event Support(address indexed supporter, uint256 indexed id, uint256 lpTokenAmount);
-    event Desupport(address indexed supporter, uint256 indexed id, uint256 lpTokenAmount);
+    event Support(uint256 indexed supportId, address indexed supporter, uint256 indexed id, uint256 lpTokenAmount);
+    event IncreaseSupport(
+        uint256 indexed supportId,
+        address indexed supporter,
+        uint256 indexed id,
+        uint256 lpTokenAmount
+    );
+    event DecreaseSupport(
+        uint256 indexed supportId,
+        address indexed supporter,
+        uint256 indexed id,
+        uint256 lpTokenAmount
+    );
     event ChangeLPTokenToNursePower(uint256 value);
+    event Claim(uint256 indexed id, address indexed claimer, uint256 reward);
+    event ClaimSupport(uint256 indexed supportId, address indexed claimer, uint256 reward);
 
     function nursePart() external view returns (INursePart);
 
@@ -42,32 +55,55 @@ interface ICloneNurse is IERC721 {
             bool supportable
         );
 
+    function supportInfo(uint256 supportId)
+        external
+        view
+        returns (
+            uint256 groupId,
+            address supporter,
+            uint256 lpTokenAmount,
+            uint256 accReward
+        );
+
+    function idOfGroupId(uint256 groupId) external view returns (uint256 id);
+
+    function destroyed(uint256 id) external view returns (bool);
+
     function assemble(uint256 nursePart, bool supportable) external returns (uint256 id);
 
     function changeSupportable(uint256 id, bool supportable) external;
-
-    function moveSupporters(
-        uint256 from,
-        uint256 to,
-        uint256 number
-    ) external;
 
     function destroy(uint256 id, uint256 supportersTo) external;
 
     function support(uint256 id, uint256 lpTokenAmount) external;
 
     function supportWithPermit(
-        uint256 id, 
-        uint256 lpTokenAmount, 
+        uint256 id,
+        uint256 lpTokenAmount,
         uint256 deadline,
         uint8 v,
         bytes32 r,
         bytes32 s
     ) external;
 
-    function desupport(uint256 id, uint256 lpTokenAmount) external;
+    function increaseSupport(uint256 supportId, uint256 lpTokenAmount) external;
 
-    function claimAmountOf(uint256 id) external view returns (uint256);
+    function increaseSupportWithPermit(
+        uint256 supportId,
+        uint256 lpTokenAmount,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external;
 
-    function claim(uint256 id) external;
+    function decreaseSupport(uint256 supportId, uint256 lpTokenAmount) external;
+
+    function claimableAmountOf(uint256 supportId) external view returns (uint256);
+
+    function claimableSupportAmountOf(uint256 supportId) external view returns (uint256);
+
+    function claim(uint256 supportId) external;
+
+    function claimSupport(uint256 supportId) external;
 }

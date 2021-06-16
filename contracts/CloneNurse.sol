@@ -20,8 +20,9 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         uint256 supporterAccReward;
         bool supportable;
     }
-    struct Supporter {
-        address addr;
+    struct SupportInfo {
+        uint256 groupId;
+        address supporter;
         uint256 lpTokenAmount;
         uint256 accReward;
     }
@@ -36,12 +37,13 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
     NurseType[] public override nurseTypes;
     Nurse[] public override nurses;
 
-    mapping(uint256 => Supporter[]) public supporters;
-    mapping(uint256 => mapping(address => uint256)) public addrToSupporter;
+    SupportInfo[] public override supportInfo;
+    mapping(uint256 => uint256) public override idOfGroupId;
+    mapping(uint256 => bool) public override destroyed;
 
     uint256 private lastUpdateBlock;
     uint256 private _accRewardPerShare;
-    uint256 private totalPower = 0;
+    uint256 private totalPower;
 
     constructor(
         address nursePartAddr,
@@ -64,27 +66,27 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         uint256 partCount,
         uint256 destroyReturn,
         uint256 power
-    ) external onlyOwner returns (uint256 typeId) {
-        typeId = nurseTypes.length;
+    ) external onlyOwner returns (uint256 nurseType) {
+        nurseType = nurseTypes.length;
         nurseTypes.push(NurseType({partCount: partCount, destroyReturn: destroyReturn, power: power}));
     }
 
-    function originPower(uint256 typeId) internal view returns (uint256) {
-        return nurseTypes[typeId].power;
+    function originPowerOf(uint256 nurseType) internal view returns (uint256) {
+        return nurseTypes[nurseType].power;
     }
 
-    function assemble(uint256 ntype, bool supportable) external override returns (uint256 id) {
-        NurseType memory nurseType = nurseTypes[ntype];
+    function assemble(uint256 nurserType, bool supportable) external override returns (uint256 id) {
+        NurseType memory nurseType = nurseTypes[nurserType];
 
-        nursePart.burn(ntype, nurseType.partCount);
+        nursePart.burn(nurserType, nurseType.partCount);
 
-        uint256 power = originPower(ntype);
+        uint256 power = originPowerOf(nurserType);
         totalPower += power;
 
         uint256 masterAccReward = (_update() * power) / 1e18;
         nurses.push(
             Nurse({
-                nurseType: ntype,
+                nurseType: nurserType,
                 supportPower: 0,
                 masterAccReward: masterAccReward,
                 supporterAccReward: 0,
@@ -93,6 +95,7 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         );
 
         id = nurses.length;
+        idOfGroupId[id] = id;
         theMaster.deposit(1, masterAccReward, id);
         if (id < theMaster.WINNING_BONUS_TAKERS()) {
             theMaster.claimWinningBonus(id);
@@ -103,91 +106,28 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
     function changeSupportable(uint256 id, bool supportable) external override {
         require(msg.sender == ownerOf(id));
         nurses[id].supportable = supportable;
+        emit ChangeSupportable(id, supportable);
     }
 
-    function moveSupporters(
-        uint256 from,
-        uint256 to,
-        uint256 number
-    ) public override {
-        require(msg.sender == ownerOf(from) && from != to);
+    function destroy(uint256 id, uint256 toId) external override {
+        require(msg.sender == ownerOf(id));
+        require(!destroyed[id]);
+        require(!destroyed[toId]);
+        require(toId != id);
 
-        claim(from);
-        claim(to);
-
-        Supporter[] storage fromSup = supporters[from];
-        Supporter[] storage toSup = supporters[to];
-
-        mapping(address => uint256) storage fromAddrToSup = addrToSupporter[from];
-        mapping(address => uint256) storage toAddrToSup = addrToSupporter[to];
-
-        uint256 totalLPTokenAmount = 0;
-
-        require(fromSup.length <= number);
-        for (uint256 i = number - 1; i > 0; i -= 1) {
-            Supporter memory supporter = fromSup[i];
-
-            delete fromAddrToSup[supporter.addr];
-            toAddrToSup[supporter.addr] = toSup.length;
-
-            toSup.push(supporter);
-            fromSup.pop();
-
-            totalLPTokenAmount += supporter.lpTokenAmount;
-        }
-
-        uint256 supportPower = (totalLPTokenAmount * lpTokenToNursePower) / 1e18;
-
-        nurses[from].supportPower -= supportPower;
-        nurses[to].supportPower += supportPower;
-    }
-
-    function destroy(uint256 id, uint256 supportersTo) external override {
-        require(msg.sender == ownerOf(id) && supportersTo != id);
-
-        // need to move supporters to another nurse
-        moveSupporters(id, supportersTo, supporters[id].length);
+        idOfGroupId[id] = toId;
+        destroyed[id] = true;
 
         (uint256 amount, ) = theMaster.userInfo(1, id);
         theMaster.withdraw(1, amount, id);
 
-        totalPower -= originPower(id);
+        totalPower -= originPowerOf(id);
         _burn(id);
     }
 
-    function support(uint256 id, uint256 lpTokenAmount) public override {
-        claim(id);
-
-        uint256 supporterId = addrToSupporter[id][msg.sender];
-
-        Supporter[] storage sups = supporters[id];
-
-        if (sups[supporterId].addr != msg.sender) {
-            // new supporter
-
-            supporterId = sups.length;
-
-            sups.push(Supporter({addr: msg.sender, lpTokenAmount: lpTokenAmount, accReward: 0}));
-
-            addrToSupporter[id][msg.sender] = supporterId;
-        } else {
-            // add amount
-            supporters[id][supporterId].lpTokenAmount += lpTokenAmount;
-        }
-
-        uint256 supportPower = (lpTokenAmount * lpTokenToNursePower) / 1e18;
-        nurses[id].supportPower += supportPower;
-        totalPower += supportPower;
-
-        // need approve
-        lpToken.transferFrom(msg.sender, address(this), lpTokenAmount);
-
-        emit Support(msg.sender, id, lpTokenAmount);
-    }
-
     function supportWithPermit(
-        uint256 id, 
-        uint256 lpTokenAmount, 
+        uint256 id,
+        uint256 lpTokenAmount,
         uint256 deadline,
         uint8 v,
         bytes32 r,
@@ -197,29 +137,80 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         support(id, lpTokenAmount);
     }
 
-    function desupport(uint256 id, uint256 lpTokenAmount) external override {
-        claim(id);
+    function support(uint256 id, uint256 lpTokenAmount) public override {
+        require(ownerOf(id) != address(0));
+        require(!destroyed[id]);
 
-        uint256 supporterId = addrToSupporter[id][msg.sender];
+        uint256 supportId = supportInfo.length;
+        supportInfo.push(SupportInfo(id, msg.sender, lpTokenAmount, 0));
 
-        Supporter storage supporter = supporters[id][supporterId];
+        claimSupport(supportId);
 
-        require(supporter.addr == msg.sender);
+        _increaseSupport(id, lpTokenAmount);
 
-        supporter.lpTokenAmount -= lpTokenAmount;
+        emit Support(supportId, msg.sender, id, lpTokenAmount);
+    }
 
-        if (supporter.lpTokenAmount == 0) {
-            delete supporters[id][supporterId];
-            delete addrToSupporter[id][msg.sender];
+    function increaseSupportWithPermit(
+        uint256 supportId,
+        uint256 lpTokenAmount,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external override {
+        lpToken.permit(msg.sender, address(this), lpTokenAmount, deadline, v, r, s);
+        increaseSupport(supportId, lpTokenAmount);
+    }
+
+    function increaseSupport(uint256 supportId, uint256 lpTokenAmount) public override {
+        SupportInfo storage _support = supportInfo[supportId];
+        require(_support.supporter == msg.sender);
+
+        _support.lpTokenAmount += lpTokenAmount;
+        claimSupport(supportId);
+
+        uint256 id = _findId(_support.groupId);
+        _increaseSupport(id, lpTokenAmount);
+
+        emit IncreaseSupport(supportId, msg.sender, id, lpTokenAmount);
+    }
+
+    function _findId(uint256 groupId) internal returns (uint256 id) {
+        id = idOfGroupId[groupId];
+        while (true) {
+            uint256 newId = idOfGroupId[id];
+            if (newId == id) {
+                idOfGroupId[groupId] = id;
+                break;
+            }
+            id = newId;
         }
+    }
 
+    function _increaseSupport(uint256 id, uint256 lpTokenAmount) internal {
+        uint256 supportPower = (lpTokenAmount * lpTokenToNursePower) / 1e18;
+        nurses[id].supportPower += supportPower;
+        totalPower += supportPower;
+
+        lpToken.transferFrom(msg.sender, address(this), lpTokenAmount);
+    }
+
+    function decreaseSupport(uint256 supportId, uint256 lpTokenAmount) external override {
+        SupportInfo storage _support = supportInfo[supportId];
+        require(_support.supporter == msg.sender);
+
+        _support.lpTokenAmount -= lpTokenAmount;
+        claimSupport(supportId);
+
+        uint256 id = _findId(_support.groupId);
         uint256 supportPower = (lpTokenAmount * lpTokenToNursePower) / 1e18;
         nurses[id].supportPower -= supportPower;
         totalPower -= supportPower;
 
         lpToken.transfer(msg.sender, lpTokenAmount);
 
-        emit Desupport(msg.sender, id, lpTokenAmount);
+        emit DecreaseSupport(supportId, msg.sender, id, lpTokenAmount);
     }
 
     function _update() internal returns (uint256 result) {
@@ -231,77 +222,90 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         }
     }
 
-    function claimAmountOf(uint256 id) external view override returns (uint256) {
-        address master = ownerOf(id);
-        if (master == address(0)) {
+    function claimableAmountOf(uint256 id) external view override returns (uint256) {
+        if (ownerOf(id) == address(0)) {
             return 0;
         }
 
-        Nurse memory nurse = nurses[id];
+        Nurse storage nurse = nurses[id];
+        (uint256 originPower, uint256 power, uint256 acc) = _nurseInfo(nurse);
+        return (acc * originPower) / power - nurse.masterAccReward;
+    }
 
-        uint256 _originPower = originPower(nurse.nurseType);
-        uint256 power = _originPower + nurse.supportPower;
-        (, , , , uint256 accRewardPerShare, ) = theMaster.poolInfo(1);
-        uint256 acc = (accRewardPerShare * power) / 1e18;
-        uint256 totalReward = 0;
-
-        // owner
-        if (master == msg.sender) {
-            totalReward += (acc * _originPower) / power - nurse.masterAccReward;
+    function claimableSupportAmountOf(uint256 supportId) external view override returns (uint256) {
+        SupportInfo storage _support = supportInfo[supportId];
+        if (_support.supporter == address(0)) {
+            return 0;
         }
 
-        // supporter
-        uint256 supporterId = addrToSupporter[id][msg.sender];
-        if (supporterId != 0) {
-            uint256 supporterAccReward = (acc * nurse.supportPower) / power - nurse.supporterAccReward;
-            Supporter memory supporter = supporters[id][supporterId];
-            totalReward +=
-                (supporterAccReward * supporter.lpTokenAmount * lpTokenToNursePower) /
-                1e18 /
-                nurse.supportPower -
-                supporter.accReward;
+        uint256 id = idOfGroupId[_support.groupId];
+        while (true) {
+            uint256 newId = idOfGroupId[id];
+            if (newId == id) {
+                break;
+            }
+            id = newId;
         }
 
-        return totalReward;
+        Nurse storage nurse = nurses[id];
+        (, uint256 power, uint256 acc) = _nurseInfo(nurse);
+
+        uint256 supporterAccReward = (acc * nurse.supportPower) / power - nurse.supporterAccReward;
+        return
+            (supporterAccReward * _support.lpTokenAmount * lpTokenToNursePower) /
+            1e18 /
+            nurse.supportPower -
+            _support.accReward;
     }
 
     function claim(uint256 id) public override {
-        address master = ownerOf(id);
-        require(master != address(0));
+        require(ownerOf(id) == msg.sender);
 
         Nurse storage nurse = nurses[id];
-        require(master != address(0));
+        (uint256 originPower, uint256 power, uint256 acc) = _nurseInfo(nurse);
+        uint256 reward = (acc * originPower) / power - nurse.masterAccReward;
+        nurse.masterAccReward += reward;
 
-        uint256 _originPower = originPower(nurse.nurseType);
-        uint256 power = _originPower + nurse.supportPower;
-        uint256 acc = (_update() * power) / 1e18;
-        uint256 totalReward = 0;
+        maidCoin.transfer(msg.sender, reward);
 
-        uint256 masterAccReward = (acc * _originPower) / power - nurse.masterAccReward;
-        nurse.masterAccReward += masterAccReward;
+        emit Claim(id, msg.sender, reward);
+    }
 
-        uint256 supporterAccReward = (acc * nurse.supportPower) / power - nurse.supporterAccReward;
-        nurse.supporterAccReward += supporterAccReward;
+    function claimSupport(uint256 supportId) public override {
+        SupportInfo storage _support = supportInfo[supportId];
+        require(_support.supporter == msg.sender);
 
-        // owner
-        if (master == msg.sender) {
-            totalReward += masterAccReward;
-        } else {
-            maidCoin.transfer(master, masterAccReward);
-        }
+        uint256 id = _findId(_support.groupId);
 
-        // supporter
-        uint256 supporterId = addrToSupporter[id][msg.sender];
-        if (supporterId != 0) {
-            Supporter storage supporter = supporters[id][supporterId];
-            uint256 reward = (supporterAccReward * supporter.lpTokenAmount * lpTokenToNursePower) /
-                1e18 /
-                nurse.supportPower -
-                supporter.accReward;
-            totalReward += reward;
-            supporter.accReward += reward;
-        }
+        Nurse storage nurse = nurses[id];
+        (, uint256 power, uint256 acc) = _nurseInfo(nurse);
+        uint256 totalReward = (acc * nurse.supportPower) / power - nurse.supporterAccReward;
+        nurse.supporterAccReward += totalReward;
+
+        uint256 reward = (totalReward * _support.lpTokenAmount * lpTokenToNursePower) /
+            1e18 /
+            nurse.supportPower -
+            _support.accReward;
+        totalReward += reward;
+        _support.accReward += reward;
 
         maidCoin.transfer(msg.sender, totalReward);
+
+        emit ClaimSupport(supportId, msg.sender, totalReward);
+    }
+
+    function _nurseInfo(Nurse storage nurse)
+        internal
+        view
+        returns (
+            uint256 originPower,
+            uint256 power,
+            uint256 acc
+        )
+    {
+        originPower = originPowerOf(nurse.nurseType);
+        power = originPower + nurse.supportPower;
+        (, , , , uint256 accRewardPerShare, ) = theMaster.poolInfo(1);
+        acc = (accRewardPerShare * power) / 1e18;
     }
 }
