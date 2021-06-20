@@ -69,11 +69,11 @@ interface ICloneNurse is IERC721 {
 
     function destroyed(uint256 id) external view returns (bool);
 
-    function assemble(uint256 nursePart, bool supportable) external returns (uint256 id);
+    function assemble(uint256 nursePart, bool supportable, uint256 pid) external returns (uint256 id);
 
     function changeSupportable(uint256 id, bool supportable) external;
 
-    function destroy(uint256 id, uint256 supportersTo) external;
+    function destroy(uint256 id, uint256 supportersTo, uint256 pid) external;
 
     function support(uint256 id, uint256 lpTokenAmount) external;
 

@@ -9,9 +9,9 @@ contract NurseRaid is Ownable, INurseRaid {
 
     uint256 public override maidPowerToRaidReducedBlock = 1;
 
-    IMaid public override maid;
-    IMaidCoin public override maidCoin;
-    INursePart public override nursePart;
+    IMaid public override maid;   //immutable
+    IMaidCoin public immutable override maidCoin;
+    INursePart public override nursePart;   //immutable
     IRNG public override rng;
 
     constructor(
@@ -70,7 +70,7 @@ contract NurseRaid is Ownable, INurseRaid {
         emit Create(id, entranceFee, _nursePart, maxRewardCount, duration, endBlock);
     }
 
-    function enterWithPermit(
+    function enterWithPermitAll(
         uint256 id,
         uint256[] calldata maids,
         uint256 deadline,
@@ -78,7 +78,7 @@ contract NurseRaid is Ownable, INurseRaid {
         bytes32 r,
         bytes32 s
     ) external override {
-        maid.permit(address(this), id, deadline, v, r, s);
+        maid.permitAll(msg.sender, address(this), deadline, v, r, s);
         enter(id, maids);
     }
 
@@ -103,13 +103,21 @@ contract NurseRaid is Ownable, INurseRaid {
         Raid memory raid = raids[id];
         Challenger memory challenger = challengers[id][msg.sender];
 
+        return _checkDone(raid, challenger);
+    }
+
+    function _checkDone(Raid memory raid, Challenger memory challenger) internal view returns (bool) {
         uint256 maidsLength = challenger.maids.length;
         uint256 totalPower = 0;
         for (uint256 i = 0; i < maidsLength; i += 1) {
             totalPower += maid.powerOf(challenger.maids[i]);
         }
 
-        return block.number - challenger.enterBlock + totalPower * maidPowerToRaidReducedBlock >= raid.duration;
+        if(totalPower == 0) {
+            return block.number - challenger.enterBlock >= raid.duration;
+        } else {
+            return block.number - challenger.enterBlock + totalPower * maidPowerToRaidReducedBlock >= raid.duration;
+        }
     }
 
     function exit(uint256 id) external override {
@@ -119,7 +127,7 @@ contract NurseRaid is Ownable, INurseRaid {
         Raid memory raid = raids[id];
 
         // done
-        if (checkDone(id) == true) {
+        if (_checkDone(raid, challenger) == true) {
             uint256 rewardCount = (rng.generateRandomNumber(id) % raid.maxRewardCount) + 1;
             nursePart.mint(msg.sender, raid.nursePart, rewardCount);
         }
