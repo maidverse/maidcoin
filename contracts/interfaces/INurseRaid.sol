@@ -37,7 +37,7 @@ interface INurseRaid {
         uint256 endBlock
     ) external returns (uint256 id);
 
-    function enterWithPermit(
+    function enterWithPermitAll(
         uint256 id,
         uint256[] calldata maids,
         uint256 deadline,

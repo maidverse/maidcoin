@@ -84,5 +84,5 @@ interface ITheMaster {
 
     function emergencyWithdraw(uint256 pid) external;
 
-    function claimWinningBonus(uint256 user) external;
+    function claimWinningBonus(uint256 user) external returns (uint256 amount);
 }

@@ -48,6 +48,7 @@ interface IMaid {
     ) external;
 
     function permitAll(
+        address owner,
         address spender,
         uint256 deadline,
         uint8 v,
