@@ -139,10 +139,10 @@ contract Maid is Ownable, ERC721("Maid", "MAID") {
             abi.encodePacked(
                 "\x19\x01",
                 DOMAIN_SEPARATOR,
-                keccak256(abi.encode(PERMIT_ALL_TYPEHASH, owner, spender, nonces[owner], deadline))
+                keccak256(abi.encode(PERMIT_ALL_TYPEHASH, owner, spender, noncesForAll[owner], deadline))
             )
         );
-        nonces[owner] += 1;
+        noncesForAll[owner] += 1;
 
         if (Address.isContract(owner)) {
             require(IERC1271(owner).isValidSignature(digest, abi.encodePacked(r, s, v)) == 0x1626ba7e);
