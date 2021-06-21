@@ -9,6 +9,10 @@ const ERC721_PERMIT_TYPEHASH = ethers.utils.keccak256(
   ethers.utils.toUtf8Bytes('Permit(address spender,uint256 tokenId,uint256 nonce,uint256 deadline)')
 )
 
+const ERC721_PERMIT_ALL_TYPEHASH = ethers.utils.keccak256(
+  ethers.utils.toUtf8Bytes('Permit(address owner,address spender,uint256 nonce,uint256 deadline)')
+)
+
 const ERC1155_PERMIT_TYPEHASH = ethers.utils.keccak256(
   ethers.utils.toUtf8Bytes('Permit(address owner,address spender,uint256 nonce,uint256 deadline)')
 )
@@ -84,6 +88,35 @@ export async function getERC721ApprovalDigest(
           ethers.utils.defaultAbiCoder.encode(
             ['bytes32', 'address', 'uint256', 'uint256', 'uint256'],
             [ERC721_PERMIT_TYPEHASH, approve.spender, approve.id, nonce, deadline]
+          )
+        )
+      ]
+    )
+  )
+}
+
+export async function getERC721ApprovalAllDigest(
+  token: Contract,
+  approve: {
+    owner: string
+    spender: string
+  },
+  nonce: BigNumber,
+  deadline: BigNumber
+): Promise<string> {
+  const name = await token.name()
+  const DOMAIN_SEPARATOR = getDomainSeparator(name, token.address)
+  return ethers.utils.keccak256(
+    ethers.utils.solidityPack(
+      ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
+      [
+        '0x19',
+        '0x01',
+        DOMAIN_SEPARATOR,
+        ethers.utils.keccak256(
+          ethers.utils.defaultAbiCoder.encode(
+            ['bytes32', 'address', 'address', 'uint256', 'uint256'],
+            [ERC1155_PERMIT_TYPEHASH, approve.owner, approve.spender, nonce, deadline]
           )
         )
       ]

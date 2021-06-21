@@ -74,11 +74,11 @@ contract NurseRaid is Ownable, INurseRaid {
         uint256 id,
         uint256[] calldata maids,
         uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
+        uint8 v1, bytes32 r1, bytes32 s1,
+        uint8 v2, bytes32 r2, bytes32 s2
     ) external override {
-        maid.permitAll(msg.sender, address(this), deadline, v, r, s);
+        maidCoin.permit(msg.sender, address(this), type(uint256).max, deadline, v1, r1, s1);
+        maid.permitAll(msg.sender, address(this), deadline, v2, r2, s2);
         enter(id, maids);
     }
 
@@ -95,6 +95,7 @@ contract NurseRaid is Ownable, INurseRaid {
             maid.transferFrom(msg.sender, address(this), maids[i]);
         }
 
+        maidCoin.transferFrom(msg.sender, address(this), raid.entranceFee);
         maidCoin.burn(raid.entranceFee);
         emit Enter(msg.sender, id, maids);
     }
