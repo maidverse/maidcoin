@@ -1,15 +1,29 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./IMaidCoin.sol";
+interface IMasterCoin {
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+    event Transfer(address indexed from, address indexed to, uint256 value);
 
-interface IMasterCoin is IERC20 {
-    event Claim(address indexed master, uint256 amount);
+    function name() external pure returns (string memory);
 
-    function maidCoin() external view returns (IMaidCoin);
+    function symbol() external pure returns (string memory);
 
-    function claimableAmount(address master) external view returns (uint256);
+    function decimals() external pure returns (uint8);
 
-    function claim(address master) external;
+    function totalSupply() external view returns (uint256);
+
+    function balanceOf(address owner) external view returns (uint256);
+
+    function allowance(address owner, address spender) external view returns (uint256);
+
+    function approve(address spender, uint256 value) external returns (bool);
+
+    function transfer(address to, uint256 value) external returns (bool);
+
+    function transferFrom(
+        address from,
+        address to,
+        uint256 value
+    ) external returns (bool);
 }

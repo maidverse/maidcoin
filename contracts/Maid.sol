@@ -18,11 +18,9 @@ contract Maid is Ownable, ERC721("Maid", "MAID") {
 
     bytes32 public immutable DOMAIN_SEPARATOR;
     // keccak256("Permit(address spender,uint256 tokenId,uint256 nonce,uint256 deadline)");
-    bytes32 public constant PERMIT_TYPEHASH =
-        0x49ecf333e5b8c95c40fdafc95c1ad136e8914a8fb55e9dc8bb01eaa83a2df9ad;
+    bytes32 public constant PERMIT_TYPEHASH = 0x49ecf333e5b8c95c40fdafc95c1ad136e8914a8fb55e9dc8bb01eaa83a2df9ad;
     // keccak256("Permit(address owner,address spender,uint256 nonce,uint256 deadline)");
-    bytes32 public constant PERMIT_ALL_TYPEHASH =
-        0xdaab21af31ece73a508939fedd476a5ee5129a5ed4bb091f3236ffb45394df62;
+    bytes32 public constant PERMIT_ALL_TYPEHASH = 0xdaab21af31ece73a508939fedd476a5ee5129a5ed4bb091f3236ffb45394df62;
     mapping(uint256 => uint256) public nonces;
     mapping(address => uint256) public noncesForAll;
 
@@ -73,8 +71,8 @@ contract Maid is Ownable, ERC721("Maid", "MAID") {
     }
 
     function supportWithPermit(
-        uint256 id, 
-        uint256 lpTokenAmount, 
+        uint256 id,
+        uint256 lpTokenAmount,
         uint256 deadline,
         uint8 v,
         bytes32 r,
@@ -88,7 +86,7 @@ contract Maid is Ownable, ERC721("Maid", "MAID") {
         require(ownerOf(id) == msg.sender);
         maids[id].supportedLPTokenAmount -= lpTokenAmount;
         lpToken.transfer(msg.sender, lpTokenAmount);
-        
+
         emit Desupport(id, lpTokenAmount);
     }
 
@@ -124,7 +122,7 @@ contract Maid is Ownable, ERC721("Maid", "MAID") {
 
         _approve(spender, id);
     }
-    
+
     function permitAll(
         address owner,
         address spender,
@@ -134,7 +132,7 @@ contract Maid is Ownable, ERC721("Maid", "MAID") {
         bytes32 s
     ) external {
         require(block.timestamp <= deadline);
-        
+
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
