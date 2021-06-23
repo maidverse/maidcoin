@@ -41,8 +41,12 @@ interface INurseRaid {
         uint256 id,
         uint256[] calldata maids,
         uint256 deadline,
-        uint8 v1, bytes32 r1, bytes32 s1,
-        uint8 v2, bytes32 r2, bytes32 s2
+        uint8 v1,
+        bytes32 r1,
+        bytes32 s1,
+        uint8 v2,
+        bytes32 r2,
+        bytes32 s2
     ) external;
 
     function enter(uint256 id, uint256[] calldata maids) external;
