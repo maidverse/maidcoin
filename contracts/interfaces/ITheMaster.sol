@@ -2,15 +2,21 @@
 pragma solidity >=0.5.0;
 
 import "./IMaidCoin.sol";
-import "./ICloneNurse.sol";
 import "./IRewardCalculator.sol";
+import "./ISupportable.sol";
 
 interface ITheMaster {
     event ChangeRewardCalculator(address addr);
-    event ChangeCloneNurse(address addr);
-    
-    event Add(uint256 indexed pid, address addr, bool indexed delegate, bool indexed mintable, uint256 allocPoint);
-    event Set(uint256 indexed pid, uint256 allocPoint);
+
+    event Add(
+        uint256 indexed pid,
+        address addr,
+        bool indexed delegate,
+        bool indexed mintable,
+        address supportable,
+        uint256 allocPoint
+    );
+    event Set(uint256 indexed pid, address supportable, uint256 allocPoint);
     event Deposit(uint256 indexed userId, uint256 indexed pid, uint256 amount);
     event Withdraw(uint256 indexed userId, uint256 indexed pid, uint256 amount);
     event EmergencyWithdraw(address indexed user, uint256 indexed pid, uint256 amount);
@@ -28,8 +34,6 @@ interface ITheMaster {
 
     function maidCoin() external view returns (IMaidCoin);
 
-    function cloneNurse() external view returns (ICloneNurse);
-
     function rewardCalculator() external view returns (IRewardCalculator);
 
     function poolInfo(uint256 pid)
@@ -39,6 +43,7 @@ interface ITheMaster {
             address addr,
             bool delegate,
             bool mintable,
+            ISupportable supportable,
             uint256 allocPoint,
             uint256 lastRewardBlock,
             uint256 accRewardPerShare,
@@ -51,24 +56,25 @@ interface ITheMaster {
 
     function totalAllocPoint() external view returns (uint256);
 
-    function isSupporterPool(uint256 pid) external view returns (bool);
-
     function pendingReward(uint256 pid, uint256 userId) external view returns (uint256);
 
     function rewardPerBlock() external view returns (uint256);
 
     function changeRewardCalculator(address addr) external;
 
-    function setCloneNurse(address addr) external;
-
     function add(
         address addr,
         bool delegate,
         bool mintable,
+        address supportable,
         uint256 allocPoint
     ) external;
 
-    function set(uint256 pid, uint256 allocPoint) external;
+    function set(
+        uint256 pid,
+        address supportable,
+        uint256 allocPoint
+    ) external;
 
     function deposit(
         uint256 pid,
@@ -93,6 +99,4 @@ interface ITheMaster {
     function desupport(uint256 pid, uint256 amount) external;
 
     function mint(address to, uint256 amount) external;
-
-    function setIsSupporterPool(uint256 pid, bool status) external;
 }

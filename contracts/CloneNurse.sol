@@ -88,7 +88,7 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         uint256 power = supportedPower[id];
         supportedPower[toId] += power;
         supportedPower[id] = 0;
-        emit ChangeSupportedPower(toId, int(power));
+        emit ChangeSupportedPower(toId, int256(power));
         // emit ChangeSupportedPower(id, -int(power));
         theMaster.mint(msg.sender, nurseType.destroyReturn);
         _burn(id);
@@ -109,14 +109,23 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         return theMaster.pendingReward(2, id);
     }
 
-    function setSupportingTo(address supporter, uint256 to) public override {
+    function setSupportingTo(
+        address supporter,
+        uint256 to,
+        uint256 amounts
+    ) public override {
         require(msg.sender == address(theMaster));
+        require(_exists(to));
         supportingTo[supporter] = to;
         emit SupportTo(supporter, to);
+
+        if (amounts > 0) {
+            supportedPower[to] += amounts;
+            emit ChangeSupportedPower(to, int256(amounts));
+        }
     }
 
     function checkSupportingRoute(address supporter) public override returns (address, uint256) {
-        require(msg.sender == address(theMaster));
         uint256 _supportingTo = supportingTo[supporter];
         uint256 _route = supportingRoute[_supportingTo];
         if (_route == _supportingTo) return (ownerOf(_supportingTo), _supportingTo);
@@ -132,8 +141,9 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         return (ownerOf(_supportingTo), _supportingTo);
     }
 
-    function changeSupportedPower(uint256 id, int256 power) public override {
+    function changeSupportedPower(address supporter, int256 power) public override {
         require(msg.sender == address(theMaster));
+        (, uint256 id) = checkSupportingRoute(supporter);
         int256 _supportedPower = int256(supportedPower[id]);
         if (power < 0) require(_supportedPower >= (-power));
         _supportedPower += power;
@@ -145,9 +155,23 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         address supporter,
         uint256 id,
         uint256 amounts
-    ) public override {
+    ) internal {
         require(msg.sender == address(theMaster));
         totalRewardsFromSupporters[id] += amounts;
         emit TransferSupportingRewards(supporter, id, amounts);
+    }
+
+    function shareRewards(uint256 pending, address supporter)
+        public
+        override
+        returns (address nurseOwner, uint256 amountToNurseOwner)
+    {
+        require(msg.sender == address(theMaster));
+        amountToNurseOwner = pending / 10;
+        uint256 _supportTo;
+        if (amountToNurseOwner > 0) {
+            (nurseOwner, _supportTo) = checkSupportingRoute(supporter);
+            recordRewardsTransfer(supporter, _supportTo, amountToNurseOwner);
+        }
     }
 }
