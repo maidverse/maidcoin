@@ -8,6 +8,7 @@ import "./IRewardCalculator.sol";
 interface ITheMaster {
     event ChangeRewardCalculator(address addr);
     event ChangeCloneNurse(address addr);
+    
     event Add(uint256 indexed pid, address addr, bool indexed delegate, bool indexed mintable, uint256 allocPoint);
     event Set(uint256 indexed pid, uint256 allocPoint);
     event Deposit(uint256 indexed userId, uint256 indexed pid, uint256 amount);

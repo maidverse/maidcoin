@@ -9,6 +9,7 @@ import "./ITheMaster.sol";
 interface ICloneNurse is IERC721 {
     event Claim(uint256 indexed id, address indexed claimer, uint256 reward);
     event SupportRecorded(address indexed supporter, uint256 indexed to);
+    event SupportRoute(uint256 indexed from, uint256 indexed to);//
     event SupportPowerChanged(uint256 indexed id, int256 power);
     event SupportingRewardsTransfer(address indexed supporter, uint256 indexed id, uint256 amounts);
 

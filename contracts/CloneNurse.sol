@@ -16,9 +16,9 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         uint256 nurseType;
     }
 
-    INursePart public override nursePart;
-    IMaidCoin public override maidCoin;
-    ITheMaster public override theMaster;
+    INursePart public immutable override nursePart;
+    IMaidCoin public immutable override maidCoin;
+    ITheMaster public immutable override theMaster;
 
     mapping(uint256 => uint256) public override supportRoute;
     mapping(address => uint256) public override supportTo;
@@ -55,6 +55,7 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         theMaster.deposit(2, nurseType.power, id);
         nurses.push(Nurse({nurseType: nurserType}));
         supportRoute[id] = id;
+        emit SupportRoute(id, id);
         _mint(msg.sender, id);
     }
 
@@ -83,8 +84,12 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         if (reward > 0) maidCoin.transfer(msg.sender, reward);
 
         supportRoute[id] = toId;
-        supportedPower[toId] += supportedPower[id];
+        emit SupportRoute(id, toId);
+        uint256 power = supportedPower[id];
+        supportedPower[toId] += power;
         supportedPower[id] = 0;
+        emit SupportPowerChanged(toId, int(power));
+        // emit SupportPowerChanged(id, -int(power));
         theMaster.mint(msg.sender, nurseType.destroyReturn);
         _burn(id);
     }
@@ -115,15 +120,16 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         uint256 _supportTo = supportTo[supporter];
         uint256 _route = supportRoute[_supportTo];
         if (_route == _supportTo) return (ownerOf(_supportTo), _supportTo);
-        while (true) {
+        uint256 initialSupportTo = _supportTo;
+        while (_route != _supportTo) {
             _supportTo = _route;
             _route = supportRoute[_supportTo];
-            if (_route == _supportTo) {
-                supportTo[supporter] = _supportTo;
-                emit SupportRecorded(supporter, _supportTo);
-                return (ownerOf(_supportTo), _supportTo);
-            }
         }
+        supportTo[supporter] = _supportTo;
+        supportRoute[initialSupportTo] = _supportTo;
+        emit SupportRoute(initialSupportTo, _supportTo);
+        emit SupportRecorded(supporter, _supportTo);
+        return (ownerOf(_supportTo), _supportTo);
     }
 
     function changeSupportedPower(uint256 id, int256 power) public override {
