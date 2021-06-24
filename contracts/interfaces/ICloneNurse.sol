@@ -8,10 +8,10 @@ import "./ITheMaster.sol";
 
 interface ICloneNurse is IERC721 {
     event Claim(uint256 indexed id, address indexed claimer, uint256 reward);
-    event SupportRecorded(address indexed supporter, uint256 indexed to);
-    event SupportRoute(uint256 indexed from, uint256 indexed to);//
-    event SupportPowerChanged(uint256 indexed id, int256 power);
-    event SupportingRewardsTransfer(address indexed supporter, uint256 indexed id, uint256 amounts);
+    event SupportTo(address indexed supporter, uint256 indexed to);
+    event ChangeSupportingRoute(uint256 indexed from, uint256 indexed to);
+    event ChangeSupportedPower(uint256 indexed id, int256 power);
+    event TransferSupportingRewards(address indexed supporter, uint256 indexed id, uint256 amounts);
 
     function nursePart() external view returns (INursePart);
 
@@ -19,9 +19,9 @@ interface ICloneNurse is IERC721 {
 
     function theMaster() external view returns (ITheMaster);
 
-    function supportRoute(uint256 id) external view returns (uint256);
+    function supportingRoute(uint256 id) external view returns (uint256);
 
-    function supportTo(address supporter) external view returns (uint256);
+    function supportingTo(address supporter) external view returns (uint256);
 
     function supportedPower(uint256 id) external view returns (uint256);
 
@@ -54,9 +54,9 @@ interface ICloneNurse is IERC721 {
 
     function pendingReward(uint256 id) external view returns (uint256);
 
-    function setSupportTo(address supporter, uint256 to) external;
+    function setSupportingTo(address supporter, uint256 to) external;
 
-    function checkSupportRoute(address supporter) external returns (address, uint256);
+    function checkSupportingRoute(address supporter) external returns (address, uint256);
 
     function changeSupportedPower(uint256 id, int256 power) external;
 

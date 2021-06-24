@@ -5,9 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/INurseRaid.sol";
 
 contract NurseRaid is Ownable, INurseRaid {
-    uint256 public constant MAX_MAIDS_PER_RAID = 5;
-
-    uint256 public override maidPowerToRaidReducedBlock = 1;
+    uint256 public override maidPowerToRaidReducedBlock = 100;
 
     IMaid public immutable override maid;
     IMaidCoin public immutable override maidCoin;
@@ -46,7 +44,7 @@ contract NurseRaid is Ownable, INurseRaid {
 
     struct Challenger {
         uint256 enterBlock;
-        uint256[] maids;
+        uint256 maid;
     }
     mapping(uint256 => mapping(address => Challenger)) public challengers;
 
@@ -72,7 +70,7 @@ contract NurseRaid is Ownable, INurseRaid {
 
     function enterWithPermitAll(
         uint256 id,
-        uint256[] calldata maids,
+        uint256 _maid,
         uint256 deadline,
         uint8 v1,
         bytes32 r1,
@@ -82,26 +80,21 @@ contract NurseRaid is Ownable, INurseRaid {
         bytes32 s2
     ) external override {
         maidCoin.permit(msg.sender, address(this), type(uint256).max, deadline, v1, r1, s1);
-        maid.permitAll(msg.sender, address(this), deadline, v2, r2, s2);
-        enter(id, maids);
+        if (_maid != type(uint256).max) maid.permitAll(msg.sender, address(this), deadline, v2, r2, s2);
+        enter(id, _maid);
     }
 
-    function enter(uint256 id, uint256[] calldata maids) public override {
+    function enter(uint256 id, uint256 _maid) public override {
         Raid memory raid = raids[id];
         require(block.number < raid.endBlock);
-        require(maids.length < MAX_MAIDS_PER_RAID);
-
         require(challengers[id][msg.sender].enterBlock == 0);
-        challengers[id][msg.sender] = Challenger({enterBlock: block.number, maids: maids});
-
-        uint256 maidsLength = maids.length;
-        for (uint256 i = 0; i < maidsLength; i += 1) {
-            maid.transferFrom(msg.sender, address(this), maids[i]);
+        challengers[id][msg.sender] = Challenger({enterBlock: block.number, maid: _maid});
+        if (_maid != type(uint256).max) {
+            maid.transferFrom(msg.sender, address(this), _maid);
         }
-
         maidCoin.transferFrom(msg.sender, address(this), raid.entranceFee);
         maidCoin.burn(raid.entranceFee);
-        emit Enter(msg.sender, id, maids);
+        emit Enter(msg.sender, id, _maid);
     }
 
     function checkDone(uint256 id) public view override returns (bool) {
@@ -112,16 +105,15 @@ contract NurseRaid is Ownable, INurseRaid {
     }
 
     function _checkDone(Raid memory raid, Challenger memory challenger) internal view returns (bool) {
-        uint256 maidsLength = challenger.maids.length;
-        uint256 totalPower = 0;
-        for (uint256 i = 0; i < maidsLength; i += 1) {
-            totalPower += maid.powerOf(challenger.maids[i]);
-        }
-
-        if (totalPower == 0) {
+        if (challenger.maid == type(uint256).max) {
             return block.number - challenger.enterBlock >= raid.duration;
         } else {
-            return block.number - challenger.enterBlock + totalPower * maidPowerToRaidReducedBlock >= raid.duration;
+            return
+                block.number -
+                    challenger.enterBlock +
+                    (maid.powerOf(challenger.maid) * maidPowerToRaidReducedBlock) /
+                    100 >=
+                raid.duration;
         }
     }
 
@@ -136,9 +128,8 @@ contract NurseRaid is Ownable, INurseRaid {
             nursePart.mint(msg.sender, raid.nursePart, rewardCount);
         }
 
-        uint256 maidsLength = challenger.maids.length;
-        for (uint256 i = 0; i < maidsLength; i += 1) {
-            maid.transferFrom(address(this), msg.sender, challenger.maids[i]);
+        if (challenger.maid != type(uint256).max) {
+            maid.transferFrom(address(this), msg.sender, challenger.maid);
         }
 
         delete challengers[id][msg.sender];

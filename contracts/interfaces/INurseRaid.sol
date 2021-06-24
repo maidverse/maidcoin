@@ -10,12 +10,12 @@ interface INurseRaid {
     event Create(
         uint256 indexed id,
         uint256 entranceFee,
-        uint256 nursePart,
+        uint256 indexed nursePart,
         uint256 maxRewardCount,
         uint256 duration,
         uint256 endBlock
     );
-    event Enter(address indexed challenger, uint256 indexed id, uint256[] maids);
+    event Enter(address indexed challenger, uint256 indexed id, uint256 indexed maid);
     event Exit(address indexed challenger, uint256 indexed id);
     event ChangeMaidPowerToRaidReducedBlock(uint256 value);
 
@@ -39,7 +39,7 @@ interface INurseRaid {
 
     function enterWithPermitAll(
         uint256 id,
-        uint256[] calldata maids,
+        uint256 _maid,
         uint256 deadline,
         uint8 v1,
         bytes32 r1,
@@ -49,7 +49,7 @@ interface INurseRaid {
         bytes32 s2
     ) external;
 
-    function enter(uint256 id, uint256[] calldata maids) external;
+    function enter(uint256 id, uint256 maid) external;
 
     function checkDone(uint256 id) external view returns (bool);
 

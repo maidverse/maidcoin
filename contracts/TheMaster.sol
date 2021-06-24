@@ -239,7 +239,7 @@ contract TheMaster is Ownable, ITheMaster {
             if (pending > 0) {
                 uint256 amountToNurseOwner = pending / 10;
                 if (amountToNurseOwner > 0) {
-                    (address nurseOwner, uint256 _supportTo) = cloneNurse.checkSupportRoute(msg.sender);
+                    (address nurseOwner, uint256 _supportTo) = cloneNurse.checkSupportingRoute(msg.sender);
                     cloneNurse.recordRewardsTransfer(msg.sender, _supportTo, amountToNurseOwner);
                     safeRewardTransfer(nurseOwner, amountToNurseOwner);
                 }
@@ -249,10 +249,10 @@ contract TheMaster is Ownable, ITheMaster {
         if (amount > 0) {
             if (_amount == 0) {
                 require(cloneNurse.ownerOf(supportTo) != address(0));
-                cloneNurse.setSupportTo(msg.sender, supportTo);
+                cloneNurse.setSupportingTo(msg.sender, supportTo);
                 cloneNurse.changeSupportedPower(supportTo, int256(amount));
             } else {
-                cloneNurse.changeSupportedPower(cloneNurse.supportTo(msg.sender), int256(amount));
+                cloneNurse.changeSupportedPower(cloneNurse.supportingTo(msg.sender), int256(amount));
             }
             IERC20(pool.addr).safeTransferFrom(msg.sender, address(this), amount);
             pool.supply += amount;
@@ -275,14 +275,14 @@ contract TheMaster is Ownable, ITheMaster {
         if (pending > 0) {
             uint256 amountToNurseOwner = pending / 10;
             if (amountToNurseOwner > 0) {
-                (address nurseOwner, uint256 _supportTo) = cloneNurse.checkSupportRoute(msg.sender);
+                (address nurseOwner, uint256 _supportTo) = cloneNurse.checkSupportingRoute(msg.sender);
                 cloneNurse.recordRewardsTransfer(msg.sender, _supportTo, amountToNurseOwner);
                 safeRewardTransfer(nurseOwner, amountToNurseOwner);
             }
             safeRewardTransfer(msg.sender, pending - amountToNurseOwner);
         }
         if (amount > 0) {
-            cloneNurse.changeSupportedPower(cloneNurse.supportTo(msg.sender), -int256(amount));
+            cloneNurse.changeSupportedPower(cloneNurse.supportingTo(msg.sender), -int256(amount));
             pool.supply -= amount;
             _amount -= amount;
             user.amount = _amount;
