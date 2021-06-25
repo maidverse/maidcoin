@@ -284,6 +284,20 @@ contract TheMaster is Ownable, ITheMaster {
         emit Desupport(msg.sender, pid, amount);
     }
 
+    function emergencyDesupport(uint256 pid) external override {
+        PoolInfo storage pool = poolInfo[pid];
+        ISupportable supportable = pool.supportable;
+        require(address(supportable) == address(0), "TheMaster: use emergencyWithdraw func");
+        UserInfo storage user = userInfo[pid][uint256(uint160(msg.sender))];
+        uint256 amounts = user.amount;
+        user.amount = 0;
+        user.rewardDebt = 0;
+        pool.supply -= amounts;
+        supportable.changeSupportedPower(msg.sender, -int256(amounts));
+        IERC20(pool.addr).safeTransfer(msg.sender, amounts);
+        emit EmergencyDesupport(msg.sender, pid, amounts);
+    }
+
     function mint(address to, uint256 amount) external override {
         require(poolInfo[pidByAddr[msg.sender]].mintable, "TheMaster: called from un-mintable");
         maidCoin.mint(to, amount);

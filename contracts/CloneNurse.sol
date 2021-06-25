@@ -2,6 +2,7 @@
 pragma solidity ^0.8.5;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+// import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import "./libraries/ERC721.sol";
 import "./interfaces/IERC1271.sol";
 import "./interfaces/ICloneNurse.sol";
@@ -89,7 +90,6 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         supportedPower[toId] += power;
         supportedPower[id] = 0;
         emit ChangeSupportedPower(toId, int256(power));
-        // emit ChangeSupportedPower(id, -int(power));
         theMaster.mint(msg.sender, nurseType.destroyReturn);
         _burn(id);
     }
@@ -173,5 +173,9 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
             (nurseOwner, _supportTo) = checkSupportingRoute(supporter);
             recordRewardsTransfer(supporter, _supportTo, amountToNurseOwner);
         }
+    }
+
+    function onERC1155Received(address, address, uint256, uint256, bytes memory) public pure returns (bytes4) {
+        return this.onERC1155Received.selector;
     }
 }

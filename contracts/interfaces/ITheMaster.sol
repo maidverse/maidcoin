@@ -23,6 +23,7 @@ interface ITheMaster {
 
     event Support(address indexed supporter, uint256 indexed pid, uint256 amount);
     event Desupport(address indexed supporter, uint256 indexed pid, uint256 amount);
+    event EmergencyDesupport(address indexed user, uint256 indexed pid, uint256 amount);
 
     event SetIsSupporterPool(uint256 indexed pid, bool indexed status);
 
@@ -97,6 +98,8 @@ interface ITheMaster {
     ) external;
 
     function desupport(uint256 pid, uint256 amount) external;
+
+    function emergencyDesupport(uint256 pid) external;
 
     function mint(address to, uint256 amount) external;
 }
