@@ -174,11 +174,7 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ERC1155Holder, I
             recordRewardsTransfer(supporter, _supportTo, amountToNurseOwner);
         }
     }
-
-    //function onERC1155Received(address, address, uint256, uint256, bytes memory) public pure returns (bytes4) {
-    //    return this.onERC1155Received.selector;
-    //}
-
+    
     function supportsInterface(bytes4 interfaceId)
         public
         view
