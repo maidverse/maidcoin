@@ -19,6 +19,7 @@ contract TheMaster is Ownable, ITheMaster {
         bool delegate;
         bool mintable;
         ISupportable supportable;
+        uint8 supportingRatio;
         uint256 allocPoint;
         uint256 lastRewardBlock;
         uint256 accRewardPerShare;
@@ -60,7 +61,12 @@ contract TheMaster is Ownable, ITheMaster {
                 totalAllocPoint;
             accRewardPerShare = accRewardPerShare + (reward * PRECISION) / supply;
         }
-        return ((user.amount * accRewardPerShare) / PRECISION) - user.rewardDebt;
+        uint256 pending = ((user.amount * accRewardPerShare) / PRECISION) - user.rewardDebt;
+        if (pool.supportingRatio == 0) {
+            return pending;
+        } else {
+            return pending - ((pending * pool.supportingRatio) / 100);
+        }
     }
 
     function rewardPerBlock() public view override returns (uint256) {
@@ -81,27 +87,40 @@ contract TheMaster is Ownable, ITheMaster {
         bool delegate,
         bool mintable,
         address supportable,
+        uint8 supportingRatio,
         uint256 allocPoint
     ) external override onlyOwner {
+        if (supportable != address(0)) {
+            require(supportingRatio > 0 && supportingRatio <= 80, "TheMaster: outranged supportingRatio");
+        } else {
+            require(supportingRatio == 0, "TheMaster: not supportable pool");
+        }
         massUpdatePools();
         uint256 lastRewardBlock = block.number > startBlock ? block.number : startBlock;
         totalAllocPoint += allocPoint;
         uint256 pid = poolInfo.length;
         pidByAddr[addr] = pid;
-        poolInfo.push(PoolInfo(addr, delegate, mintable, ISupportable(supportable), allocPoint, lastRewardBlock, 0, 0));
-        emit Add(pid, addr, delegate, mintable, supportable, allocPoint);
+        poolInfo.push(
+            PoolInfo(
+                addr,
+                delegate,
+                mintable,
+                ISupportable(supportable),
+                supportingRatio,
+                allocPoint,
+                lastRewardBlock,
+                0,
+                0
+            )
+        );
+        emit Add(pid, addr, delegate, mintable, supportable, supportingRatio, allocPoint);
     }
 
-    function set(
-        uint256 pid,
-        address supportable,
-        uint256 allocPoint
-    ) external override onlyOwner {
+    function set(uint256 pid, uint256 allocPoint) external override onlyOwner {
         massUpdatePools();
         totalAllocPoint = totalAllocPoint - poolInfo[pid].allocPoint + allocPoint;
         poolInfo[pid].allocPoint = allocPoint;
-        poolInfo[pid].supportable = ISupportable(supportable);
-        emit Set(pid, supportable, allocPoint);
+        emit Set(pid, allocPoint);
     }
 
     function updatePool(PoolInfo storage pool) internal {
@@ -238,7 +257,7 @@ contract TheMaster is Ownable, ITheMaster {
         if (_amount > 0) {
             uint256 pending = ((_amount * _accRewardPerShare) / PRECISION) - user.rewardDebt;
             if (pending > 0) {
-                (address to, uint256 amounts) = supportable.shareRewards(pending, msg.sender);
+                (address to, uint256 amounts) = supportable.shareRewards(pending, msg.sender, pool.supportingRatio);
                 if (to != address(0) && amounts > 0) safeRewardTransfer(to, amounts); //
                 safeRewardTransfer(msg.sender, pending - amounts);
             }
@@ -269,7 +288,7 @@ contract TheMaster is Ownable, ITheMaster {
         uint256 _accRewardPerShare = pool.accRewardPerShare;
         uint256 pending = ((_amount * _accRewardPerShare) / PRECISION) - user.rewardDebt;
         if (pending > 0) {
-            (address to, uint256 amounts) = supportable.shareRewards(pending, msg.sender);
+            (address to, uint256 amounts) = supportable.shareRewards(pending, msg.sender, pool.supportingRatio);
             if (to != address(0) && amounts > 0) safeRewardTransfer(to, amounts);
             safeRewardTransfer(msg.sender, pending - amounts);
         }
