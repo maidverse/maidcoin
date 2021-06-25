@@ -2,6 +2,7 @@
 pragma solidity ^0.8.5;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+// import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import "./libraries/ERC721.sol";
 import "./interfaces/IERC1271.sol";
 import "./interfaces/ICloneNurse.sol";
@@ -16,12 +17,12 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         uint256 nurseType;
     }
 
-    INursePart public override nursePart;
-    IMaidCoin public override maidCoin;
-    ITheMaster public override theMaster;
+    INursePart public immutable override nursePart;
+    IMaidCoin public immutable override maidCoin;
+    ITheMaster public immutable override theMaster;
 
-    mapping(uint256 => uint256) public override supportRoute;
-    mapping(address => uint256) public override supportTo;
+    mapping(uint256 => uint256) public override supportingRoute;
+    mapping(address => uint256) public override supportingTo;
     mapping(uint256 => uint256) public override supportedPower;
     mapping(uint256 => uint256) public override totalRewardsFromSupporters;
 
@@ -54,7 +55,8 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         uint256 id = nurses.length;
         theMaster.deposit(2, nurseType.power, id);
         nurses.push(Nurse({nurseType: nurserType}));
-        supportRoute[id] = id;
+        supportingRoute[id] = id;
+        emit ChangeSupportingRoute(id, id);
         _mint(msg.sender, id);
     }
 
@@ -82,9 +84,12 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         uint256 reward = balanceAfter - balanceBefore;
         if (reward > 0) maidCoin.transfer(msg.sender, reward);
 
-        supportRoute[id] = toId;
-        supportedPower[toId] += supportedPower[id];
+        supportingRoute[id] = toId;
+        emit ChangeSupportingRoute(id, toId);
+        uint256 power = supportedPower[id];
+        supportedPower[toId] += power;
         supportedPower[id] = 0;
+        emit ChangeSupportedPower(toId, int256(power));
         theMaster.mint(msg.sender, nurseType.destroyReturn);
         _burn(id);
     }
@@ -104,44 +109,73 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         return theMaster.pendingReward(2, id);
     }
 
-    function setSupportTo(address supporter, uint256 to) public override {
+    function setSupportingTo(
+        address supporter,
+        uint256 to,
+        uint256 amounts
+    ) public override {
         require(msg.sender == address(theMaster));
-        supportTo[supporter] = to;
-        emit SupportRecorded(supporter, to);
-    }
+        require(_exists(to));
+        supportingTo[supporter] = to;
+        emit SupportTo(supporter, to);
 
-    function checkSupportRoute(address supporter) public override returns (address, uint256) {
-        require(msg.sender == address(theMaster));
-        uint256 _supportTo = supportTo[supporter];
-        uint256 _route = supportRoute[_supportTo];
-        if (_route == _supportTo) return (ownerOf(_supportTo), _supportTo);
-        while (true) {
-            _supportTo = _route;
-            _route = supportRoute[_supportTo];
-            if (_route == _supportTo) {
-                supportTo[supporter] = _supportTo;
-                emit SupportRecorded(supporter, _supportTo);
-                return (ownerOf(_supportTo), _supportTo);
-            }
+        if (amounts > 0) {
+            supportedPower[to] += amounts;
+            emit ChangeSupportedPower(to, int256(amounts));
         }
     }
 
-    function changeSupportedPower(uint256 id, int256 power) public override {
+    function checkSupportingRoute(address supporter) public override returns (address, uint256) {
+        uint256 _supportingTo = supportingTo[supporter];
+        uint256 _route = supportingRoute[_supportingTo];
+        if (_route == _supportingTo) return (ownerOf(_supportingTo), _supportingTo);
+        uint256 initialSupportTo = _supportingTo;
+        while (_route != _supportingTo) {
+            _supportingTo = _route;
+            _route = supportingRoute[_supportingTo];
+        }
+        supportingTo[supporter] = _supportingTo;
+        supportingRoute[initialSupportTo] = _supportingTo;
+        emit ChangeSupportingRoute(initialSupportTo, _supportingTo);
+        emit SupportTo(supporter, _supportingTo);
+        return (ownerOf(_supportingTo), _supportingTo);
+    }
+
+    function changeSupportedPower(address supporter, int256 power) public override {
         require(msg.sender == address(theMaster));
+        (, uint256 id) = checkSupportingRoute(supporter);
         int256 _supportedPower = int256(supportedPower[id]);
         if (power < 0) require(_supportedPower >= (-power));
         _supportedPower += power;
         supportedPower[id] = uint256(_supportedPower);
-        emit SupportPowerChanged(id, power);
+        emit ChangeSupportedPower(id, power);
     }
 
     function recordRewardsTransfer(
         address supporter,
         uint256 id,
         uint256 amounts
-    ) public override {
+    ) internal {
         require(msg.sender == address(theMaster));
         totalRewardsFromSupporters[id] += amounts;
-        emit SupportingRewardsTransfer(supporter, id, amounts);
+        emit TransferSupportingRewards(supporter, id, amounts);
+    }
+
+    function shareRewards(uint256 pending, address supporter)
+        public
+        override
+        returns (address nurseOwner, uint256 amountToNurseOwner)
+    {
+        require(msg.sender == address(theMaster));
+        amountToNurseOwner = pending / 10;
+        uint256 _supportTo;
+        if (amountToNurseOwner > 0) {
+            (nurseOwner, _supportTo) = checkSupportingRoute(supporter);
+            recordRewardsTransfer(supporter, _supportTo, amountToNurseOwner);
+        }
+    }
+
+    function onERC1155Received(address, address, uint256, uint256, bytes memory) public pure returns (bytes4) {
+        return this.onERC1155Received.selector;
     }
 }
