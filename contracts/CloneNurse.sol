@@ -2,12 +2,12 @@
 pragma solidity ^0.8.5;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-// import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
+import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import "./libraries/ERC721.sol";
 import "./interfaces/IERC1271.sol";
 import "./interfaces/ICloneNurse.sol";
 
-contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
+contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ERC1155Holder, ICloneNurse {
     struct NurseType {
         uint256 partCount;
         uint256 destroyReturn;
@@ -175,7 +175,15 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ICloneNurse {
         }
     }
 
-    function onERC1155Received(address, address, uint256, uint256, bytes memory) public pure returns (bytes4) {
-        return this.onERC1155Received.selector;
+    //function onERC1155Received(address, address, uint256, uint256, bytes memory) public pure returns (bytes4) {
+    //    return this.onERC1155Received.selector;
+    //}
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721, ERC1155Receiver, IERC165) returns (bool) {
+        return
+            interfaceId == type(IERC721).interfaceId ||
+            interfaceId == type(IERC721Metadata).interfaceId ||
+            interfaceId == type(IERC1155Receiver).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 }
