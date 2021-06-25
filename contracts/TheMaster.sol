@@ -258,7 +258,7 @@ contract TheMaster is Ownable, ITheMaster {
             uint256 pending = ((_amount * _accRewardPerShare) / PRECISION) - user.rewardDebt;
             if (pending > 0) {
                 (address to, uint256 amounts) = supportable.shareRewards(pending, msg.sender, pool.supportingRatio);
-                if (amounts > 0) safeRewardTransfer(to, amounts); //
+                if (amounts > 0) safeRewardTransfer(to, amounts);
                 safeRewardTransfer(msg.sender, pending - amounts);
             }
         }
