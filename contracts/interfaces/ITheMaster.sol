@@ -14,9 +14,10 @@ interface ITheMaster {
         bool indexed delegate,
         bool indexed mintable,
         address supportable,
+        uint8 supportingRatio,
         uint256 allocPoint
     );
-    event Set(uint256 indexed pid, address supportable, uint256 allocPoint);
+    event Set(uint256 indexed pid, uint256 allocPoint);
     event Deposit(uint256 indexed userId, uint256 indexed pid, uint256 amount);
     event Withdraw(uint256 indexed userId, uint256 indexed pid, uint256 amount);
     event EmergencyWithdraw(address indexed user, uint256 indexed pid, uint256 amount);
@@ -45,6 +46,7 @@ interface ITheMaster {
             bool delegate,
             bool mintable,
             ISupportable supportable,
+            uint8 supportingRatio,
             uint256 allocPoint,
             uint256 lastRewardBlock,
             uint256 accRewardPerShare,
@@ -68,12 +70,12 @@ interface ITheMaster {
         bool delegate,
         bool mintable,
         address supportable,
+        uint8 supportingRatio,
         uint256 allocPoint
     ) external;
 
     function set(
         uint256 pid,
-        address supportable,
         uint256 allocPoint
     ) external;
 

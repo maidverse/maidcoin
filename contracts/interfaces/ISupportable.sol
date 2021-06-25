@@ -25,7 +25,7 @@ interface ISupportable {
 
     function changeSupportedPower(address supporter, int256 power) external;
 
-    function shareRewards(uint256 pending, address supporter)
+    function shareRewards(uint256 pending, address supporter, uint8 supportingRatio)
         external
         returns (address nurseOwner, uint256 amountToNurseOwner);
 }

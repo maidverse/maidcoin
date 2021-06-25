@@ -1,7 +1,13 @@
 const { ethers } = require("hardhat");
 const { expect } = require("chai");
+const { BigNumber } = ethers;
 const { mine } = require("./helpers/evm");
 const { tokenAmount } = require("./helpers/ethers");
+
+/**
+    await network.provider.send("evm_setAutomine", [true]);
+    await network.provider.send("evm_setAutomine", [false]);
+ */
 
 const INITIAL_REWARD_PER_BLOCK = tokenAmount(100);
 const START_BLOCK = 32;
@@ -10,13 +16,9 @@ const mineToStartBlock = async () => {
     await mine(START_BLOCK - (await ethers.provider.getBlockNumber()) - 1);
 };
 
-const rewardPool0 = (amount, multiplier = 1) => amount.mul(multiplier).div(10);
-const rewardPool1 = (amount, multiplier = 1) =>
-  amount.mul(multiplier).mul(9).div(10);
-
 const setupTest = async () => {
     const signers = await ethers.getSigners();
-    const [deployer, delegate, alice, bob, carol] = signers;
+    const [deployer, alice, bob, carol, dan] = signers;
 
     const MockERC20 = await ethers.getContractFactory("MockERC20");
     const poolToken = await MockERC20.deploy();
@@ -24,33 +26,55 @@ const setupTest = async () => {
     await poolToken.mint(alice.address, tokenAmount(1000));
     await poolToken.mint(bob.address, tokenAmount(1000));
     await poolToken.mint(carol.address, tokenAmount(1000));
-
+    await poolToken.mint(dan.address, tokenAmount(1000));
+    
     const MaidCoin = await ethers.getContractFactory("MaidCoin");
     const maidCoin = await MaidCoin.deploy();
     await mine();
-
-    const TheMaster = await ethers.getContractFactory("TheMaster");
-    const theMaster = await TheMaster.deploy(INITIAL_REWARD_PER_BLOCK, 4000000, START_BLOCK, maidCoin.address);
+    
+    const NursePart = await ethers.getContractFactory("NursePart");
+    const parts = await NursePart.deploy();
     await mine();
+    await parts.mint(alice.address, 1, 10);
+    await parts.mint(bob.address, 2, 5);
+    await parts.mint(carol.address, 0, 2);
+    
+    const TheMaster = await ethers.getContractFactory("TheMaster");
+    const theMaster = await TheMaster.deploy(INITIAL_REWARD_PER_BLOCK, 400000, START_BLOCK, maidCoin.address);
+    await mine();
+
+    const CloneNurse = await ethers.getContractFactory("CloneNurse");
+    const nurse = await CloneNurse.deploy(parts.address, maidCoin.address, theMaster.address);
+    await mine();
+
+    await parts.connect(alice).setApprovalForAll(nurse.address, true);
+    await parts.connect(bob).setApprovalForAll(nurse.address, true);
+    await parts.connect(carol).setApprovalForAll(nurse.address, true);
 
     await poolToken.connect(alice).approve(theMaster.address, ethers.constants.MaxUint256);
     await poolToken.connect(bob).approve(theMaster.address, ethers.constants.MaxUint256);
     await poolToken.connect(carol).approve(theMaster.address, ethers.constants.MaxUint256);
-    await maidCoin.transferOwnership(theMaster.address);
-    await theMaster.add(poolToken.address, false, 10);
-    await theMaster.add(delegate.address, true, 90);
+    await poolToken.connect(dan).approve(theMaster.address, ethers.constants.MaxUint256);
 
+    await maidCoin.transferOwnership(theMaster.address);
+
+    await theMaster.add(maidCoin.address, false, false, ethers.constants.AddressZero, 0, 10);
+    await theMaster.add(poolToken.address, false, false, ethers.constants.AddressZero, 0, 9);
+    await theMaster.add(nurse.address, true, true, ethers.constants.AddressZero, 0, 30);
+    await theMaster.add(poolToken.address, false, true, nurse.address, 10, 51);
     await mine();
 
     return {
         deployer,
-        delegate,
         alice,
         bob,
         carol,
+        dan,
         poolToken,
         maidCoin,
+        parts,
         theMaster,
+        nurse,
     };
 };
 
@@ -58,126 +82,197 @@ describe("TheMaster", function () {
     beforeEach(async function () {
         await ethers.provider.send("hardhat_reset", []);
     });
+    
+    it.only("overall test", async function () {
+        const { alice, bob, carol, dan, poolToken, maidCoin, parts, theMaster, nurse } = await setupTest();
+        await network.provider.send("evm_setAutomine", [true]);
 
-    it("should allow emergency withdraw", async function () {
-        const { alice, poolToken, theMaster } = await setupTest();
+        await nurse.addNurseType(1, 123, 100);
+        await nurse.addNurseType(1, 234, 200);
+        await nurse.addNurseType(1, 345, 300);
+
+        await nurse.connect(alice).assemble(1);
+        await nurse.connect(bob).assemble(2);
+        await nurse.connect(carol).assemble(0);
+        await nurse.connect(alice).assemble(1);
+        await nurse.connect(bob).assemble(2);
+        await nurse.connect(carol).assemble(0);
+        await nurse.connect(alice).assemble(1);
+        await nurse.connect(bob).assemble(2);
+        await nurse.connect(alice).assemble(1);
+        await nurse.connect(bob).assemble(2);
+        
+        expect(await nurse.ownerOf(0)).to.be.equal(alice.address);
+        expect(await nurse.ownerOf(1)).to.be.equal(bob.address);
+        expect(await nurse.ownerOf(2)).to.be.equal(carol.address);
 
         await mineToStartBlock();
 
-        await theMaster.connect(alice).deposit(0, tokenAmount(100), alice.address);
-        await mine();
-        expect(await poolToken.balanceOf(alice.address)).to.equal(tokenAmount(900));
+        await expect(theMaster.connect(dan).deposit(0,1,0)).to.be.revertedWith("TheMaster: deposit to your address");
+        await expect(theMaster.connect(dan).deposit(1,1,0)).to.be.revertedWith("TheMaster: deposit to your address");
+        await expect(theMaster.connect(dan).deposit(2,1,0)).to.be.revertedWith("TheMaster: Not called by delegate");
+        await expect(theMaster.connect(dan).deposit(3,1,0)).to.be.revertedWith("TheMaster: use support func");
 
-        await theMaster.connect(alice).emergencyWithdraw(0);
-        await mine();
-
-        expect(await poolToken.balanceOf(alice.address)).to.equal(tokenAmount(1000));
-    });
-
-    it("should reward correctly for pool 0", async function () {
-        const { alice, theMaster } = await setupTest();
-
-        expect(await theMaster.pendingReward(0, alice.address)).to.be.equal(0);
-
-        await mineToStartBlock(); //31
-        await mine(3); //34
-        expect(await theMaster.pendingReward(0, alice.address)).to.be.equal(0); //34
-
-        await mine(5); //39
-        await theMaster.connect(alice).deposit(0, tokenAmount(100), alice.address); //40 update
-        await mine(); //40
-        expect(await theMaster.pendingReward(0, alice.address)).to.be.equal(0); //40
-
-        await mine(); //41
-        const rewardPerBlock = await theMaster.rewardPerBlock();
-        expect(await theMaster.pendingReward(0, alice.address)).to.be.equal(rewardPool0(rewardPerBlock)); //41
-
-        await mine(16); //57
-        expect(await theMaster.pendingReward(0, alice.address)).to.be.equal(rewardPool0(rewardPerBlock, 17)); //57
-    });
-
-    it("should reward correctly for pool 0 (alice & bob)", async function () {
-        const { alice, bob, theMaster, maidCoin } = await setupTest();
-
-        expect(await theMaster.pendingReward(0, alice.address)).to.be.equal(0);
-
-        await mineToStartBlock(); //31
-        await mine(3); //34
-        expect(await theMaster.pendingReward(0, alice.address)).to.be.equal(0); //34
-
-        await mine(5); //39
-        await theMaster.connect(alice).deposit(0, tokenAmount(100), alice.address); //40 update
-
-        await mine(5); //44
-        await theMaster.connect(bob).deposit(0, tokenAmount(100), bob.address); //45 update
-
-        await mine(); //45
-        await theMaster.connect(alice).withdraw(0, tokenAmount(100), alice.address); //46 update
-
-        await mine(); //46
-        const rewardPerBlock = await theMaster.rewardPerBlock();
-        // expect(await maidCoin.balanceOf(alice.address)).to.equal(rewardPool0(rewardPerBlock, 5));
-        // expect(await maidCoin.balanceOf(bob.address)).to.equal(rewardPool0(rewardPerBlock, 5));
-    });
-
-    it("should reward correctly for pool 0 and 1", async function () {
-        const { delegate, alice, theMaster } = await setupTest();
-
-        expect(await theMaster.pendingReward(0, alice.address)).to.be.equal(0);
-        expect(await theMaster.pendingReward(1, alice.address)).to.be.equal(0);
-
-        await mineToStartBlock(); //31
-        await mine(3); //34
-        expect(await theMaster.pendingReward(0, alice.address)).to.be.equal(0); //34
-        expect(await theMaster.pendingReward(1, alice.address)).to.be.equal(0); //34
-
-        await mine(5); //39
-        await theMaster.connect(alice).deposit(0, tokenAmount(100), alice.address); //40 update
-        await mine(); //40
-        expect(await theMaster.pendingReward(0, alice.address)).to.be.equal(0); //40
-        expect(await theMaster.pendingReward(1, alice.address)).to.be.equal(0); //40
-
-        await mine(); //41
-        const rewardPerBlock = await theMaster.rewardPerBlock();
-        expect(await theMaster.pendingReward(0, alice.address)).to.be.equal(rewardPool0(rewardPerBlock)); //41
-        expect(await theMaster.pendingReward(1, alice.address)).to.be.equal(0); //41
-
-        await theMaster.connect(delegate).deposit(1, tokenAmount(100), alice.address); //41 update
-        await mine(16); //57
-        expect(await theMaster.pendingReward(0, alice.address)).to.be.equal(rewardPool0(rewardPerBlock, 17)); //57
-        expect(await theMaster.pendingReward(0, alice.address)).to.be.equal(rewardPool0(rewardPerBlock, 17)); //57
-        expect(await theMaster.pendingReward(1, alice.address)).to.be.equal(
-          rewardPool1(rewardPerBlock, 15)
-        ); //57
-
-        await mine(7); //64
-        expect(await theMaster.pendingReward(0, alice.address)).to.be.equal(rewardPool0(rewardPerBlock, 24)); //64
-        expect(await theMaster.pendingReward(1, alice.address)).to.be.equal(
-          rewardPool1(rewardPerBlock, 22)
-        ); //64
-    });
-
-    it("should distribute winningBonus correctly", async function () {
-        const { delegate, alice, theMaster, maidCoin } = await setupTest();
-
-        await mineToStartBlock(); //31
-        await mine(3); //34
-        expect(await theMaster.pendingReward(0, alice.address)).to.be.equal(0); //34
-        expect(await theMaster.pendingReward(1, alice.address)).to.be.equal(0); //34
-
-        await mine(5); //39
-        await theMaster.connect(alice).deposit(0, tokenAmount(100), alice.address); //40 update
-        await mine(10); //49
-        await theMaster.connect(delegate).deposit(1, tokenAmount(100), alice.address); //50 update
-        await mine(); //50
-        const winningBonus = await theMaster.winningBonus();
-        const rewardPerBlock = await theMaster.rewardPerBlock();
-        expect(winningBonus).to.be.equal(rewardPool1(rewardPerBlock, 50 - START_BLOCK)); //50
-
-        for (let i = 0; i < 30; i++) {
-            await theMaster.connect(delegate).claimWinningBonus(i);
-            await mine();
-            expect(await maidCoin.balanceOf(delegate.address)).to.equal(winningBonus.div(30).mul(i + 1));
+        await expect(theMaster.connect(dan).support(0,1,0)).to.be.revertedWith("TheMaster: use deposit func");
+        await expect(theMaster.connect(dan).support(1,1,0)).to.be.revertedWith("TheMaster: use deposit func");
+        await expect(theMaster.connect(dan).support(2,1,0)).to.be.revertedWith("TheMaster: use deposit func");
+        
+        await theMaster.connect(dan).support(3,1,1);
+        expect(await nurse.supportingTo(dan.address)).to.be.equal(1);
+        expect(await nurse.supportedPower(1)).to.be.equal(1);
+        
+        for(let i = 0; i<10; i++) {
+            expect(await nurse.supportingRoute(i)).to.be.equal(i);
         }
+        
+        await theMaster.connect(dan).support(3,1,2);
+        expect(await nurse.supportingTo(dan.address)).to.be.equal(1);
+        expect(await nurse.supportedPower(1)).to.be.equal(2);
+        expect(await nurse.supportedPower(2)).to.be.equal(0);
+        
+        await mine();
+        await mine();
+        await mine();
+        await mine();
+
+        let toNFT = tokenAmount(255).div(10);
+        let toDan = tokenAmount(255).sub(toNFT);
+        await expect(() => theMaster.connect(dan).desupport(3,1)).to.changeTokenBalances(maidCoin, [dan, bob], [toDan, toNFT]);
+
+        const signers = await ethers.getSigners();
+        const [a, b, c, d, e, u0, u1, u2, u3, u4, u5, u6, u7, u8, u9] = signers;
+
+        await poolToken.connect(alice).transfer(u0.address, 100);
+        await poolToken.connect(alice).transfer(u1.address, 100);
+        await poolToken.connect(alice).transfer(u2.address, 100);
+        await poolToken.connect(alice).transfer(u3.address, 100);
+        await poolToken.connect(alice).transfer(u4.address, 100);
+        await poolToken.connect(alice).transfer(u5.address, 100);
+        await poolToken.connect(alice).transfer(u6.address, 100);
+        await poolToken.connect(alice).transfer(u7.address, 100);
+        await poolToken.connect(alice).transfer(u8.address, 100);
+        await poolToken.connect(alice).transfer(u9.address, 100);
+
+        await poolToken.connect(u0).approve(theMaster.address, 10000);
+        await poolToken.connect(u1).approve(theMaster.address, 10000);
+        await poolToken.connect(u2).approve(theMaster.address, 10000);
+        await poolToken.connect(u3).approve(theMaster.address, 10000);
+        await poolToken.connect(u4).approve(theMaster.address, 10000);
+        await poolToken.connect(u5).approve(theMaster.address, 10000);
+        await poolToken.connect(u6).approve(theMaster.address, 10000);
+        await poolToken.connect(u7).approve(theMaster.address, 10000);
+        await poolToken.connect(u8).approve(theMaster.address, 10000);
+        await poolToken.connect(u9).approve(theMaster.address, 10000);
+
+        await theMaster.connect(u0).support(3,2,2);
+        await theMaster.connect(u1).support(3,3,3);
+        await theMaster.connect(u2).support(3,4,4);
+        await theMaster.connect(u3).support(3,5,5);
+        await theMaster.connect(u4).support(3,6,6);
+        await theMaster.connect(u5).support(3,7,7);
+        await theMaster.connect(u6).support(3,8,8);
+        await theMaster.connect(u7).support(3,9,9);
+
+        for(let i = 0; i<10; i++) {
+            expect(await nurse.supportingRoute(i)).to.be.equal(i);
+            expect(await nurse.supportedPower(i)).to.be.equal(i);
+        }
+
+        await nurse.connect(alice).destroy(0, 4);
+        await nurse.connect(bob).destroy(4, 8);
+        expect(await nurse.supportedPower(8)).to.be.equal(12);
+        await nurse.connect(alice).destroy(8, 6);
+        expect(await nurse.supportedPower(8)).to.be.equal(0);
+        expect(await nurse.supportedPower(6)).to.be.equal(18);
+        expect(await nurse.supportingRoute(8)).to.be.equal(6);
+        expect(await nurse.supportingRoute(6)).to.be.equal(6);
+
+        expect(await nurse.supportingTo(dan.address)).to.be.equal(1);
+        expect(await nurse.supportingTo(u0.address)).to.be.equal(2);
+        expect(await nurse.supportingTo(u1.address)).to.be.equal(3);
+        expect(await nurse.supportingTo(u2.address)).to.be.equal(4);
+        expect(await nurse.supportingTo(u3.address)).to.be.equal(5);
+        expect(await nurse.supportingTo(u4.address)).to.be.equal(6);
+        expect(await nurse.supportingTo(u5.address)).to.be.equal(7);
+        expect(await nurse.supportingTo(u6.address)).to.be.equal(8);
+        expect(await nurse.supportingTo(u7.address)).to.be.equal(9);
+
+        await theMaster.connect(u2).support(3,0,0);
+        expect(await nurse.supportingTo(u2.address)).to.be.equal(6);
+        // console.log((await nurse.totalRewardsFromSupporters(6)).toString());
+
+        await theMaster.connect(u6).support(3,0,0);
+        expect(await nurse.supportingTo(u6.address)).to.be.equal(6);
+        // console.log((await nurse.totalRewardsFromSupporters(6)).toString());
+
+        await network.provider.send("evm_setAutomine", [false]);
+
+        await theMaster.connect(dan).support(3,0,0);
+        await theMaster.connect(u0).support(3,0,0);
+        await theMaster.connect(u1).support(3,0,0);
+        await theMaster.connect(u2).support(3,0,0);
+        await theMaster.connect(u3).support(3,0,0);
+        await theMaster.connect(u4).support(3,0,0);
+        await theMaster.connect(u5).support(3,0,0);
+        await theMaster.connect(u6).support(3,0,0);
+        await theMaster.connect(u7).support(3,0,0);
+        await mine();
+
+        // console.log((await theMaster.pendingReward(3,dan.address)).toString());
+        // console.log((await theMaster.pendingReward(3,u0.address)).toString());
+        // console.log((await theMaster.pendingReward(3,u1.address)).toString());
+        // console.log((await theMaster.pendingReward(3,u2.address)).toString());
+        // console.log((await theMaster.pendingReward(3,u3.address)).toString());
+        // console.log((await theMaster.pendingReward(3,u4.address)).toString());
+        // console.log((await theMaster.pendingReward(3,u5.address)).toString());
+        // console.log((await theMaster.pendingReward(3,u6.address)).toString());
+        // console.log((await theMaster.pendingReward(3,u7.address)).toString());
+
+        await mine();
+        await mine();
+        await mine();
+        await mine();
+        await mine();
+
+        await theMaster.set(3, 0);
+        await theMaster.set(2, 0);
+        await mine();
+        
+        // console.log((await theMaster.pendingReward(3,dan.address)).toString());
+        // console.log((await theMaster.pendingReward(3,u0.address)).toString());
+        // console.log((await theMaster.pendingReward(3,u1.address)).toString());
+        // console.log((await theMaster.pendingReward(3,u2.address)).toString());
+        // console.log((await theMaster.pendingReward(3,u3.address)).toString());
+        // console.log((await theMaster.pendingReward(3,u4.address)).toString());
+        // console.log((await theMaster.pendingReward(3,u5.address)).toString());
+        // console.log((await theMaster.pendingReward(3,u6.address)).toString());
+        // console.log((await theMaster.pendingReward(3,u7.address)).toString());
+
+        const r1 = await nurse.pendingReward(1);
+        const r2 = await nurse.pendingReward(2);
+        const r3 = await nurse.pendingReward(3);
+        const r5 = await nurse.pendingReward(5);
+        const r6 = await nurse.pendingReward(6);
+        const r7 = await nurse.pendingReward(7);
+        const r9 = await nurse.pendingReward(9);
+
+        await network.provider.send("evm_setAutomine", [true]);
+
+        await expect(() => nurse.connect(bob).claim(1)).to.changeTokenBalance(maidCoin, bob, r1);
+        await expect(() => nurse.connect(carol).claim(2)).to.changeTokenBalance(maidCoin, carol, r2);
+        await expect(() => nurse.connect(alice).claim(3)).to.changeTokenBalance(maidCoin, alice, r3);
+        await expect(() => nurse.connect(carol).claim(5)).to.changeTokenBalance(maidCoin, carol, r5);
+        await expect(() => nurse.connect(alice).claim(6)).to.changeTokenBalance(maidCoin, alice, r6);
+        await expect(() => nurse.connect(bob).claim(7)).to.changeTokenBalance(maidCoin, bob, r7);
+        await expect(() => nurse.connect(bob).claim(9)).to.changeTokenBalance(maidCoin, bob, r9);
+
+        await theMaster.set(3, 51);
+        await theMaster.set(2, 30);
+
+        await theMaster.connect(dan).desupport(3,1);
+        expect(await nurse.supportingTo(dan.address)).to.be.equal(1);
+        
+        await theMaster.connect(dan).support(3,1,2);
+        expect(await nurse.supportingTo(dan.address)).to.be.equal(2);
     });
 });

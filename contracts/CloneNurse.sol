@@ -161,25 +161,27 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ERC1155Holder, I
         emit TransferSupportingRewards(supporter, id, amounts);
     }
 
-    function shareRewards(uint256 pending, address supporter)
-        public
-        override
-        returns (address nurseOwner, uint256 amountToNurseOwner)
-    {
+    function shareRewards(
+        uint256 pending,
+        address supporter,
+        uint8 supportingRatio
+    ) public override returns (address nurseOwner, uint256 amountToNurseOwner) {
         require(msg.sender == address(theMaster));
-        amountToNurseOwner = pending / 10;
+        amountToNurseOwner = (pending * supportingRatio) / 100;
         uint256 _supportTo;
         if (amountToNurseOwner > 0) {
             (nurseOwner, _supportTo) = checkSupportingRoute(supporter);
             recordRewardsTransfer(supporter, _supportTo, amountToNurseOwner);
         }
     }
-
-    //function onERC1155Received(address, address, uint256, uint256, bytes memory) public pure returns (bytes4) {
-    //    return this.onERC1155Received.selector;
-    //}
-
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721, ERC1155Receiver, IERC165) returns (bool) {
+    
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC721, ERC1155Receiver, IERC165)
+        returns (bool)
+    {
         return
             interfaceId == type(IERC721).interfaceId ||
             interfaceId == type(IERC721Metadata).interfaceId ||
