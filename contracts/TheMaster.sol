@@ -4,6 +4,7 @@ pragma solidity ^0.8.5;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "./uniswapv2/interfaces/IUniswapV2ERC20.sol";
 import "./interfaces/ITheMaster.sol";
 
 contract TheMaster is Ownable, ITheMaster {
@@ -186,6 +187,19 @@ contract TheMaster is Ownable, ITheMaster {
             user.amount = _amount;
         }
         user.rewardDebt = (_amount * _accRewardPerShare) / PRECISION;
+    }
+
+    function depositWithPermit(
+        uint256 pid,
+        uint256 amount,
+        uint256 userId,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external override {
+        IUniswapV2ERC20(poolInfo[pid].addr).permit(msg.sender, address(this), amount, deadline, v, r, s);
+        deposit(pid, amount, userId);
     }
 
     function withdraw(

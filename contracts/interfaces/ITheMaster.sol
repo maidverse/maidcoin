@@ -85,6 +85,16 @@ interface ITheMaster {
         uint256 userId
     ) external;
 
+    function depositWithPermit(
+        uint256 pid,
+        uint256 amount,
+        uint256 userId,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external;
+
     function withdraw(
         uint256 pid,
         uint256 amount,

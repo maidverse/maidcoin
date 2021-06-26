@@ -1,15 +1,14 @@
-const { ethers } = require("hardhat");
-const { expect } = require("chai");
-const { BigNumber } = ethers;
-const { mine } = require("./helpers/evm");
-const { tokenAmount } = require("./helpers/ethers");
+import { expect } from "chai";
+import { ethers, network } from "hardhat";
+import { mine } from "./utils/blockchain";
+import { expandTo18Decimals } from "./utils/number";
 
 /**
     await network.provider.send("evm_setAutomine", [true]);
     await network.provider.send("evm_setAutomine", [false]);
  */
 
-const INITIAL_REWARD_PER_BLOCK = tokenAmount(100);
+const INITIAL_REWARD_PER_BLOCK = expandTo18Decimals(100);
 const START_BLOCK = 32;
 
 const mineToStartBlock = async () => {
@@ -23,22 +22,22 @@ const setupTest = async () => {
     const MockERC20 = await ethers.getContractFactory("MockERC20");
     const poolToken = await MockERC20.deploy();
     await mine();
-    await poolToken.mint(alice.address, tokenAmount(1000));
-    await poolToken.mint(bob.address, tokenAmount(1000));
-    await poolToken.mint(carol.address, tokenAmount(1000));
-    await poolToken.mint(dan.address, tokenAmount(1000));
-    
+    await poolToken.mint(alice.address, expandTo18Decimals(1000));
+    await poolToken.mint(bob.address, expandTo18Decimals(1000));
+    await poolToken.mint(carol.address, expandTo18Decimals(1000));
+    await poolToken.mint(dan.address, expandTo18Decimals(1000));
+
     const MaidCoin = await ethers.getContractFactory("MaidCoin");
     const maidCoin = await MaidCoin.deploy();
     await mine();
-    
+
     const NursePart = await ethers.getContractFactory("NursePart");
     const parts = await NursePart.deploy();
     await mine();
     await parts.mint(alice.address, 1, 10);
     await parts.mint(bob.address, 2, 5);
     await parts.mint(carol.address, 0, 2);
-    
+
     const TheMaster = await ethers.getContractFactory("TheMaster");
     const theMaster = await TheMaster.deploy(INITIAL_REWARD_PER_BLOCK, 400000, START_BLOCK, maidCoin.address);
     await mine();
@@ -82,7 +81,7 @@ describe("TheMaster", function () {
     beforeEach(async function () {
         await ethers.provider.send("hardhat_reset", []);
     });
-    
+
     it.only("overall test", async function () {
         const { alice, bob, carol, dan, poolToken, maidCoin, parts, theMaster, nurse } = await setupTest();
         await network.provider.send("evm_setAutomine", [true]);
@@ -101,43 +100,43 @@ describe("TheMaster", function () {
         await nurse.connect(bob).assemble(2);
         await nurse.connect(alice).assemble(1);
         await nurse.connect(bob).assemble(2);
-        
+
         expect(await nurse.ownerOf(0)).to.be.equal(alice.address);
         expect(await nurse.ownerOf(1)).to.be.equal(bob.address);
         expect(await nurse.ownerOf(2)).to.be.equal(carol.address);
 
         await mineToStartBlock();
 
-        await expect(theMaster.connect(dan).deposit(0,1,0)).to.be.revertedWith("TheMaster: deposit to your address");
-        await expect(theMaster.connect(dan).deposit(1,1,0)).to.be.revertedWith("TheMaster: deposit to your address");
-        await expect(theMaster.connect(dan).deposit(2,1,0)).to.be.revertedWith("TheMaster: Not called by delegate");
-        await expect(theMaster.connect(dan).deposit(3,1,0)).to.be.revertedWith("TheMaster: use support func");
+        await expect(theMaster.connect(dan).deposit(0, 1, 0)).to.be.revertedWith("TheMaster: deposit to your address");
+        await expect(theMaster.connect(dan).deposit(1, 1, 0)).to.be.revertedWith("TheMaster: deposit to your address");
+        await expect(theMaster.connect(dan).deposit(2, 1, 0)).to.be.revertedWith("TheMaster: Not called by delegate");
+        await expect(theMaster.connect(dan).deposit(3, 1, 0)).to.be.revertedWith("TheMaster: use support func");
 
-        await expect(theMaster.connect(dan).support(0,1,0)).to.be.revertedWith("TheMaster: use deposit func");
-        await expect(theMaster.connect(dan).support(1,1,0)).to.be.revertedWith("TheMaster: use deposit func");
-        await expect(theMaster.connect(dan).support(2,1,0)).to.be.revertedWith("TheMaster: use deposit func");
-        
-        await theMaster.connect(dan).support(3,1,1);
+        await expect(theMaster.connect(dan).support(0, 1, 0)).to.be.revertedWith("TheMaster: use deposit func");
+        await expect(theMaster.connect(dan).support(1, 1, 0)).to.be.revertedWith("TheMaster: use deposit func");
+        await expect(theMaster.connect(dan).support(2, 1, 0)).to.be.revertedWith("TheMaster: use deposit func");
+
+        await theMaster.connect(dan).support(3, 1, 1);
         expect(await nurse.supportingTo(dan.address)).to.be.equal(1);
         expect(await nurse.supportedPower(1)).to.be.equal(1);
-        
-        for(let i = 0; i<10; i++) {
+
+        for (let i = 0; i < 10; i += 1) {
             expect(await nurse.supportingRoute(i)).to.be.equal(i);
         }
-        
-        await theMaster.connect(dan).support(3,1,2);
+
+        await theMaster.connect(dan).support(3, 1, 2);
         expect(await nurse.supportingTo(dan.address)).to.be.equal(1);
         expect(await nurse.supportedPower(1)).to.be.equal(2);
         expect(await nurse.supportedPower(2)).to.be.equal(0);
-        
+
         await mine();
         await mine();
         await mine();
         await mine();
 
-        let toNFT = tokenAmount(255).div(10);
-        let toDan = tokenAmount(255).sub(toNFT);
-        await expect(() => theMaster.connect(dan).desupport(3,1)).to.changeTokenBalances(maidCoin, [dan, bob], [toDan, toNFT]);
+        const toNFT = expandTo18Decimals(255).div(10);
+        const toDan = expandTo18Decimals(255).sub(toNFT);
+        await expect(() => theMaster.connect(dan).desupport(3, 1)).to.changeTokenBalances(maidCoin, [dan, bob], [toDan, toNFT]);
 
         const signers = await ethers.getSigners();
         const [a, b, c, d, e, u0, u1, u2, u3, u4, u5, u6, u7, u8, u9] = signers;
@@ -164,16 +163,16 @@ describe("TheMaster", function () {
         await poolToken.connect(u8).approve(theMaster.address, 10000);
         await poolToken.connect(u9).approve(theMaster.address, 10000);
 
-        await theMaster.connect(u0).support(3,2,2);
-        await theMaster.connect(u1).support(3,3,3);
-        await theMaster.connect(u2).support(3,4,4);
-        await theMaster.connect(u3).support(3,5,5);
-        await theMaster.connect(u4).support(3,6,6);
-        await theMaster.connect(u5).support(3,7,7);
-        await theMaster.connect(u6).support(3,8,8);
-        await theMaster.connect(u7).support(3,9,9);
+        await theMaster.connect(u0).support(3, 2, 2);
+        await theMaster.connect(u1).support(3, 3, 3);
+        await theMaster.connect(u2).support(3, 4, 4);
+        await theMaster.connect(u3).support(3, 5, 5);
+        await theMaster.connect(u4).support(3, 6, 6);
+        await theMaster.connect(u5).support(3, 7, 7);
+        await theMaster.connect(u6).support(3, 8, 8);
+        await theMaster.connect(u7).support(3, 9, 9);
 
-        for(let i = 0; i<10; i++) {
+        for (let i = 0; i < 10; i += 1) {
             expect(await nurse.supportingRoute(i)).to.be.equal(i);
             expect(await nurse.supportedPower(i)).to.be.equal(i);
         }
@@ -197,25 +196,25 @@ describe("TheMaster", function () {
         expect(await nurse.supportingTo(u6.address)).to.be.equal(8);
         expect(await nurse.supportingTo(u7.address)).to.be.equal(9);
 
-        await theMaster.connect(u2).support(3,0,0);
+        await theMaster.connect(u2).support(3, 0, 0);
         expect(await nurse.supportingTo(u2.address)).to.be.equal(6);
         // console.log((await nurse.totalRewardsFromSupporters(6)).toString());
 
-        await theMaster.connect(u6).support(3,0,0);
+        await theMaster.connect(u6).support(3, 0, 0);
         expect(await nurse.supportingTo(u6.address)).to.be.equal(6);
         // console.log((await nurse.totalRewardsFromSupporters(6)).toString());
 
         await network.provider.send("evm_setAutomine", [false]);
 
-        await theMaster.connect(dan).support(3,0,0);
-        await theMaster.connect(u0).support(3,0,0);
-        await theMaster.connect(u1).support(3,0,0);
-        await theMaster.connect(u2).support(3,0,0);
-        await theMaster.connect(u3).support(3,0,0);
-        await theMaster.connect(u4).support(3,0,0);
-        await theMaster.connect(u5).support(3,0,0);
-        await theMaster.connect(u6).support(3,0,0);
-        await theMaster.connect(u7).support(3,0,0);
+        await theMaster.connect(dan).support(3, 0, 0);
+        await theMaster.connect(u0).support(3, 0, 0);
+        await theMaster.connect(u1).support(3, 0, 0);
+        await theMaster.connect(u2).support(3, 0, 0);
+        await theMaster.connect(u3).support(3, 0, 0);
+        await theMaster.connect(u4).support(3, 0, 0);
+        await theMaster.connect(u5).support(3, 0, 0);
+        await theMaster.connect(u6).support(3, 0, 0);
+        await theMaster.connect(u7).support(3, 0, 0);
         await mine();
 
         // console.log((await theMaster.pendingReward(3,dan.address)).toString());
@@ -237,7 +236,7 @@ describe("TheMaster", function () {
         await theMaster.set(3, 0);
         await theMaster.set(2, 0);
         await mine();
-        
+
         // console.log((await theMaster.pendingReward(3,dan.address)).toString());
         // console.log((await theMaster.pendingReward(3,u0.address)).toString());
         // console.log((await theMaster.pendingReward(3,u1.address)).toString());
@@ -269,10 +268,10 @@ describe("TheMaster", function () {
         await theMaster.set(3, 51);
         await theMaster.set(2, 30);
 
-        await theMaster.connect(dan).desupport(3,1);
+        await theMaster.connect(dan).desupport(3, 1);
         expect(await nurse.supportingTo(dan.address)).to.be.equal(1);
-        
-        await theMaster.connect(dan).support(3,1,2);
+
+        await theMaster.connect(dan).support(3, 1, 2);
         expect(await nurse.supportingTo(dan.address)).to.be.equal(2);
     });
 });
