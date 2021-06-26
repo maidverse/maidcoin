@@ -124,7 +124,7 @@ contract NurseRaid is Ownable, INurseRaid {
         Raid memory raid = raids[id];
 
         if (_checkDone(raid, challenger)) {
-            uint256 rewardCount = _randomReward(id, raid.maxRewardCount);
+            uint256 rewardCount = _randomReward(id, raid.maxRewardCount, msg.sender);
             nursePart.mint(msg.sender, raid.nursePart, rewardCount);
         }
 
@@ -137,16 +137,20 @@ contract NurseRaid is Ownable, INurseRaid {
         emit Exit(msg.sender, id);
     }
 
-    function _randomReward(uint256 _id, uint256 _maxRewardCount) internal returns (uint256 rewardCount) {
-        uint256 totalNumber = 2 * (2 ** _maxRewardCount - 1);
-        uint256 randomNumber = (rng.generateRandomNumber(_id) % totalNumber) + 1;
+    function _randomReward(
+        uint256 _id,
+        uint256 _maxRewardCount,
+        address sender
+    ) internal returns (uint256 rewardCount) {
+        uint256 totalNumber = 2 * (2**_maxRewardCount - 1);
+        uint256 randomNumber = (rng.generateRandomNumber(_id, sender) % totalNumber) + 1;
 
         uint256 ceil;
         uint256 i = 0;
 
         while (randomNumber > ceil) {
             i += 1;
-            ceil = (2 ** (_maxRewardCount + 1)) - (2 ** (_maxRewardCount + 1 - i));
+            ceil = (2**(_maxRewardCount + 1)) - (2**(_maxRewardCount + 1 - i));
         }
 
         rewardCount = i;
