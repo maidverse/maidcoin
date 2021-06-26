@@ -1,22 +1,32 @@
-# Node
-node_modules/
+# OS X
+.DS_Store*
+Icon?
+._*
 
-# Hardhat
-cache/
-artifacts/
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
 
-# Deployments
-deployments/
+# Linux
+.directory
+*~
 
-# Typechain
-typechain/
+# npm
+node_modules
+package-lock.json
+*.log
+*.gz
 
-# Env
+# local env variables
 .env
 
-# Coverage
-coverage/
-coverage.json
-
-# VSCode
+# vscode
 .history
+
+# hardhat
+cache
+artifacts
+
+# typechain
+typechain

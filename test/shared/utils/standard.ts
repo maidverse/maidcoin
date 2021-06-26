@@ -17,7 +17,7 @@ const domainSeparator = (name: string, tokenAddress: string) => {
             ethers.utils.keccak256(ethers.utils.toUtf8Bytes("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)")),
             ethers.utils.keccak256(ethers.utils.toUtf8Bytes(name)),
             ethers.utils.keccak256(ethers.utils.toUtf8Bytes("1")),
-            1,
+            31337,
             tokenAddress,
         ]
     ));

@@ -1,27 +1,19 @@
 import { expect } from "chai";
-import { MockProvider } from "ethereum-waffle";
 import { ecsign } from "ethereumjs-util";
 import { BigNumber, constants } from "ethers";
 import { defaultAbiCoder, hexlify, keccak256, toUtf8Bytes } from "ethers/lib/utils";
 import { waffle } from "hardhat";
 import MaidCoinArtifact from "../artifacts/contracts/MaidCoin.sol/MaidCoin.json";
 import { MaidCoin } from "../typechain";
-import { expandTo18Decimals } from "./utils/number";
-import { getERC20ApprovalDigest } from "./utils/standard";
+import { expandTo18Decimals } from "./shared/utils/number";
+import { getERC20ApprovalDigest } from "./shared/utils/standard";
 
 const { deployContract } = waffle;
 
 describe("MaidCoin", () => {
     let maidCoin: MaidCoin;
 
-    const provider = new MockProvider({
-        ganacheOptions: {
-            hardfork: "istanbul",
-            mnemonic: "horn horn horn horn horn horn horn horn horn horn horn horn",
-            gasLimit: 99999999999
-        }
-    });
-
+    const provider = waffle.provider;
     const [admin, other] = provider.getWallets();
     const totalSupply = expandTo18Decimals(30000);
 
@@ -120,7 +112,7 @@ describe("MaidCoin", () => {
                             ),
                             keccak256(toUtf8Bytes("MaidCoin")),
                             keccak256(toUtf8Bytes("1")),
-                            1,
+                            31337,
                             maidCoin.address
                         ]
                     )

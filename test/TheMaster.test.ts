@@ -1,12 +1,14 @@
 import { expect } from "chai";
-import { ethers, network } from "hardhat";
-import { mine } from "./utils/blockchain";
-import { expandTo18Decimals } from "./utils/number";
-
-/**
-    await network.provider.send("evm_setAutomine", [true]);
-    await network.provider.send("evm_setAutomine", [false]);
- */
+import { ethers, network, waffle } from "hardhat";
+import CloneNurseArtifact from "../artifacts/contracts/CloneNurse.sol/CloneNurse.json";
+import MaidCoinArtifact from "../artifacts/contracts/MaidCoin.sol/MaidCoin.json";
+import MockERC20Artifact from "../artifacts/contracts/mock/MockERC20.sol/MockERC20.json";
+import TheMasterArtifact from "../artifacts/contracts/TheMaster.sol/TheMaster.json";
+import NursePartArtifact from "../artifacts/contracts/NursePart.sol/NursePart.json";
+import { CloneNurse, MaidCoin, MockERC20, NursePart, TheMaster } from "../typechain";
+import { mine } from "./shared/utils/blockchain";
+import { expandTo18Decimals } from "./shared/utils/number";
+import { ContractFactory } from "ethers";
 
 const INITIAL_REWARD_PER_BLOCK = expandTo18Decimals(100);
 const START_BLOCK = 32;
@@ -16,39 +18,70 @@ const mineToStartBlock = async () => {
 };
 
 const setupTest = async () => {
-    const signers = await ethers.getSigners();
-    const [deployer, alice, bob, carol, dan] = signers;
+    const provider = waffle.provider;
+    const [admin, alice, bob, carol, dan] = provider.getWallets();
 
-    const MockERC20 = await ethers.getContractFactory("MockERC20");
-    const poolToken = await MockERC20.deploy();
+    await network.provider.send("evm_setAutomine", [false]);
+
+    const poolTokenFactory = new ContractFactory(
+        MockERC20Artifact.abi,
+        MockERC20Artifact.bytecode,
+        admin,
+    );
+    const poolToken = await poolTokenFactory.deploy() as MockERC20;
+
     await mine();
     await poolToken.mint(alice.address, expandTo18Decimals(1000));
     await poolToken.mint(bob.address, expandTo18Decimals(1000));
     await poolToken.mint(carol.address, expandTo18Decimals(1000));
     await poolToken.mint(dan.address, expandTo18Decimals(1000));
 
-    const MaidCoin = await ethers.getContractFactory("MaidCoin");
-    const maidCoin = await MaidCoin.deploy();
+    const maidCoinFactory = new ContractFactory(
+        MaidCoinArtifact.abi,
+        MaidCoinArtifact.bytecode,
+        admin,
+    );
+    const maidCoin = await maidCoinFactory.deploy() as MaidCoin;
+
     await mine();
 
-    const NursePart = await ethers.getContractFactory("NursePart");
-    const parts = await NursePart.deploy();
-    await mine();
-    await parts.mint(alice.address, 1, 10);
-    await parts.mint(bob.address, 2, 5);
-    await parts.mint(carol.address, 0, 2);
+    const nursePartFactory = new ContractFactory(
+        NursePartArtifact.abi,
+        NursePartArtifact.bytecode,
+        admin,
+    );
+    const nursePart = await nursePartFactory.deploy() as NursePart;
 
-    const TheMaster = await ethers.getContractFactory("TheMaster");
-    const theMaster = await TheMaster.deploy(INITIAL_REWARD_PER_BLOCK, 400000, START_BLOCK, maidCoin.address);
+    await mine();
+    await nursePart.mint(alice.address, 1, 10);
+    await nursePart.mint(bob.address, 2, 5);
+    await nursePart.mint(carol.address, 0, 2);
+
+    const theMasterFactory = new ContractFactory(
+        TheMasterArtifact.abi,
+        TheMasterArtifact.bytecode,
+        admin,
+    );
+    const theMaster = await theMasterFactory.deploy(
+        INITIAL_REWARD_PER_BLOCK, 400000, START_BLOCK, maidCoin.address,
+    ) as TheMaster;
+
     await mine();
 
-    const CloneNurse = await ethers.getContractFactory("CloneNurse");
-    const nurse = await CloneNurse.deploy(parts.address, maidCoin.address, theMaster.address);
+    const nurseFactory = new ContractFactory(
+        CloneNurseArtifact.abi,
+        CloneNurseArtifact.bytecode,
+        admin,
+    );
+    const nurse = await nurseFactory.deploy(
+        nursePart.address, maidCoin.address, theMaster.address,
+    ) as CloneNurse;
+
     await mine();
 
-    await parts.connect(alice).setApprovalForAll(nurse.address, true);
-    await parts.connect(bob).setApprovalForAll(nurse.address, true);
-    await parts.connect(carol).setApprovalForAll(nurse.address, true);
+    await nursePart.connect(alice).setApprovalForAll(nurse.address, true);
+    await nursePart.connect(bob).setApprovalForAll(nurse.address, true);
+    await nursePart.connect(carol).setApprovalForAll(nurse.address, true);
 
     await poolToken.connect(alice).approve(theMaster.address, ethers.constants.MaxUint256);
     await poolToken.connect(bob).approve(theMaster.address, ethers.constants.MaxUint256);
@@ -64,14 +97,14 @@ const setupTest = async () => {
     await mine();
 
     return {
-        deployer,
+        admin,
         alice,
         bob,
         carol,
         dan,
         poolToken,
         maidCoin,
-        parts,
+        nursePart,
         theMaster,
         nurse,
     };
@@ -83,7 +116,7 @@ describe("TheMaster", function () {
     });
 
     it.only("overall test", async function () {
-        const { alice, bob, carol, dan, poolToken, maidCoin, parts, theMaster, nurse } = await setupTest();
+        const { alice, bob, carol, dan, poolToken, maidCoin, nursePart, theMaster, nurse } = await setupTest();
         await network.provider.send("evm_setAutomine", [true]);
 
         await nurse.addNurseType(1, 123, 100);
