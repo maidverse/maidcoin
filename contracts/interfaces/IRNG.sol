@@ -2,5 +2,5 @@
 pragma solidity >=0.5.0;
 
 interface IRNG {
-    function generateRandomNumber(uint256 seed) external returns (uint256);
+    function generateRandomNumber(uint256 seed, address sender) external returns (uint256);
 }
