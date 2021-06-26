@@ -202,6 +202,19 @@ contract TheMaster is Ownable, ITheMaster {
         deposit(pid, amount, userId);
     }
 
+    function depositWithPermitMax(
+        uint256 pid,
+        uint256 amount,
+        uint256 userId,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external override {
+        IUniswapV2ERC20(poolInfo[pid].addr).permit(msg.sender, address(this), type(uint256).max, deadline, v, r, s);
+        deposit(pid, amount, userId);
+    }
+
     function withdraw(
         uint256 pid,
         uint256 amount,
