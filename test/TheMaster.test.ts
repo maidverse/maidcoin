@@ -93,7 +93,7 @@ const setupTest = async () => {
     await theMaster.add(maidCoin.address, false, false, ethers.constants.AddressZero, 0, 10);
     await theMaster.add(poolToken.address, false, false, ethers.constants.AddressZero, 0, 9);
     await theMaster.add(nurse.address, true, true, ethers.constants.AddressZero, 0, 30);
-    await theMaster.add(poolToken.address, false, true, nurse.address, 10, 51);
+    await theMaster.add(poolToken.address, false, false, nurse.address, 10, 51);
     await mine();
 
     return {
