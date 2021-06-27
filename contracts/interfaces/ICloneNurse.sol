@@ -2,18 +2,18 @@
 pragma solidity ^0.8.5;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
+import "./ISupportable.sol";
 import "./INursePart.sol";
 import "./IMaidCoin.sol";
 import "./ITheMaster.sol";
-import "./ISupportable.sol";
 
-interface ICloneNurse is IERC721, ISupportable {
+interface ICloneNurse is IERC721, IERC721Metadata, ISupportable {
+
     event Claim(uint256 indexed id, address indexed claimer, uint256 reward);
 
     function nursePart() external view returns (INursePart);
-
     function maidCoin() external view returns (IMaidCoin);
-
     function theMaster() external view returns (ITheMaster);
 
     function nurseTypes(uint256 typeId)

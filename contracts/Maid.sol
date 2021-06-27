@@ -5,31 +5,36 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./libraries/ERC721.sol";
 import "./uniswapv2/interfaces/IUniswapV2Pair.sol";
 import "./interfaces/IERC1271.sol";
+import "./interfaces/IMaid.sol";
 
-contract Maid is Ownable, ERC721("Maid", "MAID") {
-    event ChangeLPTokenToMaidPower(uint256 value);
-    event Support(uint256 indexed id, uint256 lpTokenAmount);
-    event Desupport(uint256 indexed id, uint256 lpTokenAmount);
+contract Maid is Ownable, ERC721("Maid", "MAID"), IMaid {
+    
+    function _baseURI() override internal pure returns (string memory) {
+        return "https://api.maidcoin.org/maid/";
+    }
 
     struct MaidInfo {
         uint256 originPower;
         uint256 supportedLPTokenAmount;
     }
 
-    bytes32 public immutable DOMAIN_SEPARATOR;
+    bytes32 override public immutable DOMAIN_SEPARATOR;
+    
     // keccak256("Permit(address spender,uint256 tokenId,uint256 nonce,uint256 deadline)");
-    bytes32 public constant PERMIT_TYPEHASH = 0x49ecf333e5b8c95c40fdafc95c1ad136e8914a8fb55e9dc8bb01eaa83a2df9ad;
+    bytes32 override public constant PERMIT_TYPEHASH = 0x49ecf333e5b8c95c40fdafc95c1ad136e8914a8fb55e9dc8bb01eaa83a2df9ad;
+    
     // keccak256("Permit(address owner,address spender,uint256 nonce,uint256 deadline)");
-    bytes32 public constant PERMIT_ALL_TYPEHASH = 0xdaab21af31ece73a508939fedd476a5ee5129a5ed4bb091f3236ffb45394df62;
-    mapping(uint256 => uint256) public nonces;
-    mapping(address => uint256) public noncesForAll;
+    bytes32 override public constant PERMIT_ALL_TYPEHASH = 0xdaab21af31ece73a508939fedd476a5ee5129a5ed4bb091f3236ffb45394df62;
+    
+    mapping(uint256 => uint256) override public nonces;
+    mapping(address => uint256) override public noncesForAll;
 
-    IUniswapV2Pair public immutable lpToken;
-    uint256 public lpTokenToMaidPower = 1;
-    MaidInfo[] public maids;
+    IUniswapV2Pair override public immutable lpToken;
+    uint256 override public lpTokenToMaidPower = 1;
+    MaidInfo[] override public maids;
 
-    constructor(address lpTokenAddr) {
-        lpToken = IUniswapV2Pair(lpTokenAddr);
+    constructor(IUniswapV2Pair _lpToken) {
+        lpToken = _lpToken;
 
         uint256 chainId;
         assembly {
@@ -57,12 +62,12 @@ contract Maid is Ownable, ERC721("Maid", "MAID") {
         _mint(msg.sender, id);
     }
 
-    function powerOf(uint256 id) external view returns (uint256) {
+    function powerOf(uint256 id) override external view returns (uint256) {
         MaidInfo memory maid = maids[id];
         return maid.originPower + (maid.supportedLPTokenAmount * lpTokenToMaidPower) / 1e18;
     }
 
-    function support(uint256 id, uint256 lpTokenAmount) public {
+    function support(uint256 id, uint256 lpTokenAmount) override public {
         require(ownerOf(id) == msg.sender);
         maids[id].supportedLPTokenAmount += lpTokenAmount;
 
@@ -77,12 +82,12 @@ contract Maid is Ownable, ERC721("Maid", "MAID") {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external {
+    ) override external {
         lpToken.permit(msg.sender, address(this), lpTokenAmount, deadline, v, r, s);
         support(id, lpTokenAmount);
     }
 
-    function desupport(uint256 id, uint256 lpTokenAmount) external {
+    function desupport(uint256 id, uint256 lpTokenAmount) override external {
         require(ownerOf(id) == msg.sender);
         maids[id].supportedLPTokenAmount -= lpTokenAmount;
         lpToken.transfer(msg.sender, lpTokenAmount);
@@ -97,7 +102,7 @@ contract Maid is Ownable, ERC721("Maid", "MAID") {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external {
+    ) override external {
         require(block.timestamp <= deadline);
 
         bytes32 digest = keccak256(
@@ -130,7 +135,7 @@ contract Maid is Ownable, ERC721("Maid", "MAID") {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external {
+    ) override external {
         require(block.timestamp <= deadline);
 
         bytes32 digest = keccak256(

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.5.16;
 
-import "./uniswapv2/UniswapV2ERC20.sol";
 import "./interfaces/IMaidCoin.sol";
+import "./uniswapv2/UniswapV2ERC20.sol";
 import "./libraries/Ownable.sol";
 
 contract MaidCoin is IMaidCoin, Ownable, UniswapV2ERC20("MaidCoin", "$MAID") {

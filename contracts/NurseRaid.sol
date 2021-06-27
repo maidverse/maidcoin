@@ -13,15 +13,15 @@ contract NurseRaid is Ownable, INurseRaid {
     IRNG public override rng;
 
     constructor(
-        address maidAddr,
-        address maidCoinAddr,
-        address nursePartAddr,
-        address rngAddr
+        IMaid _maid,
+        IMaidCoin _maidCoin,
+        INursePart _nursePart,
+        IRNG _rng
     ) {
-        maid = IMaid(maidAddr);
-        maidCoin = IMaidCoin(maidCoinAddr);
-        nursePart = INursePart(nursePartAddr);
-        rng = IRNG(rngAddr);
+        maid = _maid;
+        maidCoin = _maidCoin;
+        nursePart = _nursePart;
+        rng = _rng;
     }
 
     function changeMaidPowerToRaidReducedBlock(uint256 value) external onlyOwner {

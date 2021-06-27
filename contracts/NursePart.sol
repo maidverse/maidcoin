@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./libraries/ERC1155.sol";
 import "./interfaces/IERC1271.sol";
 
-contract NursePart is Ownable, ERC1155("https://maidcoin.org/api/nursepart/{id}.json") {
+contract NursePart is Ownable, ERC1155("https://api.maidcoin.org/nursepart/{id}") {
     string public constant name = "NursePart";
 
     bytes32 public immutable DOMAIN_SEPARATOR;

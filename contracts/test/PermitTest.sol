@@ -15,13 +15,13 @@ contract PermitTest is IERC1155Receiver, ERC165 {
     INursePart private nursePart;
 
     constructor(
-        address maidCoinAddr,
-        address maidAddr,
-        address nursePartAddr
+        IMaidCoin _maidCoin,
+        IMaid _maid,
+        INursePart _nursePart
     ) {
-        maidCoin = IMaidCoin(maidCoinAddr);
-        maid = IMaid(maidAddr);
-        nursePart = INursePart(nursePartAddr);
+        maidCoin = _maidCoin;
+        maid = _maid;
+        nursePart = _nursePart;
     }
 
     function maidCoinPermitTest(
