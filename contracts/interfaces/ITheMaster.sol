@@ -6,6 +6,7 @@ import "./IRewardCalculator.sol";
 import "./ISupportable.sol";
 
 interface ITheMaster {
+
     event ChangeRewardCalculator(address addr);
 
     event Add(
@@ -17,6 +18,7 @@ interface ITheMaster {
         uint8 supportingRatio,
         uint256 allocPoint
     );
+
     event Set(uint256 indexed pid, uint256 allocPoint);
     event Deposit(uint256 indexed userId, uint256 indexed pid, uint256 amount);
     event Withdraw(uint256 indexed userId, uint256 indexed pid, uint256 amount);
@@ -29,13 +31,9 @@ interface ITheMaster {
     event SetIsSupporterPool(uint256 indexed pid, bool indexed status);
 
     function initialRewardPerBlock() external view returns (uint256);
-
     function decreasingInterval() external view returns (uint256);
-
     function startBlock() external view returns (uint256);
-
     function maidCoin() external view returns (IMaidCoin);
-
     function rewardCalculator() external view returns (IRewardCalculator);
 
     function poolInfo(uint256 pid)
@@ -54,13 +52,9 @@ interface ITheMaster {
         );
 
     function userInfo(uint256 pid, uint256 user) external view returns (uint256 amount, uint256 rewardDebt);
-
     function pidByAddr(address addr) external view returns (uint256 pid);
-
     function totalAllocPoint() external view returns (uint256);
-
     function pendingReward(uint256 pid, uint256 userId) external view returns (uint256);
-
     function rewardPerBlock() external view returns (uint256);
 
     function changeRewardCalculator(address addr) external;

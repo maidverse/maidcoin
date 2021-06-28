@@ -4,14 +4,17 @@ pragma solidity ^0.8.5;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./libraries/ERC1155.sol";
 import "./interfaces/IERC1271.sol";
+import "./interfaces/INursePart.sol";
 
-contract NursePart is Ownable, ERC1155("https://api.maidcoin.org/nursepart/{id}") {
+contract NursePart is Ownable, ERC1155("https://api.maidcoin.org/nursepart/{id}"), INursePart {
     string public constant name = "NursePart";
 
-    bytes32 public immutable DOMAIN_SEPARATOR;
+    bytes32 override public immutable DOMAIN_SEPARATOR;
+    
     // keccak256("Permit(address owner,address spender,uint256 nonce,uint256 deadline)");
-    bytes32 public constant PERMIT_TYPEHASH = 0xdaab21af31ece73a508939fedd476a5ee5129a5ed4bb091f3236ffb45394df62;
-    mapping(address => uint256) public nonces;
+    bytes32 override public constant PERMIT_TYPEHASH = 0xdaab21af31ece73a508939fedd476a5ee5129a5ed4bb091f3236ffb45394df62;
+    
+    mapping(address => uint256) override public nonces;
 
     constructor() {
         uint256 chainId;
@@ -33,11 +36,11 @@ contract NursePart is Ownable, ERC1155("https://api.maidcoin.org/nursepart/{id}"
         address to,
         uint256 id,
         uint256 amount
-    ) external onlyOwner {
+    ) override external onlyOwner {
         _mint(to, id, amount, "");
     }
 
-    function burn(uint256 id, uint256 amount) external {
+    function burn(uint256 id, uint256 amount) override external {
         _burn(msg.sender, id, amount);
     }
 
@@ -48,7 +51,7 @@ contract NursePart is Ownable, ERC1155("https://api.maidcoin.org/nursepart/{id}"
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external {
+    ) override external {
         require(block.timestamp <= deadline);
 
         bytes32 digest = keccak256(
