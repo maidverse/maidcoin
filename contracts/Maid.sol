@@ -3,11 +3,12 @@ pragma solidity ^0.8.5;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./libraries/ERC721.sol";
+import "./libraries/ERC721Enumerable.sol";
 import "./uniswapv2/interfaces/IUniswapV2Pair.sol";
 import "./interfaces/IERC1271.sol";
 import "./interfaces/IMaid.sol";
 
-contract Maid is Ownable, ERC721("Maid", "MAID"), IMaid {
+contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
     
     function _baseURI() override internal pure returns (string memory) {
         return "https://api.maidcoin.org/maid/";
@@ -156,5 +157,21 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), IMaid {
         }
 
         _setApprovalForAll(owner, spender, true);
+    }
+
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId)
+        internal
+        override(ERC721, ERC721Enumerable)
+    {
+        super._beforeTokenTransfer(from, to, tokenId);
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC721, ERC721Enumerable, IERC165)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
     }
 }

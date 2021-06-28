@@ -3,12 +3,13 @@ pragma solidity ^0.8.5;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
 import "./ISupportable.sol";
 import "./INursePart.sol";
 import "./IMaidCoin.sol";
 import "./ITheMaster.sol";
 
-interface ICloneNurse is IERC721, IERC721Metadata, ISupportable {
+interface ICloneNurse is IERC721, IERC721Metadata, IERC721Enumerable, ISupportable {
 
     event Claim(uint256 indexed id, address indexed claimer, uint256 reward);
 
