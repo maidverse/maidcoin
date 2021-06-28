@@ -12,8 +12,7 @@ import { getERC721ApprovalDigest } from "./shared/utils/standard";
 const { deployContract } = waffle;
 
 describe("Maid", () => {
-    let testLPToken1: TestLPToken;
-    let testLPToken2: TestLPToken;
+    let testLPToken: TestLPToken;
     let maid: Maid;
 
     const provider = waffle.provider;
@@ -21,13 +20,7 @@ describe("Maid", () => {
 
     beforeEach(async () => {
 
-        testLPToken1 = await deployContract(
-            admin,
-            TestLPTokenArtifact,
-            []
-        ) as TestLPToken;
-
-        testLPToken2 = await deployContract(
+        testLPToken = await deployContract(
             admin,
             TestLPTokenArtifact,
             []
@@ -36,7 +29,7 @@ describe("Maid", () => {
         maid = await deployContract(
             admin,
             MaidArtifact,
-            [testLPToken1.address]
+            [testLPToken.address]
         ) as Maid;
     })
 
@@ -83,6 +76,8 @@ describe("Maid", () => {
                 .to.emit(maid, "Transfer")
                 .withArgs(constants.AddressZero, admin.address, id)
             expect(await maid.powerOf(id)).to.eq(power)
+            expect(await maid.totalSupply()).to.eq(BigNumber.from(1))
+            expect(await maid.tokenURI(id)).to.eq(`https://api.maidcoin.org/maid/${id}`)
         })
 
         it("support, powerOf", async () => {
@@ -91,8 +86,8 @@ describe("Maid", () => {
             const power = BigNumber.from(12);
             const token = BigNumber.from(100);
 
-            await testLPToken1.mint(admin.address, token);
-            await testLPToken1.approve(maid.address, token);
+            await testLPToken.mint(admin.address, token);
+            await testLPToken.approve(maid.address, token);
 
             await expect(maid.mint(power))
                 .to.emit(maid, "Transfer")
@@ -109,8 +104,8 @@ describe("Maid", () => {
             const power = BigNumber.from(12);
             const token = BigNumber.from(100);
 
-            await testLPToken1.mint(admin.address, token);
-            await testLPToken1.approve(maid.address, token);
+            await testLPToken.mint(admin.address, token);
+            await testLPToken.approve(maid.address, token);
 
             await expect(maid.mint(power))
                 .to.emit(maid, "Transfer")
