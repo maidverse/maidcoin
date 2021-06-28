@@ -14,6 +14,7 @@ function displayAddress(name: string, address: string) {
 }
 
 function showAddressesForJSON() {
+    console.log("json");
     for (const [name, address] of Object.entries(addresses)) {
         console.log(`${name}: "${address}",`);
     }
