@@ -18,7 +18,6 @@ contract TheMaster is Ownable, ITheMaster {
     struct PoolInfo {
         address addr;
         bool delegate;
-        bool mintable;
         ISupportable supportable;
         uint8 supportingRatio;
         uint256 allocPoint;
@@ -38,7 +37,7 @@ contract TheMaster is Ownable, ITheMaster {
 
     PoolInfo[] public override poolInfo;
     mapping(uint256 => mapping(uint256 => UserInfo)) public override userInfo;
-    mapping(address => uint256) public override pidByAddr;
+    mapping(address => bool) public override mintableByAddr;
     uint256 public override totalAllocPoint;
 
     constructor(
@@ -104,12 +103,10 @@ contract TheMaster is Ownable, ITheMaster {
         uint256 lastRewardBlock = block.number > startBlock ? block.number : startBlock;
         totalAllocPoint += allocPoint;
         uint256 pid = poolInfo.length;
-        pidByAddr[addr] = pid;
         poolInfo.push(
             PoolInfo(
                 addr,
                 delegate,
-                mintable,
                 ISupportable(supportable),
                 supportingRatio,
                 allocPoint,
@@ -118,6 +115,9 @@ contract TheMaster is Ownable, ITheMaster {
                 0
             )
         );
+        if (mintable == true) {
+            mintableByAddr[addr] = true;
+        }
         emit Add(pid, addr, delegate, mintable, supportable, supportingRatio, allocPoint);
     }
 
@@ -349,7 +349,7 @@ contract TheMaster is Ownable, ITheMaster {
     }
 
     function mint(address to, uint256 amount) external override {
-        require(poolInfo[pidByAddr[msg.sender]].mintable, "TheMaster: called from un-mintable");
+        require(mintableByAddr[msg.sender], "TheMaster: called from un-mintable");
         maidCoin.mint(to, amount);
     }
 

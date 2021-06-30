@@ -42,7 +42,6 @@ interface ITheMaster {
         returns (
             address addr,
             bool delegate,
-            bool mintable,
             ISupportable supportable,
             uint8 supportingRatio,
             uint256 allocPoint,
@@ -53,7 +52,7 @@ interface ITheMaster {
 
     function poolCount() external view returns (uint256);
     function userInfo(uint256 pid, uint256 user) external view returns (uint256 amount, uint256 rewardDebt);
-    function pidByAddr(address addr) external view returns (uint256 pid);
+    function mintableByAddr(address addr) external view returns (bool);
     function totalAllocPoint() external view returns (uint256);
     function pendingReward(uint256 pid, uint256 userId) external view returns (uint256);
     function rewardPerBlock() external view returns (uint256);
