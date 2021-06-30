@@ -116,7 +116,7 @@ describe("NurseRaid", () => {
 
             const ecsignResult1 = ecsign(Buffer.from(digest1.slice(2), "hex"), Buffer.from(admin.privateKey.slice(2), "hex"))
 
-            const nonce2 = await maid.nonces(admin.address)
+            const nonce2 = await maid.noncesForAll(admin.address)
             const digest2 = await getERC721ApprovalAllDigest(
                 maid,
                 { owner: admin.address, spender: nurseRaid.address },
