@@ -87,6 +87,7 @@ describe("NurseRaid", () => {
             expect((await nurseRaid.raids(0)).maxRewardCount).to.be.equal(5)
             expect((await nurseRaid.raids(0)).duration).to.be.equal(10)
             expect((await nurseRaid.raids(0)).endBlock).to.be.equal(999999999)
+            expect(await nurseRaid.raidCount()).to.be.equal(1)
         })
 
         it("enter", async () => {
@@ -101,6 +102,7 @@ describe("NurseRaid", () => {
             expect((await nurseRaid.raids(0)).maxRewardCount).to.be.equal(5)
             expect((await nurseRaid.raids(0)).duration).to.be.equal(10)
             expect((await nurseRaid.raids(0)).endBlock).to.be.equal(999999999)
+            expect(await nurseRaid.raidCount()).to.be.equal(1)
 
             const deadline = constants.MaxUint256
 
@@ -133,6 +135,8 @@ describe("NurseRaid", () => {
             await expect(nurseRaid.create(expandTo18Decimals(10), 0, 5, 10, 999999999))
                 .to.emit(nurseRaid, "Create")
                 .withArgs(1, expandTo18Decimals(10), 0, 5, 10, 999999999)
+
+            expect(await nurseRaid.raidCount()).to.be.equal(2)
 
             await expect(nurseRaid.enter(1, 1))
                 .to.emit(nurseRaid, "Enter")

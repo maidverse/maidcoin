@@ -8,13 +8,13 @@ TODO: From Sushiswap
 
 ## Kovan
 - RNG: [0x8a39182b6FC57aa3A09099D698161e79623c1232](https://kovan.etherscan.io/address/0x8a39182b6FC57aa3A09099D698161e79623c1232)
-- MaidCoin: [0xeBb4c4497d906A51F30A1Bd57E35aFd7A75Cb3Ec](https://kovan.etherscan.io/address/0xeBb4c4497d906A51F30A1Bd57E35aFd7A75Cb3Ec)
-- TheMaster: [0xF2145de146F6903bBE730BD013e5c1D3e128F324](https://kovan.etherscan.io/address/0xF2145de146F6903bBE730BD013e5c1D3e128F324)
-- Maid: [0x86CE591Dc0fb8fC22Ccbf4F6941688BF58dFc620](https://kovan.etherscan.io/address/0x86CE591Dc0fb8fC22Ccbf4F6941688BF58dFc620)
-- MasterCoin: [0x9fF326fecc05A5560Eea1A66C6c62a93a64afaFb](https://kovan.etherscan.io/address/0x9fF326fecc05A5560Eea1A66C6c62a93a64afaFb)
-- NursePart: [0xf35f860762540929B3157765B82E6616664f7e97](https://kovan.etherscan.io/address/0xf35f860762540929B3157765B82E6616664f7e97)
-- NurseRaid: [0xA8c3B36B7922428A9Aa68a708829635C33aEBcAd](https://kovan.etherscan.io/address/0xA8c3B36B7922428A9Aa68a708829635C33aEBcAd)
-- CloneNurse: [0xB92FF37137533B30782C67B9a3c2611BDb826A6D](https://kovan.etherscan.io/address/0xB92FF37137533B30782C67B9a3c2611BDb826A6D)
+- MaidCoin: [0xc8DA549E25Fd6d067b3eec1d4c73fCeDf7e791EF](https://kovan.etherscan.io/address/0xc8DA549E25Fd6d067b3eec1d4c73fCeDf7e791EF)
+- TheMaster: [0x71C488C7777CB22348fDc5524611d46c21400af4](https://kovan.etherscan.io/address/0x71C488C7777CB22348fDc5524611d46c21400af4)
+- Maid: [0x14f5ce165e5CEf8d48d024CbCF77ABFD65a3e581](https://kovan.etherscan.io/address/0x14f5ce165e5CEf8d48d024CbCF77ABFD65a3e581)
+- MasterCoin: [0x2282853357Dca1985B3198865B3271B8F2b833dF](https://kovan.etherscan.io/address/0x2282853357Dca1985B3198865B3271B8F2b833dF)
+- NursePart: [0xb4F4c1d5Cf438D1a94752ff9Cc9413DA5A1e9711](https://kovan.etherscan.io/address/0xb4F4c1d5Cf438D1a94752ff9Cc9413DA5A1e9711)
+- NurseRaid: [0x468765383d80f19C478919D641501312bf666aE7](https://kovan.etherscan.io/address/0x468765383d80f19C478919D641501312bf666aE7)
+- CloneNurse: [0xf578B545B393E117Fedb26729d8408CAf5085209](https://kovan.etherscan.io/address/0xf578B545B393E117Fedb26729d8408CAf5085209)
 
 ### LP Token
 - TestLPToken: [0x56ac87553c4dBcd877cA7E4fba54959f091CaEdE](https://kovan.etherscan.io/address/0x56ac87553c4dBcd877cA7E4fba54959f091CaEdE)
