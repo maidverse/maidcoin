@@ -118,7 +118,7 @@ contract TheMaster is Ownable, ITheMaster {
         if (mintable == true) {
             mintableByAddr[addr] = true;
         }
-        emit Add(pid, addr, delegate, mintable, supportable, supportingRatio, allocPoint);
+        emit Add(pid, addr, delegate, mintableByAddr[addr], supportable, supportingRatio, allocPoint);
     }
 
     function set(uint256 pid, uint256 allocPoint) external override onlyOwner {
