@@ -84,7 +84,7 @@ contract NurseRaid is Ownable, INurseRaid {
         bytes32 s2
     ) external override {
         maidCoin.permit(msg.sender, address(this), type(uint256).max, deadline, v1, r1, s1);
-        if (_maid != type(uint256).max) maid.permitAll(msg.sender, address(this), deadline, v2, r2, s2);
+        maid.permitAll(msg.sender, address(this), deadline, v2, r2, s2);
         enter(id, _maid);
     }
 

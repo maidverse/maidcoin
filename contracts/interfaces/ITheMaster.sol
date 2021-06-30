@@ -51,6 +51,7 @@ interface ITheMaster {
             uint256 supply
         );
 
+    function poolCount() external view returns (uint256);
     function userInfo(uint256 pid, uint256 user) external view returns (uint256 amount, uint256 rewardDebt);
     function pidByAddr(address addr) external view returns (uint256 pid);
     function totalAllocPoint() external view returns (uint256);

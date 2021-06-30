@@ -53,6 +53,10 @@ contract TheMaster is Ownable, ITheMaster {
         maidCoin = _maidCoin;
     }
 
+    function poolCount() external view override returns (uint256) {
+        return poolInfo.length;
+    }
+
     function pendingReward(uint256 pid, uint256 userId) external view override returns (uint256) {
         PoolInfo memory pool = poolInfo[pid];
         UserInfo memory user = userInfo[pid][userId];
