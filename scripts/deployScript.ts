@@ -46,11 +46,6 @@ async function main() {
     const masterCoin = await MasterCoin.deploy() as MasterCoin
     displayAddress("MasterCoin", masterCoin.address)
 
-    await theMaster.add(masterCoin.address, false, false, ethers.constants.AddressZero, 0, 10);
-
-    // Maid Corp
-    await theMaster.add(LP_TOKEN_ADDRESS, false, false, ethers.constants.AddressZero, 0, 9);
-
     const NursePart = await hardhat.ethers.getContractFactory("NursePart")
     const nursePart = await NursePart.deploy() as NursePart
     displayAddress("NursePart", nursePart.address)
@@ -74,8 +69,23 @@ async function main() {
     ) as CloneNurse
     displayAddress("CloneNurse", cloneNurse.address)
 
-    await theMaster.add(cloneNurse.address, true, true, ethers.constants.AddressZero, 0, 30);
-    await theMaster.add(LP_TOKEN_ADDRESS, false, false, cloneNurse.address, 10, 51);
+    await theMaster.add(masterCoin.address, false, false, ethers.constants.AddressZero, 0, 10, {
+        gasLimit: 200000,
+    });
+
+    // Maid Corp
+    await theMaster.add(LP_TOKEN_ADDRESS, false, false, ethers.constants.AddressZero, 0, 9, {
+        gasLimit: 200000,
+    });
+
+    await theMaster.add(cloneNurse.address, true, true, ethers.constants.AddressZero, 0, 30, {
+        gasLimit: 200000,
+    });
+
+    // Supporter
+    await theMaster.add(LP_TOKEN_ADDRESS, false, false, cloneNurse.address, 10, 51, {
+        gasLimit: 200000,
+    });
 
     showAddressesForJSON();
 }

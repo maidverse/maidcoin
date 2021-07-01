@@ -26,6 +26,8 @@ interface ICloneNurse is IERC721, IERC721Metadata, IERC721Enumerable, ISupportab
             uint256 power
         );
 
+    function nurseTypeCount() external view returns (uint256);
+
     function nurses(uint256 id) external view returns (uint256 nurseType);
 
     function assemble(uint256 nurserType) external;

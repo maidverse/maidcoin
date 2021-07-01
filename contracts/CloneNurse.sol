@@ -54,6 +54,10 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ERC721Enumerable
         nurseTypes.push(NurseType({partCount: partCount, destroyReturn: destroyReturn, power: power}));
     }
 
+    function nurseTypeCount() external view override returns (uint256) {
+        return nurseTypes.length;
+    }
+
     function assemble(uint256 nurserType) public override {
         NurseType memory nurseType = nurseTypes[nurserType];
         nursePart.safeTransferFrom(msg.sender, address(this), nurserType, nurseType.partCount, "");
