@@ -113,6 +113,26 @@ interface ITheMaster {
         uint256 supportTo
     ) external;
 
+    function supportWithPermit(
+        uint256 pid,
+        uint256 amount,
+        uint256 supportTo,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external;
+
+    function supportWithPermitMax(
+        uint256 pid,
+        uint256 amount,
+        uint256 supportTo,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external;
+
     function desupport(uint256 pid, uint256 amount) external;
 
     function emergencyDesupport(uint256 pid) external;

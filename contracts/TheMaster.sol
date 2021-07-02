@@ -277,7 +277,7 @@ contract TheMaster is Ownable, ITheMaster {
         uint256 pid,
         uint256 amount,
         uint256 supportTo
-    ) external override {
+    ) public override {
         PoolInfo storage pool = poolInfo[pid];
         ISupportable supportable = pool.supportable;
         require(address(supportable) != address(0), "TheMaster: use deposit func");
@@ -306,6 +306,32 @@ contract TheMaster is Ownable, ITheMaster {
         }
         user.rewardDebt = (_amount * _accRewardPerShare) / PRECISION;
         emit Support(msg.sender, pid, amount);
+    }
+
+    function supportWithPermit(
+        uint256 pid,
+        uint256 amount,
+        uint256 supportTo,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external override {
+        IUniswapV2ERC20(poolInfo[pid].addr).permit(msg.sender, address(this), amount, deadline, v, r, s);
+        support(pid, amount, supportTo);
+    }
+
+    function supportWithPermitMax(
+        uint256 pid,
+        uint256 amount,
+        uint256 supportTo,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external override {
+        IUniswapV2ERC20(poolInfo[pid].addr).permit(msg.sender, address(this), type(uint256).max, deadline, v, r, s);
+        support(pid, amount, supportTo);
     }
 
     function desupport(uint256 pid, uint256 amount) external override {
