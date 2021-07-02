@@ -58,27 +58,27 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ERC721Enumerable
         return nurseTypes.length;
     }
 
-    function assemble(uint256 nurserType) public override {
-        NurseType memory nurseType = nurseTypes[nurserType];
-        nursePart.safeTransferFrom(msg.sender, address(this), nurserType, nurseType.partCount, "");
-        nursePart.burn(nurserType, nurseType.partCount);
+    function assemble(uint256 _nurseType) public override {
+        NurseType memory nurseType = nurseTypes[_nurseType];
+        nursePart.safeTransferFrom(msg.sender, address(this), _nurseType, nurseType.partCount, "");
+        nursePart.burn(_nurseType, nurseType.partCount);
         uint256 id = nurses.length;
         theMaster.deposit(2, nurseType.power, id);
-        nurses.push(Nurse({nurseType: nurserType}));
+        nurses.push(Nurse({nurseType: _nurseType}));
         supportingRoute[id] = id;
         emit ChangeSupportingRoute(id, id);
         _mint(msg.sender, id);
     }
 
     function assembleWithPermit(
-        uint256 nurserType,
+        uint256 nurseType,
         uint256 deadline,
         uint8 v,
         bytes32 r,
         bytes32 s
     ) external override {
         nursePart.permit(msg.sender, address(this), deadline, v, r, s);
-        assemble(nurserType);
+        assemble(nurseType);
     }
 
     function destroy(uint256 id, uint256 toId) external override {
