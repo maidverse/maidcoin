@@ -9,7 +9,7 @@ const LP_TOKEN_ADDRESS = "0x56ac87553c4dBcd877cA7E4fba54959f091CaEdE";
 const addresses: { [name: string]: string } = {};
 
 function displayAddress(name: string, address: string) {
-    console.log(`- ${name}: [${address}](https://kovan.etherscan.io/address/${address})`)
+    console.log(`- ${name}: [${address}](https://kovan.etherscan.io/address/${address})`);
     addresses[name] = address;
 }
 
