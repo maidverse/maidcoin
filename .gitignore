@@ -30,3 +30,6 @@ artifacts
 
 # typechain
 typechain
+
+# sol-merger
+merge
