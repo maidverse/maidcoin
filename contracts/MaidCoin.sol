@@ -6,7 +6,7 @@ import "./uniswapv2/UniswapV2ERC20.sol";
 import "./libraries/Ownable.sol";
 
 contract MaidCoin is IMaidCoin, Ownable, UniswapV2ERC20("MaidCoin", "$MAID") {
-    uint256 public constant INITIAL_SUPPLY = 30000 * 1e18;
+    uint256 public constant INITIAL_SUPPLY = 60000 * 1e18;
 
     constructor() public {
         _mint(msg.sender, INITIAL_SUPPLY);

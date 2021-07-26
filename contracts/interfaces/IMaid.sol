@@ -15,6 +15,7 @@ interface IMaid is IERC721, IERC721Metadata, IERC721Enumerable {
     function DOMAIN_SEPARATOR() external view returns (bytes32);
     function PERMIT_TYPEHASH() external view returns (bytes32);
     function PERMIT_ALL_TYPEHASH() external view returns (bytes32);
+    function MAX_MAID_COUNT() external view returns (uint256);
 
     function nonces(uint256 id) external view returns (uint256);
     function noncesForAll(address owner) external view returns (uint256);

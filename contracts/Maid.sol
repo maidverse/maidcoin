@@ -27,6 +27,8 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
     // keccak256("Permit(address owner,address spender,uint256 nonce,uint256 deadline)");
     bytes32 override public constant PERMIT_ALL_TYPEHASH = 0xdaab21af31ece73a508939fedd476a5ee5129a5ed4bb091f3236ffb45394df62;
     
+    uint256 override public constant MAX_MAID_COUNT = 1000;
+    
     mapping(uint256 => uint256) override public nonces;
     mapping(address => uint256) override public noncesForAll;
 
@@ -59,6 +61,7 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
 
     function mint(uint256 power) external onlyOwner returns (uint256 id) {
         id = maids.length;
+        require(id < MAX_MAID_COUNT);
         maids.push(MaidInfo({originPower: power, supportedLPTokenAmount: 0}));
         _mint(msg.sender, id);
     }

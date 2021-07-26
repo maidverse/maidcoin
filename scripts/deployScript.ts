@@ -1,6 +1,10 @@
 import hardhat, { ethers } from "hardhat";
 import { expandTo18Decimals } from "../test/shared/utils/number";
-import { CloneNurse, Maid, MaidCoin, MasterCoin, NursePart, NurseRaid, TestLPToken, TheMaster } from "../typechain";
+import { CloneNurse, Maid, MaidCoin, MasterCoin, NursePart, NurseRaid, TheMaster } from "../typechain";
+
+// Ropsten
+//const RNG_ADDRESS = "0x81e75a2EeE8272D017aA3bb983dD782d08F3c702";
+//const LP_TOKEN_ADDRESS = "0xF43df1bC8DD096F5f9dF1fB4d676D2ab38592020";
 
 // Kovan
 const RNG_ADDRESS = "0x8a39182b6FC57aa3A09099D698161e79623c1232";
@@ -9,6 +13,7 @@ const LP_TOKEN_ADDRESS = "0x56ac87553c4dBcd877cA7E4fba54959f091CaEdE";
 const addresses: { [name: string]: string } = {};
 
 function displayAddress(name: string, address: string) {
+    //console.log(`- ${name}: [${address}](https://ropsten.etherscan.io/address/${address})`);
     console.log(`- ${name}: [${address}](https://kovan.etherscan.io/address/${address})`);
     addresses[name] = address;
 }

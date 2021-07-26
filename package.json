@@ -6,6 +6,9 @@
     "defi",
     "nft"
   ],
+  "scripts": {
+    "merge": "sol-merger \"./contracts/*.sol\" ./merge"
+  },
   "homepage": "https://github.com/maidcoingit/maidcoin",
   "bugs": {
     "url": "https://github.com/maidcoingit/maidcoin/issues",
@@ -34,6 +37,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "^4.1.0",
     "ethereumjs-util": "^7.0.10",
-    "skyutil": "^0.0.5"
+    "skyutil": "^0.0.5",
+    "sol-merger": "^3.1.0"
   }
 }

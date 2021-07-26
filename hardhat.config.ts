@@ -12,6 +12,11 @@ const config: HardhatUserConfig = {
     ],
   },
   networks: {
+    ropsten: {
+      url: `https://ropsten.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      accounts: [process.env.ADMIN || ''],
+      chainId: 3,
+    },
     kovan: {
       url: `https://kovan.infura.io/v3/${process.env.INFURA_API_KEY}`,
       accounts: [process.env.ADMIN || ''],
