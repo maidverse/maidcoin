@@ -7,7 +7,18 @@
     "nft"
   ],
   "scripts": {
-    "merge": "sol-merger \"./contracts/*.sol\" ./merge"
+    "build": "hardhat compile",
+    "console": "hardhat console",
+    "deploy:hardhat": "hardhat --network hardhat deploy",
+    "deploy:mainnet": "hardhat --network mainnet deploy",
+    "deploy:ropsten": "hardhat --network ropsten deploy",
+    "deploy:kovan": "hardhat --network kovan deploy",
+    "verify:mainnet": "hardhat --network mainnet etherscan-verify",
+    "verify:ropsten": "hardhat --network ropsten etherscan-verify",
+    "verify:kovan": "hardhat --network kovan etherscan-verify",
+    "test": "cross-env TS_NODE_TRANSPILE_ONLY=1 hardhat --network hardhat test",
+    "test:gas": "cross-env REPORT_GAS=true yarn test",
+    "prepare": "hardhat compile"
   },
   "homepage": "https://github.com/maidcoingit/maidcoin",
   "bugs": {
@@ -17,7 +28,7 @@
   "license": "MIT",
   "author": "Dr. Ada <contact@maidcoin.org>",
   "devDependencies": {
-    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers",
     "@nomiclabs/hardhat-etherscan": "^2.1.3",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@typechain/ethers-v5": "^5.0.0",
@@ -26,8 +37,9 @@
     "chai": "^4.3.4",
     "dotenv": "^10.0.0",
     "ethereum-waffle": "^3.4.0",
-    "ethers": "^5.3.1",
+    "ethers": "^5.4.2",
     "hardhat": "^2.4.0",
+    "hardhat-deploy": "^0.8.11",
     "hardhat-typechain": "^0.3.5",
     "ts-generator": "^0.1.1",
     "ts-node": "^10.0.0",
