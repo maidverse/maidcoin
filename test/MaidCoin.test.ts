@@ -15,7 +15,7 @@ describe("MaidCoin", () => {
 
     const provider = waffle.provider;
     const [admin, other] = provider.getWallets();
-    const totalSupply = expandTo18Decimals(60000);
+    const totalSupply = expandTo18Decimals(66000);
 
     beforeEach(async () => {
         maidCoin = await deployContract(

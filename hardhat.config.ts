@@ -7,8 +7,24 @@ import { HardhatUserConfig } from "hardhat/types";
 const config: HardhatUserConfig = {
   solidity: {
     compilers: [
-      { version: "0.5.16" },
-      { version: "0.8.5" },
+      {
+        version: "0.5.16",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
+      {
+        version: "0.8.5",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
     ],
   },
   networks: {
