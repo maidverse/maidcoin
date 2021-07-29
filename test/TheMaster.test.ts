@@ -115,7 +115,7 @@ describe("TheMaster", function () {
         await ethers.provider.send("hardhat_reset", []);
     });
 
-    it.only("overall test", async function () {
+    it("overall test", async function () {
         const { alice, bob, carol, dan, poolToken, maidCoin, nursePart, theMaster, nurse } = await setupTest();
         await network.provider.send("evm_setAutomine", [true]);
 
