@@ -115,7 +115,7 @@ contract TheMaster is Ownable, ITheMaster {
                 0
             )
         );
-        if (mintable == true) {
+        if (mintable) {
             mintableByAddr[addr] = true;
         }
         emit Add(pid, addr, delegate, mintableByAddr[addr], supportable, supportingRatio, allocPoint);
