@@ -166,7 +166,6 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ERC721Enumerable
         uint256 id,
         uint256 amounts
     ) internal {
-        require(msg.sender == address(theMaster));
         totalRewardsFromSupporters[id] += amounts;
         emit TransferSupportingRewards(supporter, id, amounts);
     }
