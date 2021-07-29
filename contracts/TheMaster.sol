@@ -363,7 +363,7 @@ contract TheMaster is Ownable, ITheMaster {
     function emergencyDesupport(uint256 pid) external override {
         PoolInfo storage pool = poolInfo[pid];
         ISupportable supportable = pool.supportable;
-        require(address(supportable) == address(0), "TheMaster: use emergencyWithdraw func");
+        require(address(supportable) != address(0), "TheMaster: use emergencyWithdraw func");
         UserInfo storage user = userInfo[pid][uint256(uint160(msg.sender))];
         uint256 amounts = user.amount;
         user.amount = 0;
