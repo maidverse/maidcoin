@@ -59,7 +59,7 @@ contract NurseRaid is Ownable, INurseRaid {
         uint256 duration,
         uint256 endBlock
     ) external override onlyOwner returns (uint256 id) {
-        require(maxRewardCount < 255, "Invalid number");
+        require(maxRewardCount < 255, "NurseRaid: Invalid number");
         id = raids.length;
         raids.push(
             Raid({
@@ -91,8 +91,8 @@ contract NurseRaid is Ownable, INurseRaid {
 
     function enter(uint256 id, uint256 _maid) public override {
         Raid memory raid = raids[id];
-        require(block.number < raid.endBlock);
-        require(challengers[id][msg.sender].enterBlock == 0);
+        require(block.number < raid.endBlock, "NurseRaid: Raid has ended");
+        require(challengers[id][msg.sender].enterBlock == 0, "NurseRaid: Raid is in progress");
         challengers[id][msg.sender] = Challenger({enterBlock: block.number, maid: _maid});
         if (_maid != type(uint256).max) {
             maid.transferFrom(msg.sender, address(this), _maid);
@@ -124,7 +124,7 @@ contract NurseRaid is Ownable, INurseRaid {
 
     function exit(uint256 id) external override {
         Challenger memory challenger = challengers[id][msg.sender];
-        require(challenger.enterBlock != 0);
+        require(challenger.enterBlock != 0, "NurseRaid: Not participating in the raid");
 
         Raid memory raid = raids[id];
 
