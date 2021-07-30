@@ -96,9 +96,9 @@ contract TheMaster is Ownable, ITheMaster {
         uint256 allocPoint
     ) external override onlyOwner {
         if (supportable != address(0)) {
-            require(supportingRatio > 0 && supportingRatio <= 80, "TheMaster: outranged supportingRatio");
+            require(supportingRatio > 0 && supportingRatio <= 80, "TheMaster: Outranged supportingRatio");
         } else {
-            require(supportingRatio == 0, "TheMaster: not supportable pool");
+            require(supportingRatio == 0, "TheMaster: Not supportable pool");
         }
         massUpdatePools();
         uint256 lastRewardBlock = block.number > startBlock ? block.number : startBlock;
@@ -149,13 +149,13 @@ contract TheMaster is Ownable, ITheMaster {
         uint256 userId
     ) public override {
         PoolInfo storage pool = poolInfo[pid];
-        require(address(pool.supportable) == address(0), "TheMaster: use support func");
+        require(address(pool.supportable) == address(0), "TheMaster: Use support func");
         UserInfo storage user = userInfo[pid][userId];
         if (pool.delegate) {
             require(pool.addr == msg.sender, "TheMaster: Not called by delegate");
             _deposit(pool, user, amount, false);
         } else {
-            require(address(uint160(userId)) == msg.sender, "TheMaster: deposit to your address");
+            require(address(uint160(userId)) == msg.sender, "TheMaster: Deposit to your address");
             _deposit(pool, user, amount, true);
         }
         emit Deposit(userId, pid, amount);
@@ -217,7 +217,7 @@ contract TheMaster is Ownable, ITheMaster {
         uint256 userId
     ) public override {
         PoolInfo storage pool = poolInfo[pid];
-        require(address(pool.supportable) == address(0), "TheMaster: use desupport func");
+        require(address(pool.supportable) == address(0), "TheMaster: Use desupport func");
         UserInfo storage user = userInfo[pid][userId];
         if (pool.delegate) {
             require(pool.addr == msg.sender, "TheMaster: Not called by delegate");
@@ -254,7 +254,7 @@ contract TheMaster is Ownable, ITheMaster {
 
     function emergencyWithdraw(uint256 pid) external override {
         PoolInfo storage pool = poolInfo[pid];
-        require(address(pool.supportable) == address(0), "TheMaster: use desupport func");
+        require(address(pool.supportable) == address(0), "TheMaster: Use desupport func");
         require(!pool.delegate, "TheMaster: Pool should be non-delegate");
         UserInfo storage user = userInfo[pid][uint256(uint160(msg.sender))];
         uint256 amounts = user.amount;
@@ -272,7 +272,7 @@ contract TheMaster is Ownable, ITheMaster {
     ) public override {
         PoolInfo storage pool = poolInfo[pid];
         ISupportable supportable = pool.supportable;
-        require(address(supportable) != address(0), "TheMaster: use deposit func");
+        require(address(supportable) != address(0), "TheMaster: Use deposit func");
         UserInfo storage user = userInfo[pid][uint256(uint160(msg.sender))];
         updatePool(pool);
         uint256 _accRewardPerShare = pool.accRewardPerShare;
@@ -329,7 +329,7 @@ contract TheMaster is Ownable, ITheMaster {
     function desupport(uint256 pid, uint256 amount) external override {
         PoolInfo storage pool = poolInfo[pid];
         ISupportable supportable = pool.supportable;
-        require(address(supportable) != address(0), "TheMaster: use withdraw func");
+        require(address(supportable) != address(0), "TheMaster: Use withdraw func");
         UserInfo storage user = userInfo[pid][uint256(uint160(msg.sender))];
         uint256 _amount = user.amount;
         require(_amount >= amount, "TheMaster: Insufficient amount");
@@ -355,7 +355,7 @@ contract TheMaster is Ownable, ITheMaster {
     function emergencyDesupport(uint256 pid) external override {
         PoolInfo storage pool = poolInfo[pid];
         ISupportable supportable = pool.supportable;
-        require(address(supportable) != address(0), "TheMaster: use emergencyWithdraw func");
+        require(address(supportable) != address(0), "TheMaster: Use emergencyWithdraw func");
         UserInfo storage user = userInfo[pid][uint256(uint160(msg.sender))];
         uint256 amounts = user.amount;
         user.amount = 0;
@@ -367,7 +367,7 @@ contract TheMaster is Ownable, ITheMaster {
     }
 
     function mint(address to, uint256 amount) external override {
-        require(mintableByAddr[msg.sender], "TheMaster: called from un-mintable");
+        require(mintableByAddr[msg.sender], "TheMaster: Called from un-mintable");
         maidCoin.mint(to, amount);
     }
 
