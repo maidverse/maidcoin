@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./libraries/ERC1155.sol";
 import "./interfaces/IERC1271.sol";
 import "./interfaces/INursePart.sol";
+import "./libraries/Signature.sol";
 
 contract NursePart is Ownable, ERC1155("https://api.maidcoin.org/nursepart/{id}"), INursePart {
     string public constant name = "NursePart";
@@ -66,8 +67,7 @@ contract NursePart is Ownable, ERC1155("https://api.maidcoin.org/nursepart/{id}"
         if (Address.isContract(owner)) {
             require(IERC1271(owner).isValidSignature(digest, abi.encodePacked(r, s, v)) == 0x1626ba7e);
         } else {
-            address recoveredAddress = ecrecover(digest, v, r, s);
-            require(recoveredAddress != address(0));
+            address recoveredAddress = Signature.recover(digest, v, r, s);
             require(recoveredAddress == owner);
         }
 

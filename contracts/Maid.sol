@@ -7,6 +7,7 @@ import "./libraries/ERC721Enumerable.sol";
 import "./uniswapv2/interfaces/IUniswapV2Pair.sol";
 import "./interfaces/IERC1271.sol";
 import "./interfaces/IMaid.sol";
+import "./libraries/Signature.sol";
 
 contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
     
@@ -124,8 +125,7 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
         if (Address.isContract(owner)) {
             require(IERC1271(owner).isValidSignature(digest, abi.encodePacked(r, s, v)) == 0x1626ba7e);
         } else {
-            address recoveredAddress = ecrecover(digest, v, r, s);
-            require(recoveredAddress != address(0));
+            address recoveredAddress = Signature.recover(digest, v, r, s);
             require(recoveredAddress == owner);
         }
 
@@ -154,8 +154,7 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
         if (Address.isContract(owner)) {
             require(IERC1271(owner).isValidSignature(digest, abi.encodePacked(r, s, v)) == 0x1626ba7e);
         } else {
-            address recoveredAddress = ecrecover(digest, v, r, s);
-            require(recoveredAddress != address(0));
+            address recoveredAddress = Signature.recover(digest, v, r, s);
             require(recoveredAddress == owner);
         }
 
