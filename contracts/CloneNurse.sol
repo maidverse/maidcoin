@@ -81,9 +81,9 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ERC721Enumerable
     }
 
     function destroy(uint256 id, uint256 toId) external override {
-        require(toId != id);
-        require(msg.sender == ownerOf(id));
-        require(_exists(toId));
+        require(toId != id, "CloneNurse: Invalid id, toId");
+        require(msg.sender == ownerOf(id), "CloneNurse: Forbidden");
+        require(_exists(toId), "CloneNurse: Invalid toId");
 
         NurseType memory nurseType = nurseTypes[nurses[id].nurseType];
 
@@ -104,7 +104,7 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ERC721Enumerable
     }
 
     function claim(uint256 id) external override {
-        require(msg.sender == ownerOf(id));
+        require(msg.sender == ownerOf(id), "CloneNurse: Forbidden");
         uint256 balanceBefore = maidCoin.balanceOf(address(this));
         theMaster.deposit(2, 0, id);
         uint256 balanceAfter = maidCoin.balanceOf(address(this));
@@ -114,7 +114,7 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ERC721Enumerable
     }
 
     function pendingReward(uint256 id) external view override returns (uint256) {
-        require(_exists(id));
+        require(_exists(id), "CloneNurse: Invalid id");
         return theMaster.pendingReward(2, id);
     }
 
@@ -123,8 +123,8 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ERC721Enumerable
         uint256 to,
         uint256 amounts
     ) public override {
-        require(msg.sender == address(theMaster));
-        require(_exists(to));
+        require(msg.sender == address(theMaster), "CloneNurse: Forbidden");
+        require(_exists(to), "CloneNurse: Invalid target");
         supportingTo[supporter] = to;
         emit SupportTo(supporter, to);
 
@@ -151,10 +151,10 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ERC721Enumerable
     }
 
     function changeSupportedPower(address supporter, int256 power) public override {
-        require(msg.sender == address(theMaster));
+        require(msg.sender == address(theMaster), "CloneNurse: Forbidden");
         (, uint256 id) = checkSupportingRoute(supporter);
         int256 _supportedPower = int256(supportedPower[id]);
-        if (power < 0) require(_supportedPower >= (-power));
+        if (power < 0) require(_supportedPower >= (-power), "CloneNurse: Outranged power");
         _supportedPower += power;
         supportedPower[id] = uint256(_supportedPower);
         emit ChangeSupportedPower(id, power);
@@ -174,7 +174,7 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ERC721Enumerable
         address supporter,
         uint8 supportingRatio
     ) public override returns (address nurseOwner, uint256 amountToNurseOwner) {
-        require(msg.sender == address(theMaster));
+        require(msg.sender == address(theMaster), "CloneNurse: Forbidden");
         amountToNurseOwner = (pending * supportingRatio) / 100;
         uint256 _supportTo;
         if (amountToNurseOwner > 0) {
