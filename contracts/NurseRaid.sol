@@ -59,6 +59,7 @@ contract NurseRaid is Ownable, INurseRaid {
         uint256 duration,
         uint256 endBlock
     ) external override onlyOwner returns (uint256 id) {
+        require(maxRewardCount < 255, "Invalid number");
         id = raids.length;
         raids.push(
             Raid({
