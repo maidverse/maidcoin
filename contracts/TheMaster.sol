@@ -60,8 +60,9 @@ contract TheMaster is Ownable, ITheMaster {
         PoolInfo memory pool = poolInfo[pid];
         UserInfo memory user = userInfo[pid][userId];
         (uint256 accRewardPerShare, uint256 supply) = (pool.accRewardPerShare, pool.supply);
-        if (block.number > pool.lastRewardBlock && supply != 0) {
-            uint256 reward = ((block.number - pool.lastRewardBlock) * rewardPerBlock() * pool.allocPoint) /
+        uint256 _lastRewardBlock = pool.lastRewardBlock;
+        if (block.number > _lastRewardBlock && supply != 0) {
+            uint256 reward = ((block.number - _lastRewardBlock) * rewardPerBlock() * pool.allocPoint) /
                 totalAllocPoint;
             accRewardPerShare = accRewardPerShare + (reward * PRECISION) / supply;
         }
