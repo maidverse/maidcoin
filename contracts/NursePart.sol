@@ -68,7 +68,7 @@ contract NursePart is Ownable, ERC1155("https://api.maidcoin.org/nursepart/{id}"
         bytes32 r,
         bytes32 s
     ) external override {
-        require(block.timestamp <= deadline);
+        require(block.timestamp <= deadline, "NursePart: Expired deadline");
         bytes32 _DOMAIN_SEPARATOR = DOMAIN_SEPARATOR();
 
         bytes32 digest = keccak256(
@@ -81,10 +81,10 @@ contract NursePart is Ownable, ERC1155("https://api.maidcoin.org/nursepart/{id}"
         nonces[owner] += 1;
 
         if (Address.isContract(owner)) {
-            require(IERC1271(owner).isValidSignature(digest, abi.encodePacked(r, s, v)) == 0x1626ba7e);
+            require(IERC1271(owner).isValidSignature(digest, abi.encodePacked(r, s, v)) == 0x1626ba7e, "NursePart: Unauthorized");
         } else {
             address recoveredAddress = Signature.recover(digest, v, r, s);
-            require(recoveredAddress == owner);
+            require(recoveredAddress == owner, "NursePart: Unauthorized");
         }
 
         _setApprovalForAll(owner, spender, true);
