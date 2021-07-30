@@ -19,7 +19,12 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
         uint256 supportedLPTokenAmount;
     }
 
-    bytes32 public immutable override DOMAIN_SEPARATOR;
+    bytes32 private immutable _CACHED_DOMAIN_SEPARATOR;
+    uint256 private immutable _CACHED_CHAIN_ID;
+
+    bytes32 private immutable _HASHED_NAME;
+    bytes32 private immutable _HASHED_VERSION;
+    bytes32 private immutable _TYPE_HASH;
 
     // keccak256("Permit(address spender,uint256 tokenId,uint256 nonce,uint256 deadline)");
     bytes32 public constant override PERMIT_TYPEHASH =
@@ -41,19 +46,28 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
     constructor(IUniswapV2Pair _lpToken) {
         lpToken = _lpToken;
 
-        uint256 chainId;
-        assembly {
-            chainId := chainid()
-        }
-        DOMAIN_SEPARATOR = keccak256(
+        _CACHED_CHAIN_ID = block.chainid;
+        _HASHED_NAME = keccak256(bytes("Maid"));
+        _HASHED_VERSION = keccak256(bytes("1"));
+        _TYPE_HASH = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
+
+        _CACHED_DOMAIN_SEPARATOR = keccak256(
             abi.encode(
                 keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
                 keccak256(bytes("Maid")),
                 keccak256(bytes("1")),
-                chainId,
+                block.chainid,
                 address(this)
             )
         );
+    }
+
+    function DOMAIN_SEPARATOR() public view override returns (bytes32) {
+        if (block.chainid == _CACHED_CHAIN_ID) {
+            return _CACHED_DOMAIN_SEPARATOR;
+        } else {
+            return keccak256(abi.encode(_TYPE_HASH, _HASHED_NAME, _HASHED_VERSION, block.chainid, address(this)));
+        }
     }
 
     function changeLPTokenToMaidPower(uint256 value) external onlyOwner {
@@ -110,11 +124,12 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
         bytes32 s
     ) external override {
         require(block.timestamp <= deadline);
+        bytes32 _DOMAIN_SEPARATOR = DOMAIN_SEPARATOR();
 
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
-                DOMAIN_SEPARATOR,
+                _DOMAIN_SEPARATOR,
                 keccak256(abi.encode(PERMIT_TYPEHASH, spender, id, nonces[id], deadline))
             )
         );
@@ -142,11 +157,12 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
         bytes32 s
     ) external override {
         require(block.timestamp <= deadline);
+        bytes32 _DOMAIN_SEPARATOR = DOMAIN_SEPARATOR();
 
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
-                DOMAIN_SEPARATOR,
+                _DOMAIN_SEPARATOR,
                 keccak256(abi.encode(PERMIT_ALL_TYPEHASH, owner, spender, noncesForAll[owner], deadline))
             )
         );
