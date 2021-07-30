@@ -77,7 +77,7 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
 
     function mint(uint256 power) external onlyOwner returns (uint256 id) {
         id = maids.length;
-        require(id < MAX_MAID_COUNT);
+        require(id < MAX_MAID_COUNT, "Maid: Maximum Maids");
         maids.push(MaidInfo({originPower: power, supportedLPTokenAmount: 0}));
         _mint(msg.sender, id);
     }
@@ -88,7 +88,7 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
     }
 
     function support(uint256 id, uint256 lpTokenAmount) public override {
-        require(ownerOf(id) == msg.sender);
+        require(ownerOf(id) == msg.sender, "Maid: Forbidden");
         maids[id].supportedLPTokenAmount += lpTokenAmount;
 
         lpToken.transferFrom(msg.sender, address(this), lpTokenAmount);
@@ -108,7 +108,7 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
     }
 
     function desupport(uint256 id, uint256 lpTokenAmount) external override {
-        require(ownerOf(id) == msg.sender);
+        require(ownerOf(id) == msg.sender, "Maid: Forbidden");
         maids[id].supportedLPTokenAmount -= lpTokenAmount;
         lpToken.transfer(msg.sender, lpTokenAmount);
 
@@ -123,7 +123,7 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
         bytes32 r,
         bytes32 s
     ) external override {
-        require(block.timestamp <= deadline);
+        require(block.timestamp <= deadline, "Maid: Expired deadline");
         bytes32 _DOMAIN_SEPARATOR = DOMAIN_SEPARATOR();
 
         bytes32 digest = keccak256(
@@ -136,13 +136,13 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
         nonces[id] += 1;
 
         address owner = ownerOf(id);
-        require(spender != owner);
+        require(spender != owner, "Maid: Invalid spender");
 
         if (Address.isContract(owner)) {
-            require(IERC1271(owner).isValidSignature(digest, abi.encodePacked(r, s, v)) == 0x1626ba7e);
+            require(IERC1271(owner).isValidSignature(digest, abi.encodePacked(r, s, v)) == 0x1626ba7e, "Maid: Unauthorized");
         } else {
             address recoveredAddress = Signature.recover(digest, v, r, s);
-            require(recoveredAddress == owner);
+            require(recoveredAddress == owner, "Maid: Unauthorized");
         }
 
         _approve(spender, id);
@@ -156,7 +156,7 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
         bytes32 r,
         bytes32 s
     ) external override {
-        require(block.timestamp <= deadline);
+        require(block.timestamp <= deadline, "Maid: Expired deadline");
         bytes32 _DOMAIN_SEPARATOR = DOMAIN_SEPARATOR();
 
         bytes32 digest = keccak256(
@@ -169,10 +169,10 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
         noncesForAll[owner] += 1;
 
         if (Address.isContract(owner)) {
-            require(IERC1271(owner).isValidSignature(digest, abi.encodePacked(r, s, v)) == 0x1626ba7e);
+            require(IERC1271(owner).isValidSignature(digest, abi.encodePacked(r, s, v)) == 0x1626ba7e, "Maid: Unauthorized");
         } else {
             address recoveredAddress = Signature.recover(digest, v, r, s);
-            require(recoveredAddress == owner);
+            require(recoveredAddress == owner, "Maid: Unauthorized");
         }
 
         _setApprovalForAll(owner, spender, true);
