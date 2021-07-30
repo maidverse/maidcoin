@@ -128,8 +128,12 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
 
         return _tokenApprovals[tokenId];
     }
-    
-    function _setApprovalForAll(address owner, address operator, bool approved) internal {
+
+    function _setApprovalForAll(
+        address owner,
+        address operator,
+        bool approved
+    ) internal {
         require(owner != operator, "ERC721: approve to caller");
 
         _operatorApprovals[owner][operator] = approved;

@@ -9,8 +9,7 @@ import "./interfaces/IERC1271.sol";
 import "./interfaces/ICloneNurse.sol";
 
 contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ERC721Enumerable, ERC1155Holder, ICloneNurse {
-    
-    function _baseURI() override internal pure returns (string memory) {
+    function _baseURI() internal pure override returns (string memory) {
         return "https://api.maidcoin.org/clonenurse/";
     }
 
@@ -183,14 +182,15 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ERC721Enumerable
             recordRewardsTransfer(supporter, _supportTo, amountToNurseOwner);
         }
     }
-    
-    function _beforeTokenTransfer(address from, address to, uint256 tokenId)
-        internal
-        override(ERC721, ERC721Enumerable)
-    {
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal override(ERC721, ERC721Enumerable) {
         super._beforeTokenTransfer(from, to, tokenId);
     }
-    
+
     function supportsInterface(bytes4 interfaceId)
         public
         view

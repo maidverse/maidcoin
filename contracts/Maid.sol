@@ -10,8 +10,7 @@ import "./interfaces/IMaid.sol";
 import "./libraries/Signature.sol";
 
 contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
-    
-    function _baseURI() override internal pure returns (string memory) {
+    function _baseURI() internal pure override returns (string memory) {
         return "https://api.maidcoin.org/maid/";
     }
 
@@ -20,22 +19,24 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
         uint256 supportedLPTokenAmount;
     }
 
-    bytes32 override public immutable DOMAIN_SEPARATOR;
-    
-    // keccak256("Permit(address spender,uint256 tokenId,uint256 nonce,uint256 deadline)");
-    bytes32 override public constant PERMIT_TYPEHASH = 0x49ecf333e5b8c95c40fdafc95c1ad136e8914a8fb55e9dc8bb01eaa83a2df9ad;
-    
-    // keccak256("Permit(address owner,address spender,uint256 nonce,uint256 deadline)");
-    bytes32 override public constant PERMIT_ALL_TYPEHASH = 0xdaab21af31ece73a508939fedd476a5ee5129a5ed4bb091f3236ffb45394df62;
-    
-    uint256 override public constant MAX_MAID_COUNT = 1000;
-    
-    mapping(uint256 => uint256) override public nonces;
-    mapping(address => uint256) override public noncesForAll;
+    bytes32 public immutable override DOMAIN_SEPARATOR;
 
-    IUniswapV2Pair override public immutable lpToken;
-    uint256 override public lpTokenToMaidPower = 1;
-    MaidInfo[] override public maids;
+    // keccak256("Permit(address spender,uint256 tokenId,uint256 nonce,uint256 deadline)");
+    bytes32 public constant override PERMIT_TYPEHASH =
+        0x49ecf333e5b8c95c40fdafc95c1ad136e8914a8fb55e9dc8bb01eaa83a2df9ad;
+
+    // keccak256("Permit(address owner,address spender,uint256 nonce,uint256 deadline)");
+    bytes32 public constant override PERMIT_ALL_TYPEHASH =
+        0xdaab21af31ece73a508939fedd476a5ee5129a5ed4bb091f3236ffb45394df62;
+
+    uint256 public constant override MAX_MAID_COUNT = 1000;
+
+    mapping(uint256 => uint256) public override nonces;
+    mapping(address => uint256) public override noncesForAll;
+
+    IUniswapV2Pair public immutable override lpToken;
+    uint256 public override lpTokenToMaidPower = 1;
+    MaidInfo[] public override maids;
 
     constructor(IUniswapV2Pair _lpToken) {
         lpToken = _lpToken;
@@ -67,12 +68,12 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
         _mint(msg.sender, id);
     }
 
-    function powerOf(uint256 id) override external view returns (uint256) {
+    function powerOf(uint256 id) external view override returns (uint256) {
         MaidInfo memory maid = maids[id];
         return maid.originPower + (maid.supportedLPTokenAmount * lpTokenToMaidPower) / 1e18;
     }
 
-    function support(uint256 id, uint256 lpTokenAmount) override public {
+    function support(uint256 id, uint256 lpTokenAmount) public override {
         require(ownerOf(id) == msg.sender);
         maids[id].supportedLPTokenAmount += lpTokenAmount;
 
@@ -87,12 +88,12 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) override external {
+    ) external override {
         lpToken.permit(msg.sender, address(this), lpTokenAmount, deadline, v, r, s);
         support(id, lpTokenAmount);
     }
 
-    function desupport(uint256 id, uint256 lpTokenAmount) override external {
+    function desupport(uint256 id, uint256 lpTokenAmount) external override {
         require(ownerOf(id) == msg.sender);
         maids[id].supportedLPTokenAmount -= lpTokenAmount;
         lpToken.transfer(msg.sender, lpTokenAmount);
@@ -107,7 +108,7 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) override external {
+    ) external override {
         require(block.timestamp <= deadline);
 
         bytes32 digest = keccak256(
@@ -139,7 +140,7 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) override external {
+    ) external override {
         require(block.timestamp <= deadline);
 
         bytes32 digest = keccak256(
@@ -161,10 +162,11 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
         _setApprovalForAll(owner, spender, true);
     }
 
-    function _beforeTokenTransfer(address from, address to, uint256 tokenId)
-        internal
-        override(ERC721, ERC721Enumerable)
-    {
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal override(ERC721, ERC721Enumerable) {
         super._beforeTokenTransfer(from, to, tokenId);
     }
 

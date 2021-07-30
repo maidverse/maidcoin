@@ -7,7 +7,6 @@ import "./INursePart.sol";
 import "./IRNG.sol";
 
 interface INurseRaid {
-
     event Create(
         uint256 indexed id,
         uint256 entranceFee,
@@ -21,11 +20,15 @@ interface INurseRaid {
     event ChangeMaidPowerToRaidReducedBlock(uint256 value);
 
     function maid() external view returns (IMaid);
+
     function maidCoin() external view returns (IMaidCoin);
+
     function nursePart() external view returns (INursePart);
+
     function rng() external view returns (IRNG);
-    
+
     function maidPowerToRaidReducedBlock() external view returns (uint256);
+
     function raidCount() external view returns (uint256);
 
     function create(

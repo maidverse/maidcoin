@@ -10,11 +10,12 @@ import "./IMaidCoin.sol";
 import "./ITheMaster.sol";
 
 interface ICloneNurse is IERC721, IERC721Metadata, IERC721Enumerable, ISupportable {
-
     event Claim(uint256 indexed id, address indexed claimer, uint256 reward);
 
     function nursePart() external view returns (INursePart);
+
     function maidCoin() external view returns (IMaidCoin);
+
     function theMaster() external view returns (ITheMaster);
 
     function nurseTypes(uint256 typeId)

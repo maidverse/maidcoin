@@ -42,7 +42,7 @@ contract NurseRaid is Ownable, INurseRaid {
     }
     Raid[] public raids;
 
-    function raidCount() external override view returns (uint256) {
+    function raidCount() external view override returns (uint256) {
         return raids.length;
     }
 

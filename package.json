@@ -41,6 +41,8 @@
     "hardhat": "^2.4.0",
     "hardhat-deploy": "^0.8.11",
     "hardhat-typechain": "^0.3.5",
+    "prettier": "^2.2.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.3",
     "ts-generator": "^0.1.1",
     "ts-node": "^10.0.0",
     "typechain": "^4.0.0",

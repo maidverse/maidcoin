@@ -2,19 +2,25 @@
 pragma solidity >=0.5.0;
 
 interface IMaidCoin {
-    
     event Approval(address indexed owner, address indexed spender, uint256 value);
     event Transfer(address indexed from, address indexed to, uint256 value);
 
     function name() external pure returns (string memory);
+
     function symbol() external pure returns (string memory);
+
     function decimals() external pure returns (uint8);
+
     function totalSupply() external view returns (uint256);
+
     function INITIAL_SUPPLY() external pure returns (uint256);
 
     function balanceOf(address owner) external view returns (uint256);
+
     function allowance(address owner, address spender) external view returns (uint256);
+
     function approve(address spender, uint256 value) external returns (bool);
+
     function transfer(address to, uint256 value) external returns (bool);
 
     function transferFrom(
@@ -24,7 +30,9 @@ interface IMaidCoin {
     ) external returns (bool);
 
     function DOMAIN_SEPARATOR() external view returns (bytes32);
+
     function PERMIT_TYPEHASH() external pure returns (bytes32);
+
     function nonces(address owner) external view returns (uint256);
 
     function permit(
@@ -38,5 +46,6 @@ interface IMaidCoin {
     ) external;
 
     function mint(address to, uint256 amount) external;
+
     function burn(uint256 amount) external;
 }

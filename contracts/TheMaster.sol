@@ -104,16 +104,7 @@ contract TheMaster is Ownable, ITheMaster {
         totalAllocPoint += allocPoint;
         uint256 pid = poolInfo.length;
         poolInfo.push(
-            PoolInfo(
-                addr,
-                delegate,
-                ISupportable(supportable),
-                supportingRatio,
-                allocPoint,
-                lastRewardBlock,
-                0,
-                0
-            )
+            PoolInfo(addr, delegate, ISupportable(supportable), supportingRatio, allocPoint, lastRewardBlock, 0, 0)
         );
         if (mintable) {
             mintableByAddr[addr] = true;

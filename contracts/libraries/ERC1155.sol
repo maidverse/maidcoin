@@ -94,8 +94,12 @@ contract ERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI {
 
         return batchBalances;
     }
-    
-    function _setApprovalForAll(address owner, address operator, bool approved) internal {
+
+    function _setApprovalForAll(
+        address owner,
+        address operator,
+        bool approved
+    ) internal {
         require(owner != operator, "ERC1155: setting approval status for self");
 
         _operatorApprovals[owner][operator] = approved;
