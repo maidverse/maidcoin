@@ -5,12 +5,28 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/INurseRaid.sol";
 
 contract NurseRaid is Ownable, INurseRaid {
-    uint256 public override maidPowerToRaidReducedBlock = 100;
+    struct Raid {
+        uint256 entranceFee;
+        uint256 nursePart;
+        uint256 maxRewardCount;
+        uint256 duration;
+        uint256 endBlock;
+    }
+
+    struct Challenger {
+        uint256 enterBlock;
+        uint256 maid;
+    }
+
+    Raid[] public raids;
+    mapping(uint256 => mapping(address => Challenger)) public challengers;
 
     IMaid public immutable override maid;
     IMaidCoin public immutable override maidCoin;
     INursePart public immutable override nursePart;
     IRNG public override rng;
+
+    uint256 public override maidPowerToRaidReducedBlock = 100;
 
     constructor(
         IMaid _maid,
@@ -33,24 +49,9 @@ contract NurseRaid is Ownable, INurseRaid {
         rng = IRNG(addr);
     }
 
-    struct Raid {
-        uint256 entranceFee;
-        uint256 nursePart;
-        uint256 maxRewardCount;
-        uint256 duration;
-        uint256 endBlock;
-    }
-    Raid[] public raids;
-
     function raidCount() external view override returns (uint256) {
         return raids.length;
     }
-
-    struct Challenger {
-        uint256 enterBlock;
-        uint256 maid;
-    }
-    mapping(uint256 => mapping(address => Challenger)) public challengers;
 
     function create(
         uint256 entranceFee,
