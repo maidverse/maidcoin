@@ -58,9 +58,10 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ERC721Enumerable
     }
 
     function assemble(uint256 _nurseType) public override {
-        NurseType memory nurseType = nurseTypes[_nurseType];
-        nursePart.safeTransferFrom(msg.sender, address(this), _nurseType, nurseType.partCount, "");
-        nursePart.burn(_nurseType, nurseType.partCount);
+        NurseType storage nurseType = nurseTypes[_nurseType];
+        uint256 _partCount = nurseType.partCount;
+        nursePart.safeTransferFrom(msg.sender, address(this), _nurseType, _partCount, "");
+        nursePart.burn(_nurseType, _partCount);
         uint256 id = nurses.length;
         theMaster.deposit(2, nurseType.power, id);
         nurses.push(Nurse({nurseType: _nurseType}));
@@ -85,7 +86,7 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ERC721Enumerable
         require(msg.sender == ownerOf(id), "CloneNurse: Forbidden");
         require(_exists(toId), "CloneNurse: Invalid toId");
 
-        NurseType memory nurseType = nurseTypes[nurses[id].nurseType];
+        NurseType storage nurseType = nurseTypes[nurses[id].nurseType];
 
         uint256 balanceBefore = maidCoin.balanceOf(address(this));
         theMaster.withdraw(2, nurseType.power, id);

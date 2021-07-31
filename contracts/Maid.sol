@@ -83,7 +83,7 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
     }
 
     function powerOf(uint256 id) external view override returns (uint256) {
-        MaidInfo memory maid = maids[id];
+        MaidInfo storage maid = maids[id];
         return maid.originPower + (maid.supportedLPTokenAmount * lpTokenToMaidPower) / 1e18;
     }
 

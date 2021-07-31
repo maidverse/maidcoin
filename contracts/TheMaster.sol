@@ -57,8 +57,8 @@ contract TheMaster is Ownable, ITheMaster {
     }
 
     function pendingReward(uint256 pid, uint256 userId) external view override returns (uint256) {
-        PoolInfo memory pool = poolInfo[pid];
-        UserInfo memory user = userInfo[pid][userId];
+        PoolInfo storage pool = poolInfo[pid];
+        UserInfo storage user = userInfo[pid][userId];
         (uint256 accRewardPerShare, uint256 supply) = (pool.accRewardPerShare, pool.supply);
         uint256 _lastRewardBlock = pool.lastRewardBlock;
         if (block.number > _lastRewardBlock && supply != 0) {
@@ -66,10 +66,11 @@ contract TheMaster is Ownable, ITheMaster {
             accRewardPerShare = accRewardPerShare + (reward * PRECISION) / supply;
         }
         uint256 pending = ((user.amount * accRewardPerShare) / PRECISION) - user.rewardDebt;
-        if (pool.supportingRatio == 0) {
+        uint256 _supportingRatio = pool.supportingRatio;
+        if (_supportingRatio == 0) {
             return pending;
         } else {
-            return pending - ((pending * pool.supportingRatio) / 100);
+            return pending - ((pending * _supportingRatio) / 100);
         }
     }
 

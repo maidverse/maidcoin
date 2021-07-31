@@ -91,15 +91,16 @@ contract NurseRaid is Ownable, INurseRaid {
     }
 
     function enter(uint256 id, uint256 _maid) public override {
-        Raid memory raid = raids[id];
+        Raid storage raid = raids[id];
         require(block.number < raid.endBlock, "NurseRaid: Raid has ended");
         require(challengers[id][msg.sender].enterBlock == 0, "NurseRaid: Raid is in progress");
         challengers[id][msg.sender] = Challenger({enterBlock: block.number, maid: _maid});
         if (_maid != type(uint256).max) {
             maid.transferFrom(msg.sender, address(this), _maid);
         }
-        maidCoin.transferFrom(msg.sender, address(this), raid.entranceFee);
-        maidCoin.burn(raid.entranceFee);
+        uint256 _entranceFee = raid.entranceFee;
+        maidCoin.transferFrom(msg.sender, address(this), _entranceFee);
+        maidCoin.burn(_entranceFee);
         emit Enter(msg.sender, id, _maid);
     }
 
@@ -107,19 +108,19 @@ contract NurseRaid is Ownable, INurseRaid {
         Raid memory raid = raids[id];
         Challenger memory challenger = challengers[id][msg.sender];
 
-        return _checkDone(raid, challenger);
+        return _checkDone(raid.duration, challenger);
     }
 
-    function _checkDone(Raid memory raid, Challenger memory challenger) internal view returns (bool) {
+    function _checkDone(uint256 duration, Challenger memory challenger) internal view returns (bool) {
         if (challenger.maid == type(uint256).max) {
-            return block.number - challenger.enterBlock >= raid.duration;
+            return block.number - challenger.enterBlock >= duration;
         } else {
             return
                 block.number -
                     challenger.enterBlock +
                     (maid.powerOf(challenger.maid) * maidPowerToRaidReducedBlock) /
                     100 >=
-                raid.duration;
+                duration;
         }
     }
 
@@ -127,9 +128,9 @@ contract NurseRaid is Ownable, INurseRaid {
         Challenger memory challenger = challengers[id][msg.sender];
         require(challenger.enterBlock != 0, "NurseRaid: Not participating in the raid");
 
-        Raid memory raid = raids[id];
+        Raid storage raid = raids[id];
 
-        if (_checkDone(raid, challenger)) {
+        if (_checkDone(raid.duration, challenger)) {
             uint256 rewardCount = _randomReward(id, raid.maxRewardCount, msg.sender);
             nursePart.mint(msg.sender, raid.nursePart, rewardCount);
         }
