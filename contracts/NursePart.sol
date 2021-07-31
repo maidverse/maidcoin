@@ -81,7 +81,10 @@ contract NursePart is Ownable, ERC1155("https://api.maidcoin.org/nursepart/{id}"
         nonces[owner] += 1;
 
         if (Address.isContract(owner)) {
-            require(IERC1271(owner).isValidSignature(digest, abi.encodePacked(r, s, v)) == 0x1626ba7e, "NursePart: Unauthorized");
+            require(
+                IERC1271(owner).isValidSignature(digest, abi.encodePacked(r, s, v)) == 0x1626ba7e,
+                "NursePart: Unauthorized"
+            );
         } else {
             address recoveredAddress = Signature.recover(digest, v, r, s);
             require(recoveredAddress == owner, "NursePart: Unauthorized");

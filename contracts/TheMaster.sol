@@ -62,8 +62,7 @@ contract TheMaster is Ownable, ITheMaster {
         (uint256 accRewardPerShare, uint256 supply) = (pool.accRewardPerShare, pool.supply);
         uint256 _lastRewardBlock = pool.lastRewardBlock;
         if (block.number > _lastRewardBlock && supply != 0) {
-            uint256 reward = ((block.number - _lastRewardBlock) * rewardPerBlock() * pool.allocPoint) /
-                totalAllocPoint;
+            uint256 reward = ((block.number - _lastRewardBlock) * rewardPerBlock() * pool.allocPoint) / totalAllocPoint;
             accRewardPerShare = accRewardPerShare + (reward * PRECISION) / supply;
         }
         uint256 pending = ((user.amount * accRewardPerShare) / PRECISION) - user.rewardDebt;

@@ -139,7 +139,10 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
         require(spender != owner, "Maid: Invalid spender");
 
         if (Address.isContract(owner)) {
-            require(IERC1271(owner).isValidSignature(digest, abi.encodePacked(r, s, v)) == 0x1626ba7e, "Maid: Unauthorized");
+            require(
+                IERC1271(owner).isValidSignature(digest, abi.encodePacked(r, s, v)) == 0x1626ba7e,
+                "Maid: Unauthorized"
+            );
         } else {
             address recoveredAddress = Signature.recover(digest, v, r, s);
             require(recoveredAddress == owner, "Maid: Unauthorized");
@@ -169,7 +172,10 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
         noncesForAll[owner] += 1;
 
         if (Address.isContract(owner)) {
-            require(IERC1271(owner).isValidSignature(digest, abi.encodePacked(r, s, v)) == 0x1626ba7e, "Maid: Unauthorized");
+            require(
+                IERC1271(owner).isValidSignature(digest, abi.encodePacked(r, s, v)) == 0x1626ba7e,
+                "Maid: Unauthorized"
+            );
         } else {
             address recoveredAddress = Signature.recover(digest, v, r, s);
             require(recoveredAddress == owner, "Maid: Unauthorized");
