@@ -10,10 +10,6 @@ import "./interfaces/IMaid.sol";
 import "./libraries/Signature.sol";
 
 contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
-    function _baseURI() internal pure override returns (string memory) {
-        return "https://api.maidcoin.org/maid/";
-    }
-
     struct MaidInfo {
         uint256 originPower;
         uint256 supportedLPTokenAmount;
@@ -60,6 +56,10 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
                 address(this)
             )
         );
+    }
+
+    function _baseURI() internal pure override returns (string memory) {
+        return "https://api.maidcoin.org/maid/";
     }
 
     function DOMAIN_SEPARATOR() public view override returns (bytes32) {
