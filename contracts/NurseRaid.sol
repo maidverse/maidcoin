@@ -15,13 +15,15 @@ contract NurseRaid is Ownable, INurseRaid {
 
     struct Challenger {
         uint256 enterBlock;
-        uint256 maid;
+        IMaid maid;
+        uint256 maidId;
     }
 
     Raid[] public raids;
     mapping(uint256 => mapping(address => Challenger)) public challengers;
 
-    IMaid public immutable override maid;
+    mapping(IMaid => bool) public override maidApproved;
+
     IMaidCoin public immutable override maidCoin;
     INursePart public immutable override nursePart;
     IRNG public override rng;
@@ -29,12 +31,10 @@ contract NurseRaid is Ownable, INurseRaid {
     uint256 public override maidPowerToRaidReducedBlock = 100;
 
     constructor(
-        IMaid _maid,
         IMaidCoin _maidCoin,
         INursePart _nursePart,
         IRNG _rng
     ) {
-        maid = _maid;
         maidCoin = _maidCoin;
         nursePart = _nursePart;
         rng = _rng;
@@ -43,6 +43,19 @@ contract NurseRaid is Ownable, INurseRaid {
     function changeMaidPowerToRaidReducedBlock(uint256 value) external onlyOwner {
         maidPowerToRaidReducedBlock = value;
         emit ChangeMaidPowerToRaidReducedBlock(value);
+    }
+
+    function approveMaid(IMaid maid) external onlyOwner {
+        maidApproved[maid] = true;
+    }
+
+    function disapproveMaid(IMaid maid) external onlyOwner {
+        maidApproved[maid] = false;
+    }
+
+    modifier onlyApprovedMaid(IMaid maid) {
+        require(maidApproved[maid], "NurseRaid: The maid is not approved.");
+        _;
     }
 
     function changeRNG(address addr) external onlyOwner {
@@ -76,7 +89,8 @@ contract NurseRaid is Ownable, INurseRaid {
 
     function enterWithPermitAll(
         uint256 id,
-        uint256 _maid,
+        IMaid maid,
+        uint256 maidId,
         uint256 deadline,
         uint8 v1,
         bytes32 r1,
@@ -87,21 +101,21 @@ contract NurseRaid is Ownable, INurseRaid {
     ) external override {
         maidCoin.permit(msg.sender, address(this), type(uint256).max, deadline, v1, r1, s1);
         maid.permitAll(msg.sender, address(this), deadline, v2, r2, s2);
-        enter(id, _maid);
+        enter(id, maid, maidId);
     }
 
-    function enter(uint256 id, uint256 _maid) public override {
+    function enter(uint256 id, IMaid maid, uint256 maidId) onlyApprovedMaid(maid) public override {
         Raid storage raid = raids[id];
         require(block.number < raid.endBlock, "NurseRaid: Raid has ended");
         require(challengers[id][msg.sender].enterBlock == 0, "NurseRaid: Raid is in progress");
-        challengers[id][msg.sender] = Challenger({enterBlock: block.number, maid: _maid});
-        if (_maid != type(uint256).max) {
-            maid.transferFrom(msg.sender, address(this), _maid);
+        challengers[id][msg.sender] = Challenger({enterBlock: block.number, maid: maid, maidId: maidId});
+        if (maidId != type(uint256).max) {
+            maid.transferFrom(msg.sender, address(this), maidId);
         }
         uint256 _entranceFee = raid.entranceFee;
         maidCoin.transferFrom(msg.sender, address(this), _entranceFee);
         maidCoin.burn(_entranceFee);
-        emit Enter(msg.sender, id, _maid);
+        emit Enter(msg.sender, id, maid, maidId);
     }
 
     function checkDone(uint256 id) public view override returns (bool) {
@@ -112,13 +126,13 @@ contract NurseRaid is Ownable, INurseRaid {
     }
 
     function _checkDone(uint256 duration, Challenger memory challenger) internal view returns (bool) {
-        if (challenger.maid == type(uint256).max) {
+        if (challenger.maidId == type(uint256).max) {
             return block.number - challenger.enterBlock >= duration;
         } else {
             return
                 block.number -
                     challenger.enterBlock +
-                    (maid.powerOf(challenger.maid) * maidPowerToRaidReducedBlock) /
+                    (challenger.maid.powerOf(challenger.maidId) * maidPowerToRaidReducedBlock) /
                     100 >=
                 duration;
         }
@@ -135,8 +149,8 @@ contract NurseRaid is Ownable, INurseRaid {
             nursePart.mint(msg.sender, raid.nursePart, rewardCount);
         }
 
-        if (challenger.maid != type(uint256).max) {
-            maid.transferFrom(address(this), msg.sender, challenger.maid);
+        if (challenger.maidId != type(uint256).max) {
+            challenger.maid.transferFrom(address(this), msg.sender, challenger.maidId);
         }
 
         delete challengers[id][msg.sender];

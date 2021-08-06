@@ -15,11 +15,11 @@ interface INurseRaid {
         uint256 duration,
         uint256 endBlock
     );
-    event Enter(address indexed challenger, uint256 indexed id, uint256 indexed maid);
+    event Enter(address indexed challenger, uint256 indexed id, IMaid indexed maid, uint256 maidId);
     event Exit(address indexed challenger, uint256 indexed id);
     event ChangeMaidPowerToRaidReducedBlock(uint256 value);
 
-    function maid() external view returns (IMaid);
+    function maidApproved(IMaid maid) external view returns (bool);
 
     function maidCoin() external view returns (IMaidCoin);
 
@@ -41,7 +41,8 @@ interface INurseRaid {
 
     function enterWithPermitAll(
         uint256 id,
-        uint256 _maid,
+        IMaid maid,
+        uint256 maidId,
         uint256 deadline,
         uint8 v1,
         bytes32 r1,
@@ -51,7 +52,7 @@ interface INurseRaid {
         bytes32 s2
     ) external;
 
-    function enter(uint256 id, uint256 maid) external;
+    function enter(uint256 id, IMaid maid, uint256 maidId) external;
 
     function checkDone(uint256 id) external view returns (bool);
 
