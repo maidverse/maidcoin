@@ -80,6 +80,28 @@ describe("Maid", () => {
             expect(await maid.tokenURI(id)).to.eq(`https://api.maidcoin.org/maids/${id}`)
         })
 
+        it("batch mint", async () => {
+
+            const id1 = BigNumber.from(0);
+            const id2 = BigNumber.from(1);
+            const power1 = BigNumber.from(12);
+            const power2 = BigNumber.from(15);
+
+            await expect(maid.batchMint([power1, power2]))
+                .to.emit(maid, "Transfer")
+                .withArgs(constants.AddressZero, admin.address, id1)
+                .to.emit(maid, "Transfer")
+                .withArgs(constants.AddressZero, admin.address, id2)
+
+            expect(await maid.powerOf(id1)).to.eq(power1)
+            expect(await maid.totalSupply()).to.eq(BigNumber.from(2))
+            expect(await maid.tokenURI(id1)).to.eq(`https://api.maidcoin.org/maids/${id1}`)
+
+            expect(await maid.powerOf(id2)).to.eq(power2)
+            expect(await maid.totalSupply()).to.eq(BigNumber.from(2))
+            expect(await maid.tokenURI(id2)).to.eq(`https://api.maidcoin.org/maids/${id2}`)
+        })
+
         it("support, powerOf", async () => {
 
             const id = BigNumber.from(0);

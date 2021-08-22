@@ -6,9 +6,9 @@ import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import "./libraries/ERC721.sol";
 import "./libraries/ERC721Enumerable.sol";
 import "./interfaces/IERC1271.sol";
-import "./interfaces/ICloneNurse.sol";
+import "./interfaces/ICloneNurses.sol";
 
-contract CloneNurse is Ownable, ERC721("MaidCoin Clone Nurses", "CNURSE"), ERC721Enumerable, ERC1155Holder, ICloneNurse {
+contract CloneNurses is Ownable, ERC721("MaidCoin Clone Nurses", "CNURSES"), ERC721Enumerable, ERC1155Holder, ICloneNurses {
     struct NurseType {
         uint256 partCount;
         uint256 destroyReturn;

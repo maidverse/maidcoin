@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
 import "../uniswapv2/interfaces/IUniswapV2Pair.sol";
 
-interface IMaid is IERC721, IERC721Metadata, IERC721Enumerable {
+interface IMaids is IERC721, IERC721Metadata, IERC721Enumerable {
     event ChangeLPTokenToMaidPower(uint256 value);
     event Support(uint256 indexed id, uint256 lpTokenAmount);
     event Desupport(uint256 indexed id, uint256 lpTokenAmount);

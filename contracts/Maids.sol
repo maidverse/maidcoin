@@ -6,10 +6,10 @@ import "./libraries/ERC721.sol";
 import "./libraries/ERC721Enumerable.sol";
 import "./uniswapv2/interfaces/IUniswapV2Pair.sol";
 import "./interfaces/IERC1271.sol";
-import "./interfaces/IMaid.sol";
+import "./interfaces/IMaids.sol";
 import "./libraries/Signature.sol";
 
-contract Maid is Ownable, ERC721("MaidCoin Maids", "MAID"), ERC721Enumerable, IMaid {
+contract Maids is Ownable, ERC721("MaidCoin Maids", "MAIDS"), ERC721Enumerable, IMaids {
     struct MaidInfo {
         uint256 originPower;
         uint256 supportedLPTokenAmount;
@@ -75,11 +75,18 @@ contract Maid is Ownable, ERC721("MaidCoin Maids", "MAID"), ERC721Enumerable, IM
         emit ChangeLPTokenToMaidPower(value);
     }
 
-    function mint(uint256 power) external onlyOwner returns (uint256 id) {
+    function mint(uint256 power) public onlyOwner returns (uint256 id) {
         id = maids.length;
         require(id < MAX_MAID_COUNT, "Maid: Maximum Maids");
         maids.push(MaidInfo({originPower: power, supportedLPTokenAmount: 0}));
         _mint(msg.sender, id);
+    }
+
+    function batchMint(uint256[] calldata powers) external onlyOwner {
+        uint256 length = powers.length;
+        for (uint256 i = 0; i < length; i += 1) {
+            mint(powers[i]);
+        }
     }
 
     function powerOf(uint256 id) external view override returns (uint256) {
