@@ -9,7 +9,7 @@ import "./interfaces/IERC1271.sol";
 import "./interfaces/IMaid.sol";
 import "./libraries/Signature.sol";
 
-contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
+contract Maid is Ownable, ERC721("MaidCoin Maids", "MAID"), ERC721Enumerable, IMaid {
     struct MaidInfo {
         uint256 originPower;
         uint256 supportedLPTokenAmount;
@@ -43,14 +43,14 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
         lpToken = _lpToken;
 
         _CACHED_CHAIN_ID = block.chainid;
-        _HASHED_NAME = keccak256(bytes("Maid"));
+        _HASHED_NAME = keccak256(bytes("MaidCoin Maids"));
         _HASHED_VERSION = keccak256(bytes("1"));
         _TYPE_HASH = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
 
         _CACHED_DOMAIN_SEPARATOR = keccak256(
             abi.encode(
                 keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                keccak256(bytes("Maid")),
+                keccak256(bytes("MaidCoin Maids")),
                 keccak256(bytes("1")),
                 block.chainid,
                 address(this)
@@ -59,7 +59,7 @@ contract Maid is Ownable, ERC721("Maid", "MAID"), ERC721Enumerable, IMaid {
     }
 
     function _baseURI() internal pure override returns (string memory) {
-        return "https://api.maidcoin.org/maid/";
+        return "https://api.maidcoin.org/maids/";
     }
 
     function DOMAIN_SEPARATOR() public view override returns (bytes32) {

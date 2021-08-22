@@ -8,7 +8,7 @@ import "./libraries/ERC721Enumerable.sol";
 import "./interfaces/IERC1271.sol";
 import "./interfaces/ICloneNurse.sol";
 
-contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ERC721Enumerable, ERC1155Holder, ICloneNurse {
+contract CloneNurse is Ownable, ERC721("MaidCoin Clone Nurses", "CNURSE"), ERC721Enumerable, ERC1155Holder, ICloneNurse {
     struct NurseType {
         uint256 partCount;
         uint256 destroyReturn;
@@ -41,7 +41,7 @@ contract CloneNurse is Ownable, ERC721("CloneNurse", "CNURSE"), ERC721Enumerable
     }
 
     function _baseURI() internal pure override returns (string memory) {
-        return "https://api.maidcoin.org/clonenurse/";
+        return "https://api.maidcoin.org/clonenurses/";
     }
 
     function addNurseType(

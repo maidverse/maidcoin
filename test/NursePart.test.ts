@@ -27,7 +27,7 @@ describe("NursePart", () => {
         it("name, DOMAIN_SEPARATOR, PERMIT_TYPEHASH", async () => {
             const name = await nursePart.name()
             expect(name).to.eq("NursePart")
-            expect(await nursePart.uri(0)).to.eq("https://api.maidcoin.org/nursepart/{id}")
+            expect(await nursePart.uri(0)).to.eq("https://api.maidcoin.org/nurseparts/{id}")
             expect(await nursePart.DOMAIN_SEPARATOR()).to.eq(
                 keccak256(
                     defaultAbiCoder.encode(

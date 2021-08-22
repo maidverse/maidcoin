@@ -36,7 +36,7 @@ describe("Maid", () => {
     context("new Maid", async () => {
         it("name, symbol, DOMAIN_SEPARATOR, PERMIT_TYPEHASH", async () => {
             const name = await maid.name()
-            expect(name).to.eq("Maid")
+            expect(name).to.eq("MaidCoin Maids")
             expect(await maid.symbol()).to.eq("MAID")
             expect(await maid.DOMAIN_SEPARATOR()).to.eq(
                 keccak256(
@@ -77,7 +77,7 @@ describe("Maid", () => {
                 .withArgs(constants.AddressZero, admin.address, id)
             expect(await maid.powerOf(id)).to.eq(power)
             expect(await maid.totalSupply()).to.eq(BigNumber.from(1))
-            expect(await maid.tokenURI(id)).to.eq(`https://api.maidcoin.org/maid/${id}`)
+            expect(await maid.tokenURI(id)).to.eq(`https://api.maidcoin.org/maids/${id}`)
         })
 
         it("support, powerOf", async () => {

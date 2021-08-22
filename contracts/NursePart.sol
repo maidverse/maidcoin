@@ -7,8 +7,8 @@ import "./interfaces/IERC1271.sol";
 import "./interfaces/INursePart.sol";
 import "./libraries/Signature.sol";
 
-contract NursePart is Ownable, ERC1155("https://api.maidcoin.org/nursepart/{id}"), INursePart {
-    string public constant name = "NursePart";
+contract NursePart is Ownable, ERC1155("https://api.maidcoin.org/nurseparts/{id}"), INursePart {
+    string public constant name = "MaidCoin Nurse Parts";
 
     bytes32 private immutable _CACHED_DOMAIN_SEPARATOR;
     uint256 private immutable _CACHED_CHAIN_ID;
@@ -25,14 +25,14 @@ contract NursePart is Ownable, ERC1155("https://api.maidcoin.org/nursepart/{id}"
 
     constructor() {
         _CACHED_CHAIN_ID = block.chainid;
-        _HASHED_NAME = keccak256(bytes("NursePart"));
+        _HASHED_NAME = keccak256(bytes("MaidCoin Nurse Parts"));
         _HASHED_VERSION = keccak256(bytes("1"));
         _TYPE_HASH = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
 
         _CACHED_DOMAIN_SEPARATOR = keccak256(
             abi.encode(
                 keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                keccak256(bytes("NursePart")),
+                keccak256(bytes("MaidCoin Nurse Parts")),
                 keccak256(bytes("1")),
                 block.chainid,
                 address(this)
