@@ -87,7 +87,7 @@ describe("Maid", () => {
             const power1 = BigNumber.from(12);
             const power2 = BigNumber.from(15);
 
-            await expect(maid.batchMint([power1, power2]))
+            await expect(maid.mintBatch([power1, power2], 2))
                 .to.emit(maid, "Transfer")
                 .withArgs(constants.AddressZero, admin.address, id1)
                 .to.emit(maid, "Transfer")

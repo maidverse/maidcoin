@@ -82,10 +82,12 @@ contract Maids is Ownable, ERC721("MaidCoin Maids", "MAIDS"), ERC721Enumerable, 
         _mint(msg.sender, id);
     }
 
-    function batchMint(uint256[] calldata powers) external onlyOwner {
-        uint256 length = powers.length;
-        for (uint256 i = 0; i < length; i += 1) {
-            mint(powers[i]);
+    function mintBatch(uint256[] calldata powers, uint256 amounts) external onlyOwner {
+        require(powers.length == amounts, "Maid: Invalid parameters");
+        uint256 from = maids.length;
+        for (uint256 i = 0; i < amounts; i += 1) {
+            maids.push(MaidInfo({originPower: powers[i], supportedLPTokenAmount: 0, sushiRewardDebt: 0}));
+            _mint(msg.sender, (i + from));
         }
     }
 
