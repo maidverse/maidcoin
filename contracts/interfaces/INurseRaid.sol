@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.5;
 
-import "./IMaid.sol";
+import "./IMaids.sol";
 import "./IMaidCoin.sol";
 import "./INursePart.sol";
 import "./IRNG.sol";
@@ -15,11 +15,11 @@ interface INurseRaid {
         uint256 duration,
         uint256 endBlock
     );
-    event Enter(address indexed challenger, uint256 indexed id, IMaid indexed maid, uint256 maidId);
+    event Enter(address indexed challenger, uint256 indexed id, IMaids indexed maids, uint256 maidId);
     event Exit(address indexed challenger, uint256 indexed id);
     event ChangeMaidPowerToRaidReducedBlock(uint256 value);
 
-    function maidApproved(IMaid maid) external view returns (bool);
+    function maidsApproved(IMaids maids) external view returns (bool);
 
     function maidCoin() external view returns (IMaidCoin);
 
@@ -41,7 +41,7 @@ interface INurseRaid {
 
     function enterWithPermitAll(
         uint256 id,
-        IMaid maid,
+        IMaids maids,
         uint256 maidId,
         uint256 deadline,
         uint8 v1,
@@ -52,7 +52,7 @@ interface INurseRaid {
         bytes32 s2
     ) external;
 
-    function enter(uint256 id, IMaid maid, uint256 maidId) external;
+    function enter(uint256 id, IMaids maids, uint256 maidId) external;
 
     function checkDone(uint256 id) external view returns (bool);
 

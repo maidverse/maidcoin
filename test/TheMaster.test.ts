@@ -1,12 +1,12 @@
 import { expect } from "chai";
 import { ethers, network, waffle } from "hardhat";
-import CloneNurseArtifact from "../artifacts/contracts/CloneNurse.sol/CloneNurse.json";
+import CloneNursesArtifact from "../artifacts/contracts/CloneNurses.sol/CloneNurses.json";
 import MaidCoinArtifact from "../artifacts/contracts/MaidCoin.sol/MaidCoin.json";
 import MockERC20Artifact from "../artifacts/contracts/mock/MockERC20.sol/MockERC20.json";
 import TheMasterArtifact from "../artifacts/contracts/TheMaster.sol/TheMaster.json";
 import NursePartArtifact from "../artifacts/contracts/NursePart.sol/NursePart.json";
 import {
-  CloneNurse,
+  CloneNurses,
   MaidCoin,
   MockERC20,
   NursePart,
@@ -78,21 +78,21 @@ const setupTest = async () => {
   await mine();
 
   const nurseFactory = new ContractFactory(
-    CloneNurseArtifact.abi,
-    CloneNurseArtifact.bytecode,
+    CloneNursesArtifact.abi,
+    CloneNursesArtifact.bytecode,
     admin
   );
-  const nurse = (await nurseFactory.deploy(
+  const nurses = (await nurseFactory.deploy(
     nursePart.address,
     maidCoin.address,
     theMaster.address
-  )) as CloneNurse;
+  )) as CloneNurses;
 
   await mine();
 
-  await nursePart.connect(alice).setApprovalForAll(nurse.address, true);
-  await nursePart.connect(bob).setApprovalForAll(nurse.address, true);
-  await nursePart.connect(carol).setApprovalForAll(nurse.address, true);
+  await nursePart.connect(alice).setApprovalForAll(nurses.address, true);
+  await nursePart.connect(bob).setApprovalForAll(nurses.address, true);
+  await nursePart.connect(carol).setApprovalForAll(nurses.address, true);
 
   await poolToken
     .connect(alice)
@@ -126,14 +126,14 @@ const setupTest = async () => {
     9
   );
   await theMaster.add(
-    nurse.address,
+    nurses.address,
     true,
     true,
     ethers.constants.AddressZero,
     0,
     30
   );
-  await theMaster.add(poolToken.address, false, false, nurse.address, 10, 51);
+  await theMaster.add(poolToken.address, false, false, nurses.address, 10, 51);
   await mine();
 
   return {
@@ -146,7 +146,7 @@ const setupTest = async () => {
     maidCoin,
     nursePart,
     theMaster,
-    nurse,
+    nurse: nurses,
   };
 };
 

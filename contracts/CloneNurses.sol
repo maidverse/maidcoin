@@ -82,9 +82,9 @@ contract CloneNurses is Ownable, ERC721("MaidCoin Clone Nurses", "CNURSES"), ERC
     }
 
     function destroy(uint256 id, uint256 toId) external override {
-        require(toId != id, "CloneNurse: Invalid id, toId");
-        require(msg.sender == ownerOf(id), "CloneNurse: Forbidden");
-        require(_exists(toId), "CloneNurse: Invalid toId");
+        require(toId != id, "CloneNurses: Invalid id, toId");
+        require(msg.sender == ownerOf(id), "CloneNurses: Forbidden");
+        require(_exists(toId), "CloneNurses: Invalid toId");
 
         NurseType storage nurseType = nurseTypes[nurses[id].nurseType];
 
@@ -105,7 +105,7 @@ contract CloneNurses is Ownable, ERC721("MaidCoin Clone Nurses", "CNURSES"), ERC
     }
 
     function claim(uint256 id) external override {
-        require(msg.sender == ownerOf(id), "CloneNurse: Forbidden");
+        require(msg.sender == ownerOf(id), "CloneNurses: Forbidden");
         uint256 balanceBefore = maidCoin.balanceOf(address(this));
         theMaster.deposit(2, 0, id);
         uint256 balanceAfter = maidCoin.balanceOf(address(this));
@@ -115,7 +115,7 @@ contract CloneNurses is Ownable, ERC721("MaidCoin Clone Nurses", "CNURSES"), ERC
     }
 
     function pendingReward(uint256 id) external view override returns (uint256) {
-        require(_exists(id), "CloneNurse: Invalid id");
+        require(_exists(id), "CloneNurses: Invalid id");
         return theMaster.pendingReward(2, id);
     }
 
@@ -124,8 +124,8 @@ contract CloneNurses is Ownable, ERC721("MaidCoin Clone Nurses", "CNURSES"), ERC
         uint256 to,
         uint256 amounts
     ) public override {
-        require(msg.sender == address(theMaster), "CloneNurse: Forbidden");
-        require(_exists(to), "CloneNurse: Invalid target");
+        require(msg.sender == address(theMaster), "CloneNurses: Forbidden");
+        require(_exists(to), "CloneNurses: Invalid target");
         supportingTo[supporter] = to;
         emit SupportTo(supporter, to);
 
@@ -152,10 +152,10 @@ contract CloneNurses is Ownable, ERC721("MaidCoin Clone Nurses", "CNURSES"), ERC
     }
 
     function changeSupportedPower(address supporter, int256 power) public override {
-        require(msg.sender == address(theMaster), "CloneNurse: Forbidden");
+        require(msg.sender == address(theMaster), "CloneNurses: Forbidden");
         (, uint256 id) = checkSupportingRoute(supporter);
         int256 _supportedPower = int256(supportedPower[id]);
-        if (power < 0) require(_supportedPower >= (-power), "CloneNurse: Outranged power");
+        if (power < 0) require(_supportedPower >= (-power), "CloneNurses: Outranged power");
         _supportedPower += power;
         supportedPower[id] = uint256(_supportedPower);
         emit ChangeSupportedPower(id, power);
@@ -175,7 +175,7 @@ contract CloneNurses is Ownable, ERC721("MaidCoin Clone Nurses", "CNURSES"), ERC
         address supporter,
         uint8 supportingRatio
     ) public override returns (address nurseOwner, uint256 amountToNurseOwner) {
-        require(msg.sender == address(theMaster), "CloneNurse: Forbidden");
+        require(msg.sender == address(theMaster), "CloneNurses: Forbidden");
         amountToNurseOwner = (pending * supportingRatio) / 100;
         uint256 _supportTo;
         if (amountToNurseOwner > 0) {

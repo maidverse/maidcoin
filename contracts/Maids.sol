@@ -77,16 +77,16 @@ contract Maids is Ownable, ERC721("MaidCoin Maids", "MAIDS"), ERC721Enumerable, 
 
     function mint(uint256 power) public onlyOwner returns (uint256 id) {
         id = maids.length;
-        require(id < MAX_MAID_COUNT, "Maid: Maximum Maids");
+        require(id < MAX_MAID_COUNT, "Maids: Maximum Maids");
         maids.push(MaidInfo({originPower: power, supportedLPTokenAmount: 0}));
         _mint(msg.sender, id);
     }
 
     function mintBatch(uint256[] calldata powers, uint256 amounts) external onlyOwner {
-        require(powers.length == amounts, "Maid: Invalid parameters");
+        require(powers.length == amounts, "Maids: Invalid parameters");
         uint256 from = maids.length;
         for (uint256 i = 0; i < amounts; i += 1) {
-            maids.push(MaidInfo({originPower: powers[i], supportedLPTokenAmount: 0, sushiRewardDebt: 0}));
+            maids.push(MaidInfo({originPower: powers[i], supportedLPTokenAmount: 0}));
             _mint(msg.sender, (i + from));
         }
     }
@@ -97,7 +97,7 @@ contract Maids is Ownable, ERC721("MaidCoin Maids", "MAIDS"), ERC721Enumerable, 
     }
 
     function support(uint256 id, uint256 lpTokenAmount) public override {
-        require(ownerOf(id) == msg.sender, "Maid: Forbidden");
+        require(ownerOf(id) == msg.sender, "Maids: Forbidden");
         maids[id].supportedLPTokenAmount += lpTokenAmount;
 
         lpToken.transferFrom(msg.sender, address(this), lpTokenAmount);
@@ -117,7 +117,7 @@ contract Maids is Ownable, ERC721("MaidCoin Maids", "MAIDS"), ERC721Enumerable, 
     }
 
     function desupport(uint256 id, uint256 lpTokenAmount) external override {
-        require(ownerOf(id) == msg.sender, "Maid: Forbidden");
+        require(ownerOf(id) == msg.sender, "Maids: Forbidden");
         maids[id].supportedLPTokenAmount -= lpTokenAmount;
         lpToken.transfer(msg.sender, lpTokenAmount);
 
@@ -132,7 +132,7 @@ contract Maids is Ownable, ERC721("MaidCoin Maids", "MAIDS"), ERC721Enumerable, 
         bytes32 r,
         bytes32 s
     ) external override {
-        require(block.timestamp <= deadline, "Maid: Expired deadline");
+        require(block.timestamp <= deadline, "Maids: Expired deadline");
         bytes32 _DOMAIN_SEPARATOR = DOMAIN_SEPARATOR();
 
         bytes32 digest = keccak256(
@@ -145,16 +145,16 @@ contract Maids is Ownable, ERC721("MaidCoin Maids", "MAIDS"), ERC721Enumerable, 
         nonces[id] += 1;
 
         address owner = ownerOf(id);
-        require(spender != owner, "Maid: Invalid spender");
+        require(spender != owner, "Maids: Invalid spender");
 
         if (Address.isContract(owner)) {
             require(
                 IERC1271(owner).isValidSignature(digest, abi.encodePacked(r, s, v)) == 0x1626ba7e,
-                "Maid: Unauthorized"
+                "Maids: Unauthorized"
             );
         } else {
             address recoveredAddress = Signature.recover(digest, v, r, s);
-            require(recoveredAddress == owner, "Maid: Unauthorized");
+            require(recoveredAddress == owner, "Maids: Unauthorized");
         }
 
         _approve(spender, id);
@@ -168,7 +168,7 @@ contract Maids is Ownable, ERC721("MaidCoin Maids", "MAIDS"), ERC721Enumerable, 
         bytes32 r,
         bytes32 s
     ) external override {
-        require(block.timestamp <= deadline, "Maid: Expired deadline");
+        require(block.timestamp <= deadline, "Maids: Expired deadline");
         bytes32 _DOMAIN_SEPARATOR = DOMAIN_SEPARATOR();
 
         bytes32 digest = keccak256(
@@ -183,11 +183,11 @@ contract Maids is Ownable, ERC721("MaidCoin Maids", "MAIDS"), ERC721Enumerable, 
         if (Address.isContract(owner)) {
             require(
                 IERC1271(owner).isValidSignature(digest, abi.encodePacked(r, s, v)) == 0x1626ba7e,
-                "Maid: Unauthorized"
+                "Maids: Unauthorized"
             );
         } else {
             address recoveredAddress = Signature.recover(digest, v, r, s);
-            require(recoveredAddress == owner, "Maid: Unauthorized");
+            require(recoveredAddress == owner, "Maids: Unauthorized");
         }
 
         _setApprovalForAll(owner, spender, true);

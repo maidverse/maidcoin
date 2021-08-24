@@ -2,7 +2,7 @@
 pragma solidity ^0.8.5;
 
 import "../interfaces/IMaidCoin.sol";
-import "../interfaces/IMaid.sol";
+import "../interfaces/IMaids.sol";
 import "../interfaces/INursePart.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
@@ -10,16 +10,16 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 contract PermitTest is IERC1155Receiver, ERC165 {
     IMaidCoin private maidCoin;
-    IMaid private maid;
+    IMaids private maids;
     INursePart private nursePart;
 
     constructor(
         IMaidCoin _maidCoin,
-        IMaid _maid,
+        IMaids _maids,
         INursePart _nursePart
     ) {
         maidCoin = _maidCoin;
-        maid = _maid;
+        maids = _maids;
         nursePart = _nursePart;
     }
 
@@ -41,8 +41,8 @@ contract PermitTest is IERC1155Receiver, ERC165 {
         bytes32 r,
         bytes32 s
     ) external {
-        maid.permit(address(this), id, deadline, v, r, s);
-        maid.transferFrom(msg.sender, address(this), id);
+        maids.permit(address(this), id, deadline, v, r, s);
+        maids.transferFrom(msg.sender, address(this), id);
     }
 
     function nursePartPermitTest(

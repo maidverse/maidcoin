@@ -3,12 +3,12 @@ import { ecsign } from "ethereumjs-util";
 import { BigNumber, constants } from "ethers";
 import { hexlify } from "ethers/lib/utils";
 import { waffle } from "hardhat";
-import MaidArtifact from "../../artifacts/contracts/Maid.sol/Maid.json";
+import MaidsArtifact from "../../artifacts/contracts/Maids.sol/Maids.json";
 import MaidCoinArtifact from "../../artifacts/contracts/MaidCoin.sol/MaidCoin.json";
 import NursePartArtifact from "../../artifacts/contracts/NursePart.sol/NursePart.json";
 import PermitTestArtifact from "../../artifacts/contracts/test/PermitTest.sol/PermitTest.json";
 import TestLPTokenArtifact from "../../artifacts/contracts/test/TestLPToken.sol/TestLPToken.json";
-import { Maid, MaidCoin, NursePart, PermitTest, TestLPToken } from "../../typechain";
+import { Maids, MaidCoin, NursePart, PermitTest, TestLPToken } from "../../typechain";
 import { expandTo18Decimals } from "../shared/utils/number";
 import { getERC1155ApprovalDigest, getERC20ApprovalDigest, getERC721ApprovalDigest } from "../shared/utils/standard";
 
@@ -17,7 +17,7 @@ const { deployContract } = waffle;
 describe("PermitTest", () => {
     let testLPToken: TestLPToken;
     let maidCoin: MaidCoin;
-    let maid: Maid;
+    let maids: Maids;
     let nursePart: NursePart;
     let permitTest: PermitTest;
 
@@ -39,11 +39,11 @@ describe("PermitTest", () => {
             []
         ) as MaidCoin;
 
-        maid = await deployContract(
+        maids = await deployContract(
             admin,
-            MaidArtifact,
+            MaidsArtifact,
             [testLPToken.address]
-        ) as Maid;
+        ) as Maids;
 
         nursePart = await deployContract(
             admin,
@@ -54,7 +54,7 @@ describe("PermitTest", () => {
         permitTest = await deployContract(
             admin,
             PermitTestArtifact,
-            [maidCoin.address, maid.address, nursePart.address]
+            [maidCoin.address, maids.address, nursePart.address]
         ) as PermitTest;
     })
 
@@ -79,14 +79,14 @@ describe("PermitTest", () => {
 
             const id = BigNumber.from(0);
 
-            await expect(maid.mint(BigNumber.from(12)))
-                .to.emit(maid, "Transfer")
+            await expect(maids.mint(BigNumber.from(12)))
+                .to.emit(maids, "Transfer")
                 .withArgs(constants.AddressZero, admin.address, id)
 
-            const nonce = await maid.nonces(id)
+            const nonce = await maids.nonces(id)
             const deadline = constants.MaxUint256
             const digest = await getERC721ApprovalDigest(
-                maid,
+                maids,
                 { spender: permitTest.address, id },
                 nonce,
                 deadline
@@ -95,7 +95,7 @@ describe("PermitTest", () => {
             const { v, r, s } = ecsign(Buffer.from(digest.slice(2), "hex"), Buffer.from(admin.privateKey.slice(2), "hex"))
 
             await permitTest.maidPermitTest(id, deadline, v, hexlify(r), hexlify(s))
-            expect(await maid.ownerOf(id)).to.eq(permitTest.address)
+            expect(await maids.ownerOf(id)).to.eq(permitTest.address)
         })
 
         it("nurse part permit", async () => {

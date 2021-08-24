@@ -4,13 +4,13 @@ import { expect } from "chai";
 import { ecsign } from "ethereumjs-util";
 import { constants } from "ethers";
 import { waffle } from "hardhat";
-import MaidArtifact from "../artifacts/contracts/Maid.sol/Maid.json";
+import MaidsArtifact from "../artifacts/contracts/Maids.sol/Maids.json";
 import MaidCoinArtifact from "../artifacts/contracts/MaidCoin.sol/MaidCoin.json";
 import NursePartArtifact from "../artifacts/contracts/NursePart.sol/NursePart.json";
 import NurseRaidArtifact from "../artifacts/contracts/NurseRaid.sol/NurseRaid.json";
 import TestLPTokenArtifact from "../artifacts/contracts/test/TestLPToken.sol/TestLPToken.json";
 import TestRNGArtifact from "../artifacts/contracts/test/TestRNG.sol/TestRNG.json";
-import { Maid, MaidCoin, NursePart, NurseRaid, TestLPToken, TestRNG } from "../typechain";
+import { Maids, MaidCoin, NursePart, NurseRaid, TestLPToken, TestRNG } from "../typechain";
 import { expandTo18Decimals } from "./shared/utils/number";
 import { getERC20ApprovalDigest, getERC721ApprovalAllDigest } from "./shared/utils/standard";
 
@@ -18,8 +18,8 @@ const { deployContract } = waffle;
 
 describe("NurseRaid", () => {
     let testLPToken: TestLPToken;
-    let maid1: Maid;
-    let maid2: Maid;
+    let maids1: Maids;
+    let maids2: Maids;
     let maidCoin: MaidCoin;
     let nursePart: NursePart;
     let rng: TestRNG;
@@ -36,15 +36,15 @@ describe("NurseRaid", () => {
             []
         ) as TestLPToken;
 
-        maid1 = await deployContract(
+        maids1 = await deployContract(
             admin,
-            MaidArtifact,
+            MaidsArtifact,
             [testLPToken.address]
         ) as Maid;
 
-        maid2 = await deployContract(
+        maids2 = await deployContract(
             admin,
-            MaidArtifact,
+            MaidsArtifact,
             [testLPToken.address]
         ) as Maid;
 
@@ -76,8 +76,8 @@ describe("NurseRaid", () => {
             ]
         ) as NurseRaid;
 
-        await nurseRaid.approveMaid(maid1.address);
-        await nurseRaid.approveMaid(maid2.address);
+        await nurseRaid.approveMaids(maids1.address);
+        await nurseRaid.approveMaids(maids2.address);
     })
 
     context("new NurseRaid", async () => {
@@ -100,8 +100,8 @@ describe("NurseRaid", () => {
         })
 
         it("enter", async () => {
-            await maid1.mint(BigNumber.from(10));
-            await maid1.mint(BigNumber.from(12));
+            await maids1.mint(BigNumber.from(10));
+            await maids1.mint(BigNumber.from(12));
 
             await expect(nurseRaid.create(expandTo18Decimals(10), 0, 5, 10, 999999999))
                 .to.emit(nurseRaid, "Create")
@@ -125,9 +125,9 @@ describe("NurseRaid", () => {
 
             const ecsignResult1 = ecsign(Buffer.from(digest1.slice(2), "hex"), Buffer.from(admin.privateKey.slice(2), "hex"))
 
-            const nonce2 = await maid1.noncesForAll(admin.address)
+            const nonce2 = await maids1.noncesForAll(admin.address)
             const digest2 = await getERC721ApprovalAllDigest(
-                maid1,
+                maids1,
                 { owner: admin.address, spender: nurseRaid.address },
                 nonce2,
                 deadline
@@ -135,11 +135,11 @@ describe("NurseRaid", () => {
 
             const ecsignResult2 = ecsign(Buffer.from(digest2.slice(2), "hex"), Buffer.from(admin.privateKey.slice(2), "hex"))
 
-            await expect(nurseRaid.enterWithPermitAll(0, maid1.address, 0, deadline,
+            await expect(nurseRaid.enterWithPermitAll(0, maids1.address, 0, deadline,
                 ecsignResult1.v, hexlify(ecsignResult1.r), hexlify(ecsignResult1.s),
                 ecsignResult2.v, hexlify(ecsignResult2.r), hexlify(ecsignResult2.s)))
                 .to.emit(nurseRaid, "Enter")
-                .withArgs(admin.address, 0, maid1.address, 0)
+                .withArgs(admin.address, 0, maids1.address, 0)
 
             await expect(nurseRaid.create(expandTo18Decimals(10), 0, 5, 10, 999999999))
                 .to.emit(nurseRaid, "Create")
@@ -147,9 +147,9 @@ describe("NurseRaid", () => {
 
             expect(await nurseRaid.raidCount()).to.be.equal(2)
 
-            await expect(nurseRaid.enter(1, maid1.address, 1))
+            await expect(nurseRaid.enter(1, maids1.address, 1))
                 .to.emit(nurseRaid, "Enter")
-                .withArgs(admin.address, 1, maid1.address, 1)
+                .withArgs(admin.address, 1, maids1.address, 1)
         })
     })
 })

@@ -15,14 +15,14 @@ contract NurseRaid is Ownable, INurseRaid {
 
     struct Challenger {
         uint256 enterBlock;
-        IMaid maid;
+        IMaids maids;
         uint256 maidId;
     }
 
     Raid[] public raids;
     mapping(uint256 => mapping(address => Challenger)) public challengers;
 
-    mapping(IMaid => bool) public override maidApproved;
+    mapping(IMaids => bool) public override maidsApproved;
 
     IMaidCoin public immutable override maidCoin;
     INursePart public immutable override nursePart;
@@ -45,16 +45,16 @@ contract NurseRaid is Ownable, INurseRaid {
         emit ChangeMaidPowerToRaidReducedBlock(value);
     }
 
-    function approveMaid(IMaid maid) external onlyOwner {
-        maidApproved[maid] = true;
+    function approveMaids(IMaids maids) external onlyOwner {
+        maidsApproved[maids] = true;
     }
 
-    function disapproveMaid(IMaid maid) external onlyOwner {
-        maidApproved[maid] = false;
+    function disapproveMaids(IMaids maids) external onlyOwner {
+        maidsApproved[maids] = false;
     }
 
-    modifier onlyApprovedMaid(IMaid maid) {
-        require(maidApproved[maid], "NurseRaid: The maid is not approved.");
+    modifier onlyApprovedMaids(IMaids maids) {
+        require(maidsApproved[maids], "NurseRaid: The maids is not approved.");
         _;
     }
 
@@ -89,7 +89,7 @@ contract NurseRaid is Ownable, INurseRaid {
 
     function enterWithPermitAll(
         uint256 id,
-        IMaid maid,
+        IMaids maids,
         uint256 maidId,
         uint256 deadline,
         uint8 v1,
@@ -100,22 +100,22 @@ contract NurseRaid is Ownable, INurseRaid {
         bytes32 s2
     ) external override {
         maidCoin.permit(msg.sender, address(this), type(uint256).max, deadline, v1, r1, s1);
-        maid.permitAll(msg.sender, address(this), deadline, v2, r2, s2);
-        enter(id, maid, maidId);
+        maids.permitAll(msg.sender, address(this), deadline, v2, r2, s2);
+        enter(id, maids, maidId);
     }
 
-    function enter(uint256 id, IMaid maid, uint256 maidId) onlyApprovedMaid(maid) public override {
+    function enter(uint256 id, IMaids maids, uint256 maidId) onlyApprovedMaids(maids) public override {
         Raid storage raid = raids[id];
         require(block.number < raid.endBlock, "NurseRaid: Raid has ended");
         require(challengers[id][msg.sender].enterBlock == 0, "NurseRaid: Raid is in progress");
-        challengers[id][msg.sender] = Challenger({enterBlock: block.number, maid: maid, maidId: maidId});
+        challengers[id][msg.sender] = Challenger({enterBlock: block.number, maids: maids, maidId: maidId});
         if (maidId != type(uint256).max) {
-            maid.transferFrom(msg.sender, address(this), maidId);
+            maids.transferFrom(msg.sender, address(this), maidId);
         }
         uint256 _entranceFee = raid.entranceFee;
         maidCoin.transferFrom(msg.sender, address(this), _entranceFee);
         maidCoin.burn(_entranceFee);
-        emit Enter(msg.sender, id, maid, maidId);
+        emit Enter(msg.sender, id, maids, maidId);
     }
 
     function checkDone(uint256 id) public view override returns (bool) {
@@ -132,7 +132,7 @@ contract NurseRaid is Ownable, INurseRaid {
             return
                 block.number -
                     challenger.enterBlock +
-                    (challenger.maid.powerOf(challenger.maidId) * maidPowerToRaidReducedBlock) /
+                    (challenger.maids.powerOf(challenger.maidId) * maidPowerToRaidReducedBlock) /
                     100 >=
                 duration;
         }
@@ -150,7 +150,7 @@ contract NurseRaid is Ownable, INurseRaid {
         }
 
         if (challenger.maidId != type(uint256).max) {
-            challenger.maid.transferFrom(address(this), msg.sender, challenger.maidId);
+            challenger.maids.transferFrom(address(this), msg.sender, challenger.maidId);
         }
 
         delete challengers[id][msg.sender];
