@@ -25,6 +25,7 @@ contract NurseRaid is Ownable, INurseRaid {
     mapping(IMaids => bool) public override maidsApproved;
 
     IMaidCoin public immutable override maidCoin;
+    IMaidCafe public override maidCafe;
     INursePart public immutable override nursePart;
     IRNG public override rng;
 
@@ -32,10 +33,12 @@ contract NurseRaid is Ownable, INurseRaid {
 
     constructor(
         IMaidCoin _maidCoin,
+        IMaidCafe _maidCafe,
         INursePart _nursePart,
         IRNG _rng
     ) {
         maidCoin = _maidCoin;
+        maidCafe = _maidCafe;
         nursePart = _nursePart;
         rng = _rng;
     }
@@ -43,6 +46,10 @@ contract NurseRaid is Ownable, INurseRaid {
     function changeMaidPowerToRaidReducedBlock(uint256 value) external onlyOwner {
         maidPowerToRaidReducedBlock = value;
         emit ChangeMaidPowerToRaidReducedBlock(value);
+    }
+
+    function setMaidCafe(IMaidCafe _maidCafe) external onlyOwner {
+        maidCafe = _maidCafe;
     }
 
     function approveMaids(IMaids maids) external onlyOwner {
@@ -118,7 +125,9 @@ contract NurseRaid is Ownable, INurseRaid {
         }
         uint256 _entranceFee = raid.entranceFee;
         maidCoin.transferFrom(msg.sender, address(this), _entranceFee);
-        maidCoin.burn(_entranceFee);
+        uint256 feeToCafe = _entranceFee * 3 / 1000;
+        _feeTransfer(feeToCafe);
+        maidCoin.burn(_entranceFee - feeToCafe);
         emit Enter(msg.sender, id, maids, maidId);
     }
 
@@ -179,5 +188,9 @@ contract NurseRaid is Ownable, INurseRaid {
         }
 
         rewardCount = i;
+    }
+
+    function _feeTransfer(uint256 feeToCafe) internal {
+        maidCoin.transfer(address(maidCafe), feeToCafe);
     }
 }

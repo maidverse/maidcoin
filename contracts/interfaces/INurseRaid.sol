@@ -3,6 +3,7 @@ pragma solidity ^0.8.5;
 
 import "./IMaids.sol";
 import "./IMaidCoin.sol";
+import "./IMaidCafe.sol";
 import "./INursePart.sol";
 import "./IRNG.sol";
 
@@ -22,6 +23,8 @@ interface INurseRaid {
     function maidsApproved(IMaids maids) external view returns (bool);
 
     function maidCoin() external view returns (IMaidCoin);
+
+    function maidCafe() external view returns (IMaidCafe);
 
     function nursePart() external view returns (INursePart);
 
