@@ -8,8 +8,9 @@ import "./uniswapv2/interfaces/IUniswapV2Pair.sol";
 import "./interfaces/IERC1271.sol";
 import "./interfaces/IMaids.sol";
 import "./libraries/Signature.sol";
+import "./libraries/MasterChefModule.sol";
 
-contract Maids is Ownable, ERC721("MaidCoin Maids", "MAIDS"), ERC721Enumerable, IMaids {
+contract Maids is Ownable, ERC721("MaidCoin Maids", "MAIDS"), ERC721Enumerable, MasterChefModule, IMaids {
     struct MaidInfo {
         uint256 originPower;
         uint256 supportedLPTokenAmount;
@@ -36,21 +37,10 @@ contract Maids is Ownable, ERC721("MaidCoin Maids", "MAIDS"), ERC721Enumerable, 
     mapping(uint256 => uint256) public override nonces;
     mapping(address => uint256) public override noncesForAll;
 
-    IUniswapV2Pair public immutable override lpToken;
     uint256 public override lpTokenToMaidPower = 1;
     MaidInfo[] public override maids;
 
-    IERC20 public immutable override sushi;
-    IMasterChef public override sushiMasterChef;
-    uint256 public override pid;
-    uint256 public override sushiLastRewardBlock;
-    uint256 public override accSushiPerShare;
-    bool private initialDeposited;
-
-    constructor(IUniswapV2Pair _lpToken, IERC20 _sushi) {
-        lpToken = _lpToken;
-        sushi = _sushi;
-
+    constructor(IUniswapV2Pair _lpToken, IERC20 _sushi) MasterChefModule(_lpToken, _sushi) {
         _CACHED_CHAIN_ID = block.chainid;
         _HASHED_NAME = keccak256(bytes("MaidCoin Maids"));
         _HASHED_VERSION = keccak256(bytes("1"));
@@ -113,13 +103,14 @@ contract Maids is Ownable, ERC721("MaidCoin Maids", "MAIDS"), ERC721Enumerable, 
         maids[id].supportedLPTokenAmount = _supportedLPTokenAmount + lpTokenAmount;
         lpToken.transferFrom(msg.sender, address(this), lpTokenAmount);
 
-        uint256 _pid = pid;
+        uint256 _pid = masterChefPid;
         if (_pid > 0) {
-            uint256 _totalSupportedLPTokenAmount = sushiMasterChef.userInfo(_pid, address(this)).amount;
-            uint256 _accSushiPerShare = _depositToSushiMasterChef(_pid, lpTokenAmount, _totalSupportedLPTokenAmount);
-            uint256 pending = (_supportedLPTokenAmount * _accSushiPerShare) / 1e18 - maids[id].sushiRewardDebt;
-            if (pending > 0) safeSushiTransfer(msg.sender, pending);
-            maids[id].sushiRewardDebt = ((_supportedLPTokenAmount + lpTokenAmount) * _accSushiPerShare) / 1e18;
+            maids[id].sushiRewardDebt = _depositModule(
+                _pid,
+                lpTokenAmount,
+                _supportedLPTokenAmount,
+                maids[id].sushiRewardDebt
+            );
         }
 
         emit Support(id, lpTokenAmount);
@@ -144,13 +135,14 @@ contract Maids is Ownable, ERC721("MaidCoin Maids", "MAIDS"), ERC721Enumerable, 
 
         maids[id].supportedLPTokenAmount = _supportedLPTokenAmount - lpTokenAmount;
 
-        uint256 _pid = pid;
+        uint256 _pid = masterChefPid;
         if (_pid > 0) {
-            uint256 _totalSupportedLPTokenAmount = sushiMasterChef.userInfo(_pid, address(this)).amount;
-            uint256 _accSushiPerShare = _withdrawFromSushiMasterChef(_pid, lpTokenAmount, _totalSupportedLPTokenAmount);
-            uint256 pending = (_supportedLPTokenAmount * _accSushiPerShare) / 1e18 - maids[id].sushiRewardDebt;
-            if (pending > 0) safeSushiTransfer(msg.sender, pending);
-            maids[id].sushiRewardDebt = ((_supportedLPTokenAmount - lpTokenAmount) * _accSushiPerShare) / 1e18;
+            maids[id].sushiRewardDebt = _withdrawModule(
+                _pid,
+                lpTokenAmount,
+                _supportedLPTokenAmount,
+                maids[id].sushiRewardDebt
+            );
         }
 
         lpToken.transfer(msg.sender, lpTokenAmount);
@@ -159,31 +151,11 @@ contract Maids is Ownable, ERC721("MaidCoin Maids", "MAIDS"), ERC721Enumerable, 
 
     function claimSushiReward(uint256 id) public override {
         require(ownerOf(id) == msg.sender, "Maids: Forbidden");
-        uint256 _pid = pid;
-        require(_pid > 0, "Maids: Unclaimable");
-        uint256 _supportedLPTokenAmount = maids[id].supportedLPTokenAmount;
-
-        uint256 _totalSupportedLPTokenAmount = sushiMasterChef.userInfo(_pid, address(this)).amount;
-        uint256 _accSushiPerShare = _depositToSushiMasterChef(_pid, 0, _totalSupportedLPTokenAmount);
-        uint256 pending = (_supportedLPTokenAmount * _accSushiPerShare) / 1e18 - maids[id].sushiRewardDebt;
-        require(pending > 0, "Maids: Nothing can be claimed");
-        safeSushiTransfer(msg.sender, pending);
-        maids[id].sushiRewardDebt = (_supportedLPTokenAmount * _accSushiPerShare) / 1e18;
+        maids[id].sushiRewardDebt = _claimSushiReward(maids[id].supportedLPTokenAmount, maids[id].sushiRewardDebt);
     }
 
     function pendingSushiReward(uint256 id) external view override returns (uint256) {
-        uint256 _pid = pid;
-        if (_pid == 0) return 0;
-        uint256 _supportedLPTokenAmount = maids[id].supportedLPTokenAmount;
-        uint256 _totalSupportedLPTokenAmount = sushiMasterChef.userInfo(_pid, address(this)).amount;
-
-        uint256 _accSushiPerShare = accSushiPerShare;
-        if (block.number > sushiLastRewardBlock && _totalSupportedLPTokenAmount != 0) {
-            uint256 reward = sushiMasterChef.pendingSushi(pid, address(this));
-            _accSushiPerShare += ((reward * 1e18) / _totalSupportedLPTokenAmount);
-        }
-
-        return (_supportedLPTokenAmount * _accSushiPerShare) / 1e18 - maids[id].sushiRewardDebt;
+        return _pendingSushiReward(maids[id].supportedLPTokenAmount, maids[id].sushiRewardDebt);
     }
 
     function permit(
@@ -270,82 +242,5 @@ contract Maids is Ownable, ERC721("MaidCoin Maids", "MAIDS"), ERC721Enumerable, 
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
-    }
-
-    function setSushiMasterChef(IMasterChef _masterChef, uint256 _pid) external onlyOwner {
-        require(address(_masterChef.poolInfo(_pid).lpToken) == address(lpToken), "Maids: Invalid pid");
-        if (!initialDeposited) {
-            initialDeposited = true;
-            lpToken.approve(address(_masterChef), type(uint256).max);
-
-            sushiMasterChef = _masterChef;
-            pid = _pid;
-            _depositToSushiMasterChef(_pid, lpToken.balanceOf(address(this)), 0);
-        } else {
-            IMasterChef oldChef = sushiMasterChef;
-            uint256 oldpid = pid;
-            _withdrawFromSushiMasterChef(oldpid, oldChef.userInfo(oldpid, address(this)).amount, 0);
-            if (_masterChef != oldChef) {
-                lpToken.approve(address(oldChef), 0);
-                lpToken.approve(address(_masterChef), type(uint256).max);
-            }
-
-            sushiMasterChef = _masterChef;
-            pid = _pid;
-            _depositToSushiMasterChef(_pid, lpToken.balanceOf(address(this)), 0);
-        }
-    }
-
-    function _depositToSushiMasterChef(
-        uint256 _pid,
-        uint256 _amount,
-        uint256 _totalSupportedLPTokenAmount
-    ) internal returns (uint256 _accSushiPerShare) {
-        return _toSushiMasterChef(true, _pid, _amount, _totalSupportedLPTokenAmount);
-    }
-
-    function _withdrawFromSushiMasterChef(
-        uint256 _pid,
-        uint256 _amount,
-        uint256 _totalSupportedLPTokenAmount
-    ) internal returns (uint256 _accSushiPerShare) {
-        return _toSushiMasterChef(false, _pid, _amount, _totalSupportedLPTokenAmount);
-    }
-
-    function _toSushiMasterChef(
-        bool deposit,
-        uint256 _pid,
-        uint256 _amount,
-        uint256 _totalSupportedLPTokenAmount
-    ) internal returns (uint256) {
-        uint256 reward;
-        if (block.number <= sushiLastRewardBlock) {
-            if (deposit) sushiMasterChef.deposit(_pid, _amount);
-            else sushiMasterChef.withdraw(_pid, _amount);
-            return accSushiPerShare;
-        } else {
-            uint256 balance0 = sushi.balanceOf(address(this));
-            if (deposit) sushiMasterChef.deposit(_pid, _amount);
-            else sushiMasterChef.withdraw(_pid, _amount);
-            uint256 balance1 = sushi.balanceOf(address(this));
-            reward = balance1 - balance0;
-        }
-        sushiLastRewardBlock = block.number;
-        if (_totalSupportedLPTokenAmount > 0 && reward > 0) {
-            uint256 _accSushiPerShare = accSushiPerShare + ((reward * 1e18) / _totalSupportedLPTokenAmount);
-            accSushiPerShare = _accSushiPerShare;
-            return _accSushiPerShare;
-        } else {
-            return accSushiPerShare;
-        }
-    }
-
-    function safeSushiTransfer(address _to, uint256 _amount) internal {
-        uint256 sushiBal = sushi.balanceOf(address(this));
-        if (_amount > sushiBal) {
-            sushi.transfer(_to, sushiBal);
-        } else {
-            sushi.transfer(_to, _amount);
-        }
     }
 }
