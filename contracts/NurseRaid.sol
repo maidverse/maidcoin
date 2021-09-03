@@ -54,7 +54,7 @@ contract NurseRaid is Ownable, INurseRaid {
     }
 
     modifier onlyApprovedMaids(IMaids maids) {
-        require(maidsApproved[maids], "NurseRaid: The maids is not approved.");
+        require(address(maids) == address(0) || maidsApproved[maids], "NurseRaid: The maids is not approved.");
         _;
     }
 
@@ -104,12 +104,16 @@ contract NurseRaid is Ownable, INurseRaid {
         enter(id, maids, maidId);
     }
 
-    function enter(uint256 id, IMaids maids, uint256 maidId) onlyApprovedMaids(maids) public override {
+    function enter(
+        uint256 id,
+        IMaids maids,
+        uint256 maidId
+    ) public override onlyApprovedMaids(maids) {
         Raid storage raid = raids[id];
         require(block.number < raid.endBlock, "NurseRaid: Raid has ended");
         require(challengers[id][msg.sender].enterBlock == 0, "NurseRaid: Raid is in progress");
         challengers[id][msg.sender] = Challenger({enterBlock: block.number, maids: maids, maidId: maidId});
-        if (maidId != type(uint256).max) {
+        if (address(maids) != address(0)) {
             maids.transferFrom(msg.sender, address(this), maidId);
         }
         uint256 _entranceFee = raid.entranceFee;
@@ -126,7 +130,7 @@ contract NurseRaid is Ownable, INurseRaid {
     }
 
     function _checkDone(uint256 duration, Challenger memory challenger) internal view returns (bool) {
-        if (challenger.maidId == type(uint256).max) {
+        if (address(challenger.maids) == address(0)) {
             return block.number - challenger.enterBlock >= duration;
         } else {
             return
@@ -149,7 +153,7 @@ contract NurseRaid is Ownable, INurseRaid {
             nursePart.mint(msg.sender, raid.nursePart, rewardCount);
         }
 
-        if (challenger.maidId != type(uint256).max) {
+        if (address(challenger.maids) != address(0)) {
             challenger.maids.transferFrom(address(this), msg.sender, challenger.maidId);
         }
 

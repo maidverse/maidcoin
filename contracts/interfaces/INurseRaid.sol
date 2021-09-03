@@ -52,7 +52,11 @@ interface INurseRaid {
         bytes32 s2
     ) external;
 
-    function enter(uint256 id, IMaids maids, uint256 maidId) external;
+    function enter(
+        uint256 id,
+        IMaids maids,
+        uint256 maidId
+    ) external;
 
     function checkDone(uint256 id) external view returns (bool);
 
