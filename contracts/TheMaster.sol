@@ -6,8 +6,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./uniswapv2/interfaces/IUniswapV2ERC20.sol";
 import "./interfaces/ITheMaster.sol";
+import "./libraries/MasterChefModule.sol";
 
-contract TheMaster is Ownable, ITheMaster {
+contract TheMaster is Ownable, MasterChefModule, ITheMaster {
     using SafeERC20 for IERC20;
 
     struct UserInfo {
@@ -37,6 +38,7 @@ contract TheMaster is Ownable, ITheMaster {
 
     PoolInfo[] public override poolInfo;
     mapping(uint256 => mapping(uint256 => UserInfo)) public override userInfo;
+    mapping(uint256 => mapping(address => uint256)) private sushiRewardDebt;
     mapping(address => bool) public override mintableByAddr;
     uint256 public override totalAllocPoint;
 
@@ -44,8 +46,10 @@ contract TheMaster is Ownable, ITheMaster {
         uint256 _initialRewardPerBlock,
         uint256 _decreasingInterval,
         uint256 _startBlock,
-        IMaidCoin _maidCoin
-    ) {
+        IMaidCoin _maidCoin,
+        IUniswapV2Pair _lpToken,
+        IERC20 _sushi
+    ) MasterChefModule(_lpToken, _sushi) {
         initialRewardPerBlock = _initialRewardPerBlock;
         decreasingInterval = _decreasingInterval;
         startBlock = _startBlock;
@@ -177,6 +181,15 @@ contract TheMaster is Ownable, ITheMaster {
         if (amount > 0) {
             if (tokenTransfer) {
                 IERC20(pool.addr).safeTransferFrom(msg.sender, address(this), amount);
+                uint256 _pid = masterChefPid;
+                if (_pid > 0 && pool.addr == address(lpToken)) {
+                    sushiRewardDebt[_pid][msg.sender] = _depositModule(
+                        _pid,
+                        amount,
+                        _amount,
+                        sushiRewardDebt[_pid][msg.sender]
+                    );
+                }
             }
             pool.supply += amount;
             _amount += amount;
@@ -246,6 +259,16 @@ contract TheMaster is Ownable, ITheMaster {
             _amount -= amount;
             user.amount = _amount;
             if (tokenTransfer) {
+                uint256 _pid = masterChefPid;
+                if (_pid > 0 && pool.addr == address(lpToken)) {
+                    sushiRewardDebt[_pid][msg.sender] = _withdrawModule(
+                        _pid,
+                        amount,
+                        _amount + amount,
+                        sushiRewardDebt[_pid][msg.sender]
+                    );
+                }
+
                 IERC20(pool.addr).safeTransfer(msg.sender, amount);
             }
         }
@@ -261,6 +284,17 @@ contract TheMaster is Ownable, ITheMaster {
         user.amount = 0;
         user.rewardDebt = 0;
         pool.supply -= amounts;
+
+        uint256 _pid = masterChefPid;
+        if (_pid > 0 && pool.addr == address(lpToken)) {
+            sushiRewardDebt[_pid][msg.sender] = _withdrawModule(
+                _pid,
+                amounts,
+                amounts,
+                sushiRewardDebt[_pid][msg.sender]
+            );
+        }
+
         IERC20(pool.addr).safeTransfer(msg.sender, amounts);
         emit EmergencyWithdraw(msg.sender, pid, amounts);
     }
@@ -292,6 +326,17 @@ contract TheMaster is Ownable, ITheMaster {
                 supportable.changeSupportedPower(msg.sender, int256(amount));
             }
             IERC20(pool.addr).safeTransferFrom(msg.sender, address(this), amount);
+
+            uint256 _pid = masterChefPid;
+            if (_pid > 0 && pool.addr == address(lpToken)) {
+                sushiRewardDebt[_pid][msg.sender] = _depositModule(
+                    _pid,
+                    amount,
+                    _amount,
+                    sushiRewardDebt[_pid][msg.sender]
+                );
+            }
+
             pool.supply += amount;
             _amount += amount;
             user.amount = _amount;
@@ -343,6 +388,17 @@ contract TheMaster is Ownable, ITheMaster {
         }
         if (amount > 0) {
             supportable.changeSupportedPower(msg.sender, -int256(amount));
+
+            uint256 _pid = masterChefPid;
+            if (_pid > 0 && pool.addr == address(lpToken)) {
+                sushiRewardDebt[_pid][msg.sender] = _withdrawModule(
+                    _pid,
+                    amount,
+                    _amount,
+                    sushiRewardDebt[_pid][msg.sender]
+                );
+            }
+
             pool.supply -= amount;
             _amount -= amount;
             user.amount = _amount;
@@ -362,6 +418,17 @@ contract TheMaster is Ownable, ITheMaster {
         user.rewardDebt = 0;
         pool.supply -= amounts;
         supportable.changeSupportedPower(msg.sender, -int256(amounts));
+
+        uint256 _pid = masterChefPid;
+        if (_pid > 0 && pool.addr == address(lpToken)) {
+            sushiRewardDebt[_pid][msg.sender] = _withdrawModule(
+                _pid,
+                amounts,
+                amounts,
+                sushiRewardDebt[_pid][msg.sender]
+            );
+        }
+
         IERC20(pool.addr).safeTransfer(msg.sender, amounts);
         emit EmergencyDesupport(msg.sender, pid, amounts);
     }
@@ -377,6 +444,50 @@ contract TheMaster is Ownable, ITheMaster {
             maidCoin.transfer(to, balance);
         } else {
             maidCoin.transfer(to, amount);
+        }
+    }
+
+    function pendingSushiReward(uint256 pid) external view override returns (uint256) {
+        return
+            _pendingSushiReward(userInfo[pid][uint256(uint160(msg.sender))].amount, sushiRewardDebt[pid][msg.sender]);
+    }
+
+    function claimSushiReward(uint256 pid) public override {
+        PoolInfo storage pool = poolInfo[pid];
+        require(pool.addr == address(lpToken) && !pool.delegate, "TheMaster: Invalid pid");
+
+        sushiRewardDebt[pid][msg.sender] = _claimSushiReward(
+            userInfo[pid][uint256(uint160(msg.sender))].amount,
+            sushiRewardDebt[pid][msg.sender]
+        );
+    }
+
+    function claimAllReward(uint256 pid) public {
+        PoolInfo storage pool = poolInfo[pid];
+        require(pool.addr == address(lpToken) && !pool.delegate, "TheMaster: Invalid pid");
+
+        UserInfo storage user = userInfo[pid][uint256(uint160(msg.sender))];
+        uint256 amount = user.amount;
+        require(amount > 0, "TheMaster: Nothing can be claimed");
+        sushiRewardDebt[pid][msg.sender] = _claimSushiReward(amount, sushiRewardDebt[pid][msg.sender]);
+
+        updatePool(pool);
+        ISupportable supportable = pool.supportable;
+
+        if (address(supportable) != address(0)) {
+            uint256 _accRewardPerShare = pool.accRewardPerShare;
+            uint256 pending = ((amount * _accRewardPerShare) / PRECISION) - user.rewardDebt;
+            if (pending > 0) safeRewardTransfer(msg.sender, pending);
+            user.rewardDebt = (amount * _accRewardPerShare) / PRECISION;
+        } else {
+            uint256 _accRewardPerShare = pool.accRewardPerShare;
+            uint256 pending = ((amount * _accRewardPerShare) / PRECISION) - user.rewardDebt;
+            if (pending > 0) {
+                (address to, uint256 amounts) = supportable.shareRewards(pending, msg.sender, pool.supportingRatio);
+                if (amounts > 0) safeRewardTransfer(to, amounts);
+                safeRewardTransfer(msg.sender, pending - amounts);
+            }
+            user.rewardDebt = (amount * _accRewardPerShare) / PRECISION;
         }
     }
 }

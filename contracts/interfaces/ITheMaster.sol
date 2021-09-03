@@ -4,8 +4,9 @@ pragma solidity >=0.5.0;
 import "./IMaidCoin.sol";
 import "./IRewardCalculator.sol";
 import "./ISupportable.sol";
+import "./IMasterChefModule.sol";
 
-interface ITheMaster {
+interface ITheMaster is IMasterChefModule {
     event ChangeRewardCalculator(address addr);
 
     event Add(
@@ -143,4 +144,8 @@ interface ITheMaster {
     function emergencyDesupport(uint256 pid) external;
 
     function mint(address to, uint256 amount) external;
+
+    function claimSushiReward(uint256 id) external;
+
+    function pendingSushiReward(uint256 id) external view returns (uint256);
 }
