@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
 import "../uniswapv2/interfaces/IUniswapV2Pair.sol";
+import "./IMasterChef.sol";
 
 interface IMaids is IERC721, IERC721Metadata, IERC721Enumerable {
     event ChangeLPTokenToMaidPower(uint256 value);
@@ -27,7 +28,17 @@ interface IMaids is IERC721, IERC721Metadata, IERC721Enumerable {
 
     function lpTokenToMaidPower() external view returns (uint256);
 
-    function maids(uint256 id) external view returns (uint256 originPower, uint256 supportedLPTokenAmount);
+    function maids(uint256 id) external view returns (uint256 originPower, uint256 supportedLPTokenAmount, uint256 sushiRewardDebt);
+
+    function sushi() external view returns (IERC20);
+
+    function sushiMasterChef() external view returns (IMasterChef);
+
+    function pid() external view returns (uint256);
+
+    function sushiLastRewardBlock() external view returns (uint256);
+
+    function accSushiPerShare() external view returns (uint256);
 
     function powerOf(uint256 id) external view returns (uint256);
 
@@ -43,6 +54,10 @@ interface IMaids is IERC721, IERC721Metadata, IERC721Enumerable {
     ) external;
 
     function desupport(uint256 id, uint256 lpTokenAmount) external;
+
+    function claimSushiReward(uint256 id) external;
+
+    function pendingSushiReward(uint256 id) external view returns (uint256);
 
     function permit(
         address spender,
