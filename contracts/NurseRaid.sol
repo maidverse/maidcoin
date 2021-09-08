@@ -29,7 +29,7 @@ contract NurseRaid is Ownable, INurseRaid {
     INursePart public immutable override nursePart;
     IRNG public override rng;
 
-    uint256 public override maidPowerToRaidReducedBlock = 100;
+    uint256 public override maidPowerToRaidReducedBlock = 10000;
 
     constructor(
         IMaidCoin _maidCoin,
@@ -146,7 +146,7 @@ contract NurseRaid is Ownable, INurseRaid {
                 block.number -
                     challenger.enterBlock +
                     (challenger.maids.powerOf(challenger.maidId) * maidPowerToRaidReducedBlock) /
-                    100 >=
+                    10000 >=
                 duration;
         }
     }
