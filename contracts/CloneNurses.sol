@@ -8,14 +8,25 @@ import "./libraries/ERC721Enumerable.sol";
 import "./interfaces/IERC1271.sol";
 import "./interfaces/ICloneNurses.sol";
 
-contract CloneNurses is Ownable, ERC721("MaidCoin Clone Nurses", "CNURSES"), ERC721Enumerable, ERC1155Holder, ICloneNurses {
+contract CloneNurses is
+    Ownable,
+    ERC721("MaidCoin Clone Nurses", "CNURSES"),
+    ERC721Enumerable,
+    ERC1155Holder,
+    ICloneNurses
+{
     struct NurseType {
         uint256 partCount;
         uint256 destroyReturn;
         uint256 power;
+        uint256 lifetime;
     }
+
     struct Nurse {
         uint256 nurseType;
+        uint256 creationBlock;
+        uint256 endBlock;
+        uint256 lastClaimedBlock;
     }
 
     INursePart public immutable override nursePart;
@@ -47,24 +58,37 @@ contract CloneNurses is Ownable, ERC721("MaidCoin Clone Nurses", "CNURSES"), ERC
     function addNurseType(
         uint256 partCount,
         uint256 destroyReturn,
-        uint256 power
+        uint256 power,
+        uint256 lifetime
     ) external onlyOwner returns (uint256 nurseType) {
         nurseType = nurseTypes.length;
-        nurseTypes.push(NurseType({partCount: partCount, destroyReturn: destroyReturn, power: power}));
+        nurseTypes.push(
+            NurseType({partCount: partCount, destroyReturn: destroyReturn, power: power, lifetime: lifetime})
+        );
     }
 
     function nurseTypeCount() external view override returns (uint256) {
         return nurseTypes.length;
     }
 
-    function assemble(uint256 _nurseType) public override {
+    function assemble(uint256 _nurseType, uint256 _parts) public override {
         NurseType storage nurseType = nurseTypes[_nurseType];
         uint256 _partCount = nurseType.partCount;
-        nursePart.safeTransferFrom(msg.sender, address(this), _nurseType, _partCount, "");
-        nursePart.burn(_nurseType, _partCount);
+        require(_parts >= _partCount, "CloneNurses: Not enough parts");
+
+        nursePart.safeTransferFrom(msg.sender, address(this), _nurseType, _parts, "");
+        nursePart.burn(_nurseType, _parts);
+        uint256 endBlock = block.number + ((nurseType.lifetime * (_parts - 1)) / (_partCount - 1));
         uint256 id = nurses.length;
         theMaster.deposit(2, nurseType.power, id);
-        nurses.push(Nurse({nurseType: _nurseType}));
+        nurses.push(
+            Nurse({
+                nurseType: _nurseType,
+                creationBlock: block.number,
+                endBlock: endBlock,
+                lastClaimedBlock: block.number
+            })
+        );
         supportingRoute[id] = id;
         emit ChangeSupportingRoute(id, id);
         _mint(msg.sender, id);
@@ -72,15 +96,22 @@ contract CloneNurses is Ownable, ERC721("MaidCoin Clone Nurses", "CNURSES"), ERC
 
     function assembleWithPermit(
         uint256 nurseType,
+        uint256 _parts,
         uint256 deadline,
         uint8 v,
         bytes32 r,
         bytes32 s
     ) external override {
         nursePart.permit(msg.sender, address(this), deadline, v, r, s);
-        assemble(nurseType);
+        assemble(nurseType, _parts);
     }
 
+    /**
+        TODO
+        function elongateLifetime(uint256 id, uint256 parts)
+
+        rewards after lifetime should be burned.
+    */
     function destroy(uint256 id, uint256 toId) external override {
         require(toId != id, "CloneNurses: Invalid id, toId");
         require(msg.sender == ownerOf(id), "CloneNurses: Forbidden");
