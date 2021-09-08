@@ -18,7 +18,7 @@ interface INurseRaid {
     );
     event Enter(address indexed challenger, uint256 indexed id, IMaids indexed maids, uint256 maidId);
     event Exit(address indexed challenger, uint256 indexed id);
-    event ChangeMaidPowerToRaidReducedBlock(uint256 value);
+    event ChangeMaidEfficacy(uint256 numerator, uint256 denominator);
 
     function maidsApproved(IMaids maids) external view returns (bool);
 
@@ -30,7 +30,7 @@ interface INurseRaid {
 
     function rng() external view returns (IRNG);
 
-    function maidPowerToRaidReducedBlock() external view returns (uint256);
+    function maidEfficacy() external view returns (uint256, uint256);
 
     function raidCount() external view returns (uint256);
 

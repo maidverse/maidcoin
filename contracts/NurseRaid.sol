@@ -19,6 +19,11 @@ contract NurseRaid is Ownable, INurseRaid {
         uint256 maidId;
     }
 
+    struct MaidEfficacy {
+        uint256 numerator;
+        uint256 denominator;
+    }
+
     Raid[] public raids;
     mapping(uint256 => mapping(address => Challenger)) public challengers;
 
@@ -29,7 +34,7 @@ contract NurseRaid is Ownable, INurseRaid {
     INursePart public immutable override nursePart;
     IRNG public override rng;
 
-    uint256 public override maidPowerToRaidReducedBlock = 10000;
+    MaidEfficacy public override maidEfficacy = MaidEfficacy({numerator: 1, denominator: 1000});
 
     constructor(
         IMaidCoin _maidCoin,
@@ -43,9 +48,9 @@ contract NurseRaid is Ownable, INurseRaid {
         rng = _rng;
     }
 
-    function changeMaidPowerToRaidReducedBlock(uint256 value) external onlyOwner {
-        maidPowerToRaidReducedBlock = value;
-        emit ChangeMaidPowerToRaidReducedBlock(value);
+    function changeMaidEfficacy(uint256 _numerator, uint256 _denominator) external onlyOwner {
+        maidEfficacy = MaidEfficacy({numerator: _numerator, denominator: _denominator});
+        emit ChangeMaidEfficacy(_numerator, _denominator);
     }
 
     function setMaidCafe(IMaidCafe _maidCafe) external onlyOwner {
@@ -125,7 +130,7 @@ contract NurseRaid is Ownable, INurseRaid {
         }
         uint256 _entranceFee = raid.entranceFee;
         maidCoin.transferFrom(msg.sender, address(this), _entranceFee);
-        uint256 feeToCafe = _entranceFee * 3 / 1000;
+        uint256 feeToCafe = (_entranceFee * 3) / 1000;
         _feeTransfer(feeToCafe);
         maidCoin.burn(_entranceFee - feeToCafe);
         emit Enter(msg.sender, id, maids, maidId);
@@ -143,11 +148,10 @@ contract NurseRaid is Ownable, INurseRaid {
             return block.number - challenger.enterBlock >= duration;
         } else {
             return
-                block.number -
-                    challenger.enterBlock +
-                    (challenger.maids.powerOf(challenger.maidId) * maidPowerToRaidReducedBlock) /
-                    10000 >=
-                duration;
+                block.number - challenger.enterBlock >=
+                duration -
+                    ((duration * challenger.maids.powerOf(challenger.maidId) * maidEfficacy.numerator) /
+                        maidEfficacy.denominator);
         }
     }
 
