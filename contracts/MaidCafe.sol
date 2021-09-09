@@ -2,16 +2,23 @@
 pragma solidity ^0.8.5;
 
 import "./interfaces/IMaidCafe.sol";
+import "./interfaces/IUniswapV2Router02.sol";
+import "./interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract MaidCafe is IMaidCafe, ERC20("Maid Cafe", "$OMU") {
+contract MaidCafe is IMaidCafe, ERC20("Maid Cafe", "$OMU"), Ownable {
     using SafeERC20 for IERC20;
     IMaidCoin public immutable override maidCoin;
+    IWETH private immutable WETH;
 
-    constructor(IMaidCoin _maidCoin) {
+    constructor(IMaidCoin _maidCoin, IWETH _WETH) {
         maidCoin = _maidCoin;
+        WETH = _WETH;
     }
+
+    receive() external payable {}
 
     // Enter the Maid Café. Pay some $MAIDs. Earn some shares.
     // Locks $MAID and mints $OMU (Omurice)
@@ -55,5 +62,29 @@ contract MaidCafe is IMaidCafe, ERC20("Maid Cafe", "$OMU") {
         _burn(msg.sender, _share);
         IERC20(address(maidCoin)).safeTransfer(msg.sender, what);
         emit Leave(msg.sender, _share);
+    }
+
+    function swap(
+        address token,
+        IUniswapV2Router02 router,
+        address[] calldata path,
+        uint256 amountOutMin,
+        uint256 deadline
+    ) external onlyOwner {
+        require(token == address(maidCoin), "MaidCafe: Invalid token");
+        require(path[path.length - 1] == address(maidCoin), "MaidCafe: Invalid path");
+        uint256 amountIn;
+        if (token == address(0)) {
+            require(path[0] == address(WETH), "MaidCafe: Invalid path");
+            amountIn = address(this).balance;
+            require(amountIn > 0, "MaidCafe: Invalid amount");
+            WETH.deposit{value: amountIn}();
+        } else {
+            require(path[0] == token, "MaidCafe: Invalid path");
+            amountIn = IERC20(token).balanceOf(address(this));
+            require(amountIn > 0, "MaidCafe: Invalid amount");
+        }
+        IERC20(path[0]).approve(address(router), amountIn);
+        router.swapExactTokensForTokens(amountIn, amountOutMin, path, address(this), deadline);
     }
 }
