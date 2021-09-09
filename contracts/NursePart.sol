@@ -6,8 +6,9 @@ import "./libraries/ERC1155.sol";
 import "./interfaces/IERC1271.sol";
 import "./interfaces/INursePart.sol";
 import "./libraries/Signature.sol";
+import "./interfaces/IERC2981.sol";
 
-contract NursePart is Ownable, ERC1155("https://api.maidcoin.org/nurseparts/{id}"), INursePart {
+contract NursePart is Ownable, ERC1155("https://api.maidcoin.org/nurseparts/{id}"), IERC2981, INursePart {
     string public constant name = "MaidCoin Nurse Parts";
 
     bytes32 private immutable _CACHED_DOMAIN_SEPARATOR;
@@ -23,7 +24,10 @@ contract NursePart is Ownable, ERC1155("https://api.maidcoin.org/nurseparts/{id}
 
     mapping(address => uint256) public override nonces;
 
-    constructor() {
+    uint256 private royaltyFee = 25; // out of 1000
+    address private royaltyReceiver; // MaidCafe
+
+    constructor(address _royaltyReceiver) {
         _CACHED_CHAIN_ID = block.chainid;
         _HASHED_NAME = keccak256(bytes("MaidCoin Nurse Parts"));
         _HASHED_VERSION = keccak256(bytes("1"));
@@ -38,6 +42,7 @@ contract NursePart is Ownable, ERC1155("https://api.maidcoin.org/nurseparts/{id}
                 address(this)
             )
         );
+        royaltyReceiver = _royaltyReceiver;
     }
 
     function DOMAIN_SEPARATOR() public view override returns (bytes32) {
@@ -91,5 +96,18 @@ contract NursePart is Ownable, ERC1155("https://api.maidcoin.org/nurseparts/{id}
         }
 
         _setApprovalForAll(owner, spender, true);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view override(ERC1155, IERC165) returns (bool) {
+        return interfaceId == 0x2a55205a || super.supportsInterface(interfaceId);
+    }
+
+    function royaltyInfo(uint256, uint256 _salePrice) external view override returns (address, uint256) {
+        return (royaltyReceiver, (_salePrice * royaltyFee) / 1000);
+    }
+
+    function setRoyaltyInfo(address _receiver, uint256 _royaltyFee) external onlyOwner {
+        royaltyReceiver = _receiver;
+        royaltyFee = _royaltyFee;
     }
 }

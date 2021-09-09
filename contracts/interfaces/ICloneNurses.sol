@@ -24,22 +24,33 @@ interface ICloneNurses is IERC721, IERC721Metadata, IERC721Enumerable, ISupporta
         returns (
             uint256 partCount,
             uint256 destroyReturn,
-            uint256 power
+            uint256 power,
+            uint256 lifetime
         );
 
     function nurseTypeCount() external view returns (uint256);
 
-    function nurses(uint256 id) external view returns (uint256 nurseType);
+    function nurses(uint256 id)
+        external
+        view
+        returns (
+            uint256 nurseType,
+            uint256 endBlock,
+            uint256 lastClaimedBlock
+        );
 
-    function assemble(uint256 nurseType) external;
+    function assemble(uint256 nurseType, uint256 parts) external;
 
     function assembleWithPermit(
         uint256 nurseType,
+        uint256 parts,
         uint256 deadline,
         uint8 v,
         bytes32 r,
         bytes32 s
     ) external;
+
+    function elongateLifetime(uint256 id, uint256 parts) external;
 
     function destroy(uint256 id, uint256 toId) external;
 
