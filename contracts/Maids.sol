@@ -9,8 +9,9 @@ import "./interfaces/IERC1271.sol";
 import "./interfaces/IMaids.sol";
 import "./libraries/Signature.sol";
 import "./libraries/MasterChefModule.sol";
+import "./interfaces/IERC2981.sol";
 
-contract Maids is Ownable, ERC721("MaidCoin Maids", "MAIDS"), ERC721Enumerable, MasterChefModule, IMaids {
+contract Maids is Ownable, ERC721("MaidCoin Maids", "MAIDS"), ERC721Enumerable, MasterChefModule, IERC2981, IMaids {
     struct MaidInfo {
         uint256 originPower;
         uint256 supportedLPTokenAmount;
@@ -40,7 +41,14 @@ contract Maids is Ownable, ERC721("MaidCoin Maids", "MAIDS"), ERC721Enumerable, 
     uint256 public override lpTokenToMaidPower = 1;
     MaidInfo[] public override maids;
 
-    constructor(IUniswapV2Pair _lpToken, IERC20 _sushi) MasterChefModule(_lpToken, _sushi) {
+    uint256 private royaltyFee = 25; // out of 1000
+    address private royaltyReceiver; // MaidCafe
+
+    constructor(
+        IUniswapV2Pair _lpToken,
+        IERC20 _sushi,
+        address _royaltyReceiver
+    ) MasterChefModule(_lpToken, _sushi) {
         _CACHED_CHAIN_ID = block.chainid;
         _HASHED_NAME = keccak256(bytes("MaidCoin Maids"));
         _HASHED_VERSION = keccak256(bytes("1"));
@@ -55,6 +63,8 @@ contract Maids is Ownable, ERC721("MaidCoin Maids", "MAIDS"), ERC721Enumerable, 
                 address(this)
             )
         );
+
+        royaltyReceiver = _royaltyReceiver;
     }
 
     function _baseURI() internal pure override returns (string memory) {
@@ -241,6 +251,15 @@ contract Maids is Ownable, ERC721("MaidCoin Maids", "MAIDS"), ERC721Enumerable, 
         override(ERC721, ERC721Enumerable, IERC165)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId);
+        return interfaceId == 0x2a55205a || super.supportsInterface(interfaceId);
+    }
+
+    function royaltyInfo(uint256, uint256 _salePrice) external view override returns (address, uint256) {
+        return (royaltyReceiver, (_salePrice * royaltyFee) / 1000);
+    }
+
+    function setRoyaltyInfo(address _receiver, uint256 _royaltyFee) external onlyOwner {
+        royaltyReceiver = _receiver;
+        royaltyFee = _royaltyFee;
     }
 }

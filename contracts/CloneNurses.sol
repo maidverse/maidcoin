@@ -7,12 +7,14 @@ import "./libraries/ERC721.sol";
 import "./libraries/ERC721Enumerable.sol";
 import "./interfaces/IERC1271.sol";
 import "./interfaces/ICloneNurses.sol";
+import "./interfaces/IERC2981.sol";
 
 contract CloneNurses is
     Ownable,
     ERC721("MaidCoin Clone Nurses", "CNURSES"),
     ERC721Enumerable,
     ERC1155Holder,
+    IERC2981,
     ICloneNurses
 {
     struct NurseType {
@@ -40,14 +42,19 @@ contract CloneNurses is
     NurseType[] public override nurseTypes;
     Nurse[] public override nurses;
 
+    uint256 private royaltyFee = 25; // out of 1000
+    address private royaltyReceiver; // MaidCafe
+
     constructor(
         INursePart _nursePart,
         IMaidCoin _maidCoin,
-        ITheMaster _theMaster
+        ITheMaster _theMaster,
+        address _royaltyReceiver
     ) {
         nursePart = _nursePart;
         maidCoin = _maidCoin;
         theMaster = _theMaster;
+        royaltyReceiver = _royaltyReceiver;
     }
 
     function _baseURI() internal pure override returns (string memory) {
@@ -265,6 +272,15 @@ contract CloneNurses is
         override(ERC721Enumerable, ERC721, ERC1155Receiver, IERC165)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId);
+        return interfaceId == 0x2a55205a || super.supportsInterface(interfaceId);
+    }
+
+    function royaltyInfo(uint256, uint256 _salePrice) external view override returns (address, uint256) {
+        return (royaltyReceiver, (_salePrice * royaltyFee) / 1000);
+    }
+
+    function setRoyaltyInfo(address _receiver, uint256 _royaltyFee) external onlyOwner {
+        royaltyReceiver = _receiver;
+        royaltyFee = _royaltyFee;
     }
 }
