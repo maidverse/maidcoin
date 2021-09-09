@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract MaidCafe is IMaidCafe, ERC20("Maid Cafe", "$OMU"), Ownable {
     using SafeERC20 for IERC20;
     IMaidCoin public immutable override maidCoin;
-    IWETH private immutable WETH;
+    IWETH public immutable WETH;
 
     constructor(IMaidCoin _maidCoin, IWETH _WETH) {
         maidCoin = _maidCoin;
@@ -71,7 +71,7 @@ contract MaidCafe is IMaidCafe, ERC20("Maid Cafe", "$OMU"), Ownable {
         uint256 amountOutMin,
         uint256 deadline
     ) external onlyOwner {
-        require(token == address(maidCoin), "MaidCafe: Invalid token");
+        require(token != address(maidCoin), "MaidCafe: Invalid token");
         require(path[path.length - 1] == address(maidCoin), "MaidCafe: Invalid path");
         uint256 amountIn;
         if (token == address(0)) {
