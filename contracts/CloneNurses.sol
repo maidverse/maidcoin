@@ -24,7 +24,6 @@ contract CloneNurses is
 
     struct Nurse {
         uint256 nurseType;
-        uint256 creationBlock;
         uint256 endBlock;
         uint256 lastClaimedBlock;
     }
@@ -81,14 +80,7 @@ contract CloneNurses is
         uint256 endBlock = block.number + ((nurseType.lifetime * (_parts - 1)) / (_partCount - 1));
         uint256 id = nurses.length;
         theMaster.deposit(2, nurseType.power, id);
-        nurses.push(
-            Nurse({
-                nurseType: _nurseType,
-                creationBlock: block.number,
-                endBlock: endBlock,
-                lastClaimedBlock: block.number
-            })
-        );
+        nurses.push(Nurse({nurseType: _nurseType, endBlock: endBlock, lastClaimedBlock: block.number}));
         supportingRoute[id] = id;
         emit ChangeSupportingRoute(id, id);
         _mint(msg.sender, id);
@@ -106,12 +98,25 @@ contract CloneNurses is
         assemble(nurseType, _parts);
     }
 
-    /**
-        TODO
-        function elongateLifetime(uint256 id, uint256 parts)
+    function elongateLifetime(uint256 id, uint256 parts) external override {
+        require(parts > 0, "CloneNurses: Invalid amounts of parts");
+        Nurse storage nurse = nurses[id];
+        uint256 _nurseType = nurse.nurseType;
+        NurseType storage nurseType = nurseTypes[_nurseType];
 
-        rewards after lifetime should be burned.
-    */
+        claim(id);
+        nursePart.safeTransferFrom(msg.sender, address(this), _nurseType, parts, "");
+        nursePart.burn(_nurseType, parts);
+
+        uint256 oldEndBlock = nurse.endBlock;
+        uint256 from;
+        if (block.number <= oldEndBlock) from = oldEndBlock;
+        else from = block.number;
+
+        uint256 newEndBlock = from + ((nurseType.lifetime * parts) / (nurseType.partCount - 1));
+        nurse.endBlock = newEndBlock;
+    }
+
     function destroy(uint256 id, uint256 toId) external override {
         require(toId != id, "CloneNurses: Invalid id, toId");
         require(msg.sender == ownerOf(id), "CloneNurses: Forbidden");
@@ -123,7 +128,7 @@ contract CloneNurses is
         theMaster.withdraw(2, nurseType.power, id);
         uint256 balanceAfter = maidCoin.balanceOf(address(this));
         uint256 reward = balanceAfter - balanceBefore;
-        if (reward > 0) maidCoin.transfer(msg.sender, reward);
+        _claim(id, reward);
 
         supportingRoute[id] = toId;
         emit ChangeSupportingRoute(id, toId);
@@ -135,19 +140,50 @@ contract CloneNurses is
         _burn(id);
     }
 
-    function claim(uint256 id) external override {
+    function claim(uint256 id) public override {
         require(msg.sender == ownerOf(id), "CloneNurses: Forbidden");
         uint256 balanceBefore = maidCoin.balanceOf(address(this));
         theMaster.deposit(2, 0, id);
         uint256 balanceAfter = maidCoin.balanceOf(address(this));
         uint256 reward = balanceAfter - balanceBefore;
-        if (reward > 0) maidCoin.transfer(msg.sender, reward);
-        emit Claim(id, msg.sender, reward);
+        _claim(id, reward);
     }
 
-    function pendingReward(uint256 id) external view override returns (uint256) {
+    function _claim(uint256 id, uint256 reward) internal {
+        if (reward == 0) return;
+        else {
+            Nurse storage nurse = nurses[id];
+            uint256 endBlock = nurse.endBlock;
+            uint256 lastClaimedBlock = nurse.lastClaimedBlock;
+            uint256 burningReward;
+            uint256 claimableReward;
+            if (endBlock <= lastClaimedBlock) burningReward = reward;
+            else if (endBlock < block.number) {
+                claimableReward = (reward * (endBlock - lastClaimedBlock)) / (block.number - endBlock);
+                burningReward = reward - claimableReward;
+            } else claimableReward = reward;
+
+            if (burningReward > 0) maidCoin.burn(burningReward);
+            if (claimableReward > 0) maidCoin.transfer(msg.sender, claimableReward);
+            nurse.lastClaimedBlock = block.number;
+            emit Claim(id, msg.sender, claimableReward);
+        }
+    }
+
+    function pendingReward(uint256 id) external view override returns (uint256 claimableReward) {
         require(_exists(id), "CloneNurses: Invalid id");
-        return theMaster.pendingReward(2, id);
+        uint256 reward = theMaster.pendingReward(2, id);
+
+        if (reward == 0) return 0;
+        else {
+            Nurse storage nurse = nurses[id];
+            uint256 endBlock = nurse.endBlock;
+            uint256 lastClaimedBlock = nurse.lastClaimedBlock;
+            if (endBlock <= lastClaimedBlock) return 0;
+            else if (endBlock < block.number) {
+                claimableReward = (reward * (endBlock - lastClaimedBlock)) / (block.number - endBlock);
+            } else claimableReward = reward;
+        }
     }
 
     function setSupportingTo(

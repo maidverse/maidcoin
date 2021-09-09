@@ -35,7 +35,6 @@ interface ICloneNurses is IERC721, IERC721Metadata, IERC721Enumerable, ISupporta
         view
         returns (
             uint256 nurseType,
-            uint256 creationBlock,
             uint256 endBlock,
             uint256 lastClaimedBlock
         );
@@ -50,6 +49,8 @@ interface ICloneNurses is IERC721, IERC721Metadata, IERC721Enumerable, ISupporta
         bytes32 r,
         bytes32 s
     ) external;
+
+    function elongateLifetime(uint256 id, uint256 parts) external;
 
     function destroy(uint256 id, uint256 toId) external;
 
