@@ -1,15 +1,19 @@
 import hardhat, { ethers } from "hardhat";
 import { expandTo18Decimals } from "../test/shared/utils/number";
-import { CloneNurses, MaidCoin, Maids, MasterCoin, NursePart, NurseRaid, TheMaster } from "../typechain";
+import { CloneNurses, MaidCafe, MaidCoin, Maids, MasterCoin, NursePart, NurseRaid, TheMaster } from "../typechain";
 import { TestSushiToken } from "../typechain/TestSushiToken";
 
 // Ropsten
 //const RNG_ADDRESS = "0x81e75a2EeE8272D017aA3bb983dD782d08F3c702";
 //const LP_TOKEN_ADDRESS = "0xF43df1bC8DD096F5f9dF1fB4d676D2ab38592020";
+//const WETH = "";
+//const SUSHI = "";
 
 // Kovan
 const RNG_ADDRESS = "0x7DB3218Cc8ecAe49fFA8FF3923e90BEE72cbF7Cc";
 const LP_TOKEN_ADDRESS = "0x56ac87553c4dBcd877cA7E4fba54959f091CaEdE";
+const WETH = "0xd0a1e359811322d97991e03f863a0c30c2cf029c";
+const SUSHI = "0xcd280c22F70d6f58B34a1cCbd41780979BBC2F3B";
 
 const addresses: { [name: string]: string } = {};
 
@@ -33,9 +37,9 @@ async function main() {
     const maidCoin = await MaidCoin.deploy() as MaidCoin
     displayAddress("MaidCoin", maidCoin.address)
 
-    const Sushi = await hardhat.ethers.getContractFactory("TestSushiToken")
-    const sushi = await Sushi.deploy() as TestSushiToken
-    displayAddress("Sushi", sushi.address)
+    const MaidCafe = await hardhat.ethers.getContractFactory("MaidCafe")
+    const maidCafe = await MaidCafe.deploy(maidCoin.address, WETH) as MaidCafe
+    displayAddress("MaidCafe", maidCafe.address)
 
     const TheMaster = await hardhat.ethers.getContractFactory("TheMaster")
     const theMaster = await TheMaster.deploy(
@@ -44,14 +48,14 @@ async function main() {
         await ethers.provider.getBlockNumber() + 10, // startBlock
         maidCoin.address,
         LP_TOKEN_ADDRESS,
-        sushi.address
+        SUSHI
     ) as TheMaster
     displayAddress("TheMaster", theMaster.address)
 
     await maidCoin.transferOwnership(theMaster.address);
 
     const Maids = await hardhat.ethers.getContractFactory("Maids")
-    const maids = await Maids.deploy(LP_TOKEN_ADDRESS, sushi.address) as Maids
+    const maids = await Maids.deploy(LP_TOKEN_ADDRESS, SUSHI, maidCafe.address) as Maids
     displayAddress("Maids", maids.address)
 
     const MasterCoin = await hardhat.ethers.getContractFactory("MasterCoin")
@@ -59,7 +63,7 @@ async function main() {
     displayAddress("MasterCoin", masterCoin.address)
 
     const NursePart = await hardhat.ethers.getContractFactory("NursePart")
-    const nursePart = await NursePart.deploy() as NursePart
+    const nursePart = await NursePart.deploy(maidCafe.address) as NursePart
     displayAddress("NursePart", nursePart.address)
 
     const NurseRaid = await hardhat.ethers.getContractFactory("NurseRaid")
@@ -78,6 +82,7 @@ async function main() {
         nursePart.address,
         maidCoin.address,
         theMaster.address,
+        maidCafe.address,
     ) as CloneNurses
     displayAddress("CloneNurses", cloneNurses.address)
 
