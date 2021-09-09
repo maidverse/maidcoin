@@ -1,10 +1,12 @@
 module.exports = async ({ getNamedAccounts, deployments }) => {
     const { deployer } = await getNamedAccounts();
-    const { deploy } = deployments;
+    const { deploy, get } = deployments;
+
+    const maidCafe = (await get("MaidCafe")).address;
 
     await deploy("NursePart", {
         from: deployer,
-        args: [],
+        args: [maidCafe],
         log: true,
     });
 };

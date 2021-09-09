@@ -6,12 +6,13 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
     const chainId = await getChainId();
     const maidCoin = (await get("MaidCoin")).address;
+    const maidCafe = (await get("MaidCafe")).address;
     const pair = getPairAddress(chainId, maidCoin, getWethAddress(chainId));
     const sushi = getSushiAddress(chainId);
 
     await deploy("Maids", {
         from: deployer,
-        args: [pair, sushi],
+        args: [pair, sushi, maidCafe],
         log: true,
     });
 };
