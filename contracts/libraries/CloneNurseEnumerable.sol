@@ -3,16 +3,17 @@
 pragma solidity ^0.8.0;
 
 import "./ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
+import "../interfaces/ICloneNurseEnumerable.sol";
 
 /**
  * @dev This implements an optional extension of {ERC721} defined in the EIP that adds
  * enumerability of all the token ids in the contract as well as all token ids owned by each
  * account.
 
- * @dev MaidCoin: This is for Maids and the like minted in order from 0 and doesn't have burn function.
+ * @dev MaidCoin: This is for CloneNurses and the like minted in order from 0 and have burn function.
+ * This doesn't have tokenByIndex function.
  */
-abstract contract ERC721Enumerable is ERC721, IERC721Enumerable {
+abstract contract CloneNurseEnumerable is ERC721, ICloneNurseEnumerable {
     // Mapping from owner to list of owned token IDs
     mapping(address => mapping(uint256 => uint256)) private _ownedTokens;
 
@@ -20,14 +21,7 @@ abstract contract ERC721Enumerable is ERC721, IERC721Enumerable {
     mapping(uint256 => uint256) private _ownedTokensIndex;
 
     /**
-     * @dev See {IERC165-supportsInterface}.
-     */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(IERC165, ERC721) returns (bool) {
-        return interfaceId == type(IERC721Enumerable).interfaceId || super.supportsInterface(interfaceId);
-    }
-
-    /**
-     * @dev See {IERC721Enumerable-tokenOfOwnerByIndex}.
+     * @dev See {ICloneNurseEnumerable-tokenOfOwnerByIndex}.
      */
     function tokenOfOwnerByIndex(address owner, uint256 index) public view virtual override returns (uint256) {
         require(index < ERC721.balanceOf(owner), "ERC721Enumerable: owner index out of bounds");
@@ -35,20 +29,12 @@ abstract contract ERC721Enumerable is ERC721, IERC721Enumerable {
     }
 
     /**
-     * @dev See {IERC721Enumerable-totalSupply}.
+     * @dev See {ICloneNurseEnumerable-totalSupply}.
      */     //TODO
     function totalSupply() public view virtual override returns (uint256) {
         // return _allTokens.length;    
     }
-
-    /**
-     * @dev See {IERC721Enumerable-tokenByIndex}.
-     */     //TODO
-    function tokenByIndex(uint256 index) public view virtual override returns (uint256) {
-        // require(index < ERC721Enumerable.totalSupply(), "ERC721Enumerable: global index out of bounds");
-        // return _allTokens[index];
-    }
-
+    
     /**
      * @dev Hook that is called before any token transfer. This includes minting
      * and burning.

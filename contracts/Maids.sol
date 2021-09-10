@@ -2,7 +2,6 @@
 pragma solidity ^0.8.5;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./libraries/ERC721.sol";
 import "./libraries/ERC721Enumerable.sol";
 import "./uniswapv2/interfaces/IUniswapV2Pair.sol";
 import "./interfaces/IERC1271.sol";
@@ -77,6 +76,21 @@ contract Maids is Ownable, ERC721("MaidCoin Maids", "MAIDS"), ERC721Enumerable, 
         } else {
             return keccak256(abi.encode(_TYPE_HASH, _HASHED_NAME, _HASHED_VERSION, block.chainid, address(this)));
         }
+    }
+
+    function totalSupply() public view override(ERC721Enumerable, IERC721Enumerable) returns (uint256) {
+        return maids.length;
+    }
+
+    function tokenByIndex(uint256 index)
+        public
+        view
+        virtual
+        override(ERC721Enumerable, IERC721Enumerable)
+        returns (uint256)
+    {
+        require(index < totalSupply(), "Maids: Invalid index");
+        return index;
     }
 
     function changeLPTokenToMaidPower(uint256 value) external onlyOwner {

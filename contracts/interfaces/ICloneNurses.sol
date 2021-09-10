@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.5;
 
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
+import "../interfaces/ICloneNurseEnumerable.sol";
 import "./ISupportable.sol";
 import "./INursePart.sol";
 import "./IMaidCoin.sol";
 import "./ITheMaster.sol";
 
-interface ICloneNurses is IERC721, IERC721Metadata, IERC721Enumerable, ISupportable {
+interface ICloneNurses is IERC721, IERC721Metadata, ICloneNurseEnumerable, ISupportable {
     event Claim(uint256 indexed id, address indexed claimer, uint256 reward);
 
     function nursePart() external view returns (INursePart);

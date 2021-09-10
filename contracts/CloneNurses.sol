@@ -3,8 +3,7 @@ pragma solidity ^0.8.5;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
-import "./libraries/ERC721.sol";
-import "./libraries/ERC721Enumerable.sol";
+import "./libraries/CloneNurseEnumerable.sol";
 import "./interfaces/IERC1271.sol";
 import "./interfaces/ICloneNurses.sol";
 import "./interfaces/IERC2981.sol";
@@ -12,7 +11,7 @@ import "./interfaces/IERC2981.sol";
 contract CloneNurses is
     Ownable,
     ERC721("MaidCoin Clone Nurses", "CNURSES"),
-    ERC721Enumerable,
+    CloneNurseEnumerable,
     ERC1155Holder,
     IERC2981,
     ICloneNurses
@@ -61,6 +60,10 @@ contract CloneNurses is
         return "https://api.maidcoin.org/clonenurses/";
     }
 
+    function totalSupply() public view override(CloneNurseEnumerable, ICloneNurseEnumerable) returns (uint256) {
+        return nurses.length;
+    }
+
     function addNurseType(
         uint256 partCount,
         uint256 destroyReturn,
@@ -85,7 +88,7 @@ contract CloneNurses is
         nursePart.safeTransferFrom(msg.sender, address(this), _nurseType, _parts, "");
         nursePart.burn(_nurseType, _parts);
         uint256 endBlock = block.number + ((nurseType.lifetime * (_parts - 1)) / (_partCount - 1));
-        uint256 id = nurses.length;
+        uint256 id = totalSupply();
         theMaster.deposit(2, nurseType.power, id);
         nurses.push(Nurse({nurseType: _nurseType, endBlock: endBlock, lastClaimedBlock: block.number}));
         supportingRoute[id] = id;
@@ -262,14 +265,14 @@ contract CloneNurses is
         address from,
         address to,
         uint256 tokenId
-    ) internal override(ERC721, ERC721Enumerable) {
+    ) internal override(ERC721, CloneNurseEnumerable) {
         super._beforeTokenTransfer(from, to, tokenId);
     }
 
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC721Enumerable, ERC721, ERC1155Receiver, IERC165)
+        override(ERC721, ERC1155Receiver, IERC165)
         returns (bool)
     {
         return interfaceId == 0x2a55205a || super.supportsInterface(interfaceId);
