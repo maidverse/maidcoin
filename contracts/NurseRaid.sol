@@ -57,12 +57,16 @@ contract NurseRaid is Ownable, INurseRaid {
         maidCafe = _maidCafe;
     }
 
-    function approveMaids(IMaids maids) external onlyOwner {
-        isMaidsApproved[maids] = true;
+    function approveMaids(IMaids[] calldata maids) public onlyOwner {
+        for (uint256 i = 0; i < maids.length; i += 1) {
+            isMaidsApproved[maids[i]] = true;
+        }
     }
 
-    function disapproveMaids(IMaids maids) external onlyOwner {
-        isMaidsApproved[maids] = false;
+    function disapproveMaids(IMaids[] calldata maids) public onlyOwner {
+        for (uint256 i = 0; i < maids.length; i += 1) {
+            isMaidsApproved[maids[i]] = false;
+        }
     }
 
     modifier onlyApprovedMaids(IMaids maids) {
