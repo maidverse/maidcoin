@@ -2,7 +2,7 @@ import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-waffle";
 import "dotenv/config";
 import "hardhat-deploy";
-import "hardhat-typechain";
+import "@typechain/hardhat";
 import { HardhatUserConfig } from "hardhat/types";
 
 const accounts = [
