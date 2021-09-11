@@ -87,13 +87,15 @@ contract CloneNurses is
 
         nursePart.safeTransferFrom(msg.sender, address(this), _nurseType, _parts, "");
         nursePart.burn(_nurseType, _parts);
-        uint256 endBlock = block.number + ((nurseType.lifetime * (_parts - 1)) / (_partCount - 1));
+        uint256 lifetime = ((nurseType.lifetime * (_parts - 1)) / (_partCount - 1));
+        uint256 endBlock = block.number + lifetime;
         uint256 id = totalSupply();
         theMaster.deposit(2, nurseType.power, id);
         nurses.push(Nurse({nurseType: _nurseType, endBlock: endBlock, lastClaimedBlock: block.number}));
         supportingRoute[id] = id;
         emit ChangeSupportingRoute(id, id);
         _mint(msg.sender, id);
+        emit ElongateLifetime(id, lifetime, 0, endBlock);
     }
 
     function assembleWithPermit(
@@ -123,8 +125,10 @@ contract CloneNurses is
         if (block.number <= oldEndBlock) from = oldEndBlock;
         else from = block.number;
 
-        uint256 newEndBlock = from + ((nurseType.lifetime * parts) / (nurseType.partCount - 1));
+        uint256 rechagedLifetime = ((nurseType.lifetime * parts) / (nurseType.partCount - 1));
+        uint256 newEndBlock = from + rechagedLifetime;
         nurse.endBlock = newEndBlock;
+        emit ElongateLifetime(id, rechagedLifetime, oldEndBlock, newEndBlock);
     }
 
     function destroy(uint256 id, uint256 toId) external override {

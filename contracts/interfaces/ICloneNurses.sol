@@ -10,6 +10,7 @@ import "./ITheMaster.sol";
 
 interface ICloneNurses is IERC721, IERC721Metadata, ICloneNurseEnumerable, ISupportable {
     event Claim(uint256 indexed id, address indexed claimer, uint256 reward);
+    event ElongateLifetime(uint256 indexed id, uint256 rechargedLifetime, uint256 lastEndBlock, uint256 newEndBlock);
 
     function nursePart() external view returns (INursePart);
 
