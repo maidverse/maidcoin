@@ -173,7 +173,7 @@ contract CloneNurses is
             uint256 claimableReward;
             if (endBlock <= lastClaimedBlock) burningReward = reward;
             else if (endBlock < block.number) {
-                claimableReward = (reward * (endBlock - lastClaimedBlock)) / (block.number - endBlock);
+                claimableReward = (reward * (endBlock - lastClaimedBlock)) / (block.number - lastClaimedBlock);
                 burningReward = reward - claimableReward;
             } else claimableReward = reward;
 
@@ -195,7 +195,7 @@ contract CloneNurses is
             uint256 lastClaimedBlock = nurse.lastClaimedBlock;
             if (endBlock <= lastClaimedBlock) return 0;
             else if (endBlock < block.number) {
-                claimableReward = (reward * (endBlock - lastClaimedBlock)) / (block.number - endBlock);
+                claimableReward = (reward * (endBlock - lastClaimedBlock)) / (block.number - lastClaimedBlock);
             } else claimableReward = reward;
         }
     }
