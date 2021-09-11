@@ -1,9 +1,7 @@
 {
   "overrides": [
     {
-      "files": [
-        "contracts/**/*.sol"
-      ],
+      "files": ["contracts/**/*.sol"],
       "options": {
         "printWidth": 120,
         "tabWidth": 4,
@@ -14,9 +12,7 @@
       }
     },
     {
-      "files": [
-        "**/*.js"
-      ],
+      "files": ["**/*.js", "**/*.ts"],
       "options": {
         "printWidth": 120,
         "tabWidth": 4,
