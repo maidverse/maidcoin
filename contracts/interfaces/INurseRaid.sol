@@ -20,7 +20,7 @@ interface INurseRaid {
     event Exit(address indexed challenger, uint256 indexed id);
     event ChangeMaidEfficacy(uint256 numerator, uint256 denominator);
 
-    function maidsApproved(IMaids maids) external view returns (bool);
+    function isMaidsApproved(IMaids maids) external view returns (bool);
 
     function maidCoin() external view returns (IMaidCoin);
 

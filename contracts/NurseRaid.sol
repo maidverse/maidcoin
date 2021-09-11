@@ -27,7 +27,7 @@ contract NurseRaid is Ownable, INurseRaid {
     Raid[] public raids;
     mapping(uint256 => mapping(address => Challenger)) public challengers;
 
-    mapping(IMaids => bool) public override maidsApproved;
+    mapping(IMaids => bool) public override isMaidsApproved;
 
     IMaidCoin public immutable override maidCoin;
     IMaidCafe public override maidCafe;
@@ -58,15 +58,15 @@ contract NurseRaid is Ownable, INurseRaid {
     }
 
     function approveMaids(IMaids maids) external onlyOwner {
-        maidsApproved[maids] = true;
+        isMaidsApproved[maids] = true;
     }
 
     function disapproveMaids(IMaids maids) external onlyOwner {
-        maidsApproved[maids] = false;
+        isMaidsApproved[maids] = false;
     }
 
     modifier onlyApprovedMaids(IMaids maids) {
-        require(address(maids) == address(0) || maidsApproved[maids], "NurseRaid: The maids is not approved.");
+        require(address(maids) == address(0) || isMaidsApproved[maids], "NurseRaid: The maids is not approved");
         _;
     }
 
