@@ -50,11 +50,11 @@ interface ICloneNurses is IERC721, IERC721Metadata, ICloneNurseEnumerable, ISupp
         bytes32 s
     ) external;
 
-    function elongateLifetime(uint256 id, uint256 parts) external;
+    function elongateLifetime(uint256[] calldata ids, uint256[] calldata parts) external;
 
-    function destroy(uint256 id, uint256 toId) external;
+    function destroy(uint256[] calldata ids, uint256[] calldata toIds) external;
 
-    function claim(uint256 id) external;
+    function claim(uint256[] calldata ids) external;
 
     function pendingReward(uint256 id) external view returns (uint256);
 }

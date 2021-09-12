@@ -32,6 +32,7 @@ contract CloneNurses is
     INursePart public immutable override nursePart;
     IMaidCoin public immutable override maidCoin;
     ITheMaster public immutable override theMaster;
+    uint256 private immutable theMasterStartBlock;
 
     mapping(uint256 => uint256) public override supportingRoute;
     mapping(address => uint256) public override supportingTo;
@@ -54,6 +55,7 @@ contract CloneNurses is
         maidCoin = _maidCoin;
         theMaster = _theMaster;
         royaltyReceiver = _royaltyReceiver;
+        theMasterStartBlock = _theMaster.startBlock();
     }
 
     function _baseURI() internal pure override returns (string memory) {
@@ -65,15 +67,25 @@ contract CloneNurses is
     }
 
     function addNurseType(
-        uint256 partCount,
-        uint256 destroyReturn,
-        uint256 power,
-        uint256 lifetime
-    ) external onlyOwner returns (uint256 nurseType) {
-        nurseType = nurseTypes.length;
-        nurseTypes.push(
-            NurseType({partCount: partCount, destroyReturn: destroyReturn, power: power, lifetime: lifetime})
-        );
+        uint256[] calldata partCounts,
+        uint256[] calldata destroyReturns,
+        uint256[] calldata powers,
+        uint256[] calldata lifetimes
+    ) external onlyOwner returns (uint256[] memory) {
+        uint256 startId = nurseTypes.length;
+        uint256[] memory nurseType = new uint256[](partCounts.length);
+        for (uint256 i = 0; i < partCounts.length; i += 1) {
+            nurseTypes.push(
+                NurseType({
+                    partCount: partCounts[i],
+                    destroyReturn: destroyReturns[i],
+                    power: powers[i],
+                    lifetime: lifetimes[i]
+                })
+            );
+            nurseType[i] = (startId + i);
+        }
+        return nurseType;
     }
 
     function nurseTypeCount() external view override returns (uint256) {
@@ -88,10 +100,11 @@ contract CloneNurses is
         nursePart.safeTransferFrom(msg.sender, address(this), _nurseType, _parts, "");
         nursePart.burn(_nurseType, _parts);
         uint256 lifetime = ((nurseType.lifetime * (_parts - 1)) / (_partCount - 1));
-        uint256 endBlock = block.number + lifetime;
+        uint256 startblock = block.number > theMasterStartBlock ? block.number : theMasterStartBlock;
+        uint256 endBlock = startblock + lifetime;
         uint256 id = totalSupply();
         theMaster.deposit(2, nurseType.power, id);
-        nurses.push(Nurse({nurseType: _nurseType, endBlock: endBlock, lastClaimedBlock: block.number}));
+        nurses.push(Nurse({nurseType: _nurseType, endBlock: endBlock, lastClaimedBlock: startblock}));
         supportingRoute[id] = id;
         emit ChangeSupportingRoute(id, id);
         _mint(msg.sender, id);
@@ -110,57 +123,68 @@ contract CloneNurses is
         assemble(nurseType, _parts);
     }
 
-    function elongateLifetime(uint256 id, uint256 parts) external override {
-        require(parts > 0, "CloneNurses: Invalid amounts of parts");
-        Nurse storage nurse = nurses[id];
-        uint256 _nurseType = nurse.nurseType;
-        NurseType storage nurseType = nurseTypes[_nurseType];
+    function elongateLifetime(uint256[] calldata ids, uint256[] calldata parts) external override {
+        require(ids.length == parts.length, "CloneNurses: Invalid parameters");
+        claim(ids);
+        for (uint256 i = 0; i < ids.length; i += 1) {
+            require(parts[i] > 0, "CloneNurses: Invalid amounts of parts");
+            Nurse storage nurse = nurses[ids[i]];
+            uint256 _nurseType = nurse.nurseType;
+            NurseType storage nurseType = nurseTypes[_nurseType];
 
-        claim(id);
-        nursePart.safeTransferFrom(msg.sender, address(this), _nurseType, parts, "");
-        nursePart.burn(_nurseType, parts);
+            // uint256[] memory arr = new uint256[](1);
+            // arr[0] = ids[i];
+            // claim(arr);
+            nursePart.safeTransferFrom(msg.sender, address(this), _nurseType, parts[i], "");
+            nursePart.burn(_nurseType, parts[i]);
 
-        uint256 oldEndBlock = nurse.endBlock;
-        uint256 from;
-        if (block.number <= oldEndBlock) from = oldEndBlock;
-        else from = block.number;
+            uint256 oldEndBlock = nurse.endBlock;
+            uint256 from;
+            if (block.number <= oldEndBlock) from = oldEndBlock;
+            else from = block.number;
 
-        uint256 rechagedLifetime = ((nurseType.lifetime * parts) / (nurseType.partCount - 1));
-        uint256 newEndBlock = from + rechagedLifetime;
-        nurse.endBlock = newEndBlock;
-        emit ElongateLifetime(id, rechagedLifetime, oldEndBlock, newEndBlock);
+            uint256 rechagedLifetime = ((nurseType.lifetime * parts[i]) / (nurseType.partCount - 1));
+            uint256 newEndBlock = from + rechagedLifetime;
+            nurse.endBlock = newEndBlock;
+            emit ElongateLifetime(ids[i], rechagedLifetime, oldEndBlock, newEndBlock);
+        }
     }
 
-    function destroy(uint256 id, uint256 toId) external override {
-        require(toId != id, "CloneNurses: Invalid id, toId");
-        require(msg.sender == ownerOf(id), "CloneNurses: Forbidden");
-        require(_exists(toId), "CloneNurses: Invalid toId");
+    function destroy(uint256[] calldata ids, uint256[] calldata toIds) external override {
+        require(ids.length == toIds.length, "CloneNurses: Invalid parameters");
+        for (uint256 i = 0; i < ids.length; i += 1) {
+            require(toIds[i] != ids[i], "CloneNurses: Invalid id, toId");
+            require(msg.sender == ownerOf(ids[i]), "CloneNurses: Forbidden");
+            require(_exists(toIds[i]), "CloneNurses: Invalid toId");
 
-        NurseType storage nurseType = nurseTypes[nurses[id].nurseType];
+            NurseType storage nurseType = nurseTypes[nurses[ids[i]].nurseType];
 
-        uint256 balanceBefore = maidCoin.balanceOf(address(this));
-        theMaster.withdraw(2, nurseType.power, id);
-        uint256 balanceAfter = maidCoin.balanceOf(address(this));
-        uint256 reward = balanceAfter - balanceBefore;
-        _claim(id, reward);
+            uint256 balanceBefore = maidCoin.balanceOf(address(this));
+            theMaster.withdraw(2, nurseType.power, ids[i]);
+            uint256 balanceAfter = maidCoin.balanceOf(address(this));
+            uint256 reward = balanceAfter - balanceBefore;
+            _claim(ids[i], reward);
 
-        supportingRoute[id] = toId;
-        emit ChangeSupportingRoute(id, toId);
-        uint256 power = supportedPower[id];
-        supportedPower[toId] += power;
-        supportedPower[id] = 0;
-        emit ChangeSupportedPower(toId, int256(power));
-        theMaster.mint(msg.sender, nurseType.destroyReturn);
-        _burn(id);
+            supportingRoute[ids[i]] = toIds[i];
+            emit ChangeSupportingRoute(ids[i], toIds[i]);
+            uint256 power = supportedPower[ids[i]];
+            supportedPower[toIds[i]] += power;
+            supportedPower[ids[i]] = 0;
+            emit ChangeSupportedPower(toIds[i], int256(power));
+            theMaster.mint(msg.sender, nurseType.destroyReturn);
+            _burn(ids[i]);
+        }
     }
 
-    function claim(uint256 id) public override {
-        require(msg.sender == ownerOf(id), "CloneNurses: Forbidden");
-        uint256 balanceBefore = maidCoin.balanceOf(address(this));
-        theMaster.deposit(2, 0, id);
-        uint256 balanceAfter = maidCoin.balanceOf(address(this));
-        uint256 reward = balanceAfter - balanceBefore;
-        _claim(id, reward);
+    function claim(uint256[] calldata ids) public override {
+        for (uint256 i = 0; i < ids.length; i += 1) {
+            require(msg.sender == ownerOf(ids[i]), "CloneNurses: Forbidden");
+            uint256 balanceBefore = maidCoin.balanceOf(address(this));
+            theMaster.deposit(2, 0, ids[i]);
+            uint256 balanceAfter = maidCoin.balanceOf(address(this));
+            uint256 reward = balanceAfter - balanceBefore;
+            _claim(ids[i], reward);
+        }
     }
 
     function _claim(uint256 id, uint256 reward) internal {
