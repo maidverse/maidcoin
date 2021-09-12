@@ -83,24 +83,27 @@ contract NurseRaid is Ownable, INurseRaid {
     }
 
     function create(
-        uint256 entranceFee,
-        uint256 _nursePart,
-        uint256 maxRewardCount,
-        uint256 duration,
-        uint256 endBlock
+        uint256[] calldata entranceFees,
+        uint256[] calldata _nurseParts,
+        uint256[] calldata maxRewardCounts,
+        uint256[] calldata durations,
+        uint256[] calldata endBlocks
     ) external override onlyOwner returns (uint256 id) {
-        require(maxRewardCount < 255, "NurseRaid: Invalid number");
-        id = raids.length;
-        raids.push(
-            Raid({
-                entranceFee: entranceFee,
-                nursePart: _nursePart,
-                maxRewardCount: maxRewardCount,
-                duration: duration,
-                endBlock: endBlock
-            })
-        );
-        emit Create(id, entranceFee, _nursePart, maxRewardCount, duration, endBlock);
+        uint256 length = entranceFees.length;
+        for (uint256 i = 0; i < length; i++) {
+            require(maxRewardCounts[i] < 255, "NurseRaid: Invalid number");
+            id = raids.length;
+            raids.push(
+                Raid({
+                    entranceFee: entranceFees[i],
+                    nursePart: _nurseParts[i],
+                    maxRewardCount: maxRewardCounts[i],
+                    duration: durations[i],
+                    endBlock: endBlocks[i]
+                })
+            );
+            emit Create(id, entranceFees[i], _nurseParts[i], maxRewardCounts[i], durations[i], endBlocks[i]);
+        }
     }
 
     function enterWithPermitAll(
@@ -159,24 +162,25 @@ contract NurseRaid is Ownable, INurseRaid {
         }
     }
 
-    function exit(uint256 id) external override {
-        Challenger memory challenger = challengers[id][msg.sender];
-        require(challenger.enterBlock != 0, "NurseRaid: Not participating in the raid");
+    function exit(uint256[] calldata ids) external override {
+        for (uint256 i = 0; i < ids.length; i++) {
+            Challenger memory challenger = challengers[ids[i]][msg.sender];
+            require(challenger.enterBlock != 0, "NurseRaid: Not participating in the raid");
 
-        Raid storage raid = raids[id];
+            Raid storage raid = raids[ids[i]];
 
-        if (_checkDone(raid.duration, challenger)) {
-            uint256 rewardCount = _randomReward(id, raid.maxRewardCount, msg.sender);
-            nursePart.mint(msg.sender, raid.nursePart, rewardCount);
+            if (_checkDone(raid.duration, challenger)) {
+                uint256 rewardCount = _randomReward(ids[i], raid.maxRewardCount, msg.sender);
+                nursePart.mint(msg.sender, raid.nursePart, rewardCount);
+            }
+
+            if (address(challenger.maids) != address(0)) {
+                challenger.maids.transferFrom(address(this), msg.sender, challenger.maidId);
+            }
+
+            delete challengers[ids[i]][msg.sender];
+            emit Exit(msg.sender, ids[i]);
         }
-
-        if (address(challenger.maids) != address(0)) {
-            challenger.maids.transferFrom(address(this), msg.sender, challenger.maidId);
-        }
-
-        delete challengers[id][msg.sender];
-
-        emit Exit(msg.sender, id);
     }
 
     function _randomReward(

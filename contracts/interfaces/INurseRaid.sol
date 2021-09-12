@@ -35,11 +35,11 @@ interface INurseRaid {
     function raidCount() external view returns (uint256);
 
     function create(
-        uint256 entranceFee,
-        uint256 nursePart,
-        uint256 maxRewardCount,
-        uint256 duration,
-        uint256 endBlock
+        uint256[] calldata entranceFee,
+        uint256[] calldata nursePart,
+        uint256[] calldata maxRewardCount,
+        uint256[] calldata duration,
+        uint256[] calldata endBlock
     ) external returns (uint256 id);
 
     function enterWithPermitAll(
@@ -63,5 +63,5 @@ interface INurseRaid {
 
     function checkDone(uint256 id) external view returns (bool);
 
-    function exit(uint256 id) external;
+    function exit(uint256[] calldata ids) external;
 }

@@ -115,9 +115,32 @@ describe("NurseRaid", () => {
         await maids.mint(1);
         await maids.transferFrom(deployer.address, alice.address, 0);
 
-        await expect(raid.create(10000, 0, 5, 50, 100)).to.emit(raid, "Create").withArgs(0, 10000, 0, 5, 50, 100);
-        await expect(raid.create(10000, 0, 5, 50, 100)).to.emit(raid, "Create").withArgs(1, 10000, 0, 5, 50, 100);
-        await expect(raid.create(10000, 0, 5, 50, 100)).to.emit(raid, "Create").withArgs(2, 10000, 0, 5, 50, 100);
+        await raid.create([10000, 10000, 10000], [0, 0, 0], [5, 5, 5], [50, 50, 50], [100, 100, 100]);
+        let events: any = await raid.queryFilter(raid.filters.Create(), "latest");
+        {
+            expect(events.length).to.be.equal(3);
+
+            expect(events[0].args[0]).to.be.equal(0);
+            expect(events[0].args[1]).to.be.equal(10000);
+            expect(events[0].args[2]).to.be.equal(0);
+            expect(events[0].args[3]).to.be.equal(5);
+            expect(events[0].args[4]).to.be.equal(50);
+            expect(events[0].args[5]).to.be.equal(100);
+
+            expect(events[1].args[0]).to.be.equal(1);
+            expect(events[1].args[1]).to.be.equal(10000);
+            expect(events[1].args[2]).to.be.equal(0);
+            expect(events[1].args[3]).to.be.equal(5);
+            expect(events[1].args[4]).to.be.equal(50);
+            expect(events[1].args[5]).to.be.equal(100);
+
+            expect(events[2].args[0]).to.be.equal(2);
+            expect(events[2].args[1]).to.be.equal(10000);
+            expect(events[2].args[2]).to.be.equal(0);
+            expect(events[2].args[3]).to.be.equal(5);
+            expect(events[2].args[4]).to.be.equal(50);
+            expect(events[2].args[5]).to.be.equal(100);
+        }
 
         {
             await coin.transfer(alice.address, 100000);
@@ -138,8 +161,7 @@ describe("NurseRaid", () => {
         await maids.mint(1);
         await maids.transferFrom(deployer.address, alice.address, 0);
 
-        await raid.create(10000, 0, 5, 50, 100);
-        await raid.create(10000, 0, 5, 50, 100);
+        await raid.create([10000, 10000], [0, 0], [5, 5], [50, 50], [100, 100]);
 
         {
             await coin.transfer(alice.address, 100000);
@@ -164,7 +186,7 @@ describe("NurseRaid", () => {
         await maids.mint(1);
         await maids.transferFrom(deployer.address, bob.address, 0);
 
-        await raid.create(10000, 0, 5, 50, 100);
+        await raid.create([10000], [0], [5], [50], [100]);
 
         {
             await coin.transfer(alice.address, 100000);
@@ -184,8 +206,12 @@ describe("NurseRaid", () => {
         expect(await raid.connect(alice).checkDone(0)).to.be.false;
         expect(await raid.connect(bob).checkDone(0)).to.be.false;
 
-        await expect(raid.connect(alice).exit(0)).to.emit(raid, "Exit").withArgs(alice.address, 0);
-        await expect(raid.connect(bob).exit(0)).to.emit(raid, "Exit").withArgs(bob.address, 0);
+        await expect(raid.connect(alice).exit([0]))
+            .to.emit(raid, "Exit")
+            .withArgs(alice.address, 0);
+        await expect(raid.connect(bob).exit([0]))
+            .to.emit(raid, "Exit")
+            .withArgs(bob.address, 0);
         expect(await part.balanceOf(alice.address, 0)).to.be.equal(0);
         expect(await part.balanceOf(bob.address, 0)).to.be.equal(0);
         expect(await maids.ownerOf(0)).to.be.equal(bob.address);
@@ -199,7 +225,7 @@ describe("NurseRaid", () => {
         await maids.mint(1);
         await maids.transferFrom(deployer.address, bob.address, 0);
 
-        await raid.create(10000, 0, 5, 50, 100);
+        await raid.create([10000], [0], [5], [50], [100]);
 
         {
             await coin.transfer(alice.address, 100000);
@@ -221,8 +247,12 @@ describe("NurseRaid", () => {
         await expect(raid.connect(bob).enter(0, maids.address, 0)).to.be.revertedWith("NurseRaid: Raid is in progress");
 
         await mine(50);
-        await expect(raid.connect(alice).exit(0)).to.emit(raid, "Exit").withArgs(alice.address, 0);
-        await expect(raid.connect(bob).exit(0)).to.emit(raid, "Exit").withArgs(bob.address, 0);
+        await expect(raid.connect(alice).exit([0]))
+            .to.emit(raid, "Exit")
+            .withArgs(alice.address, 0);
+        await expect(raid.connect(bob).exit([0]))
+            .to.emit(raid, "Exit")
+            .withArgs(bob.address, 0);
         expect(await maids.ownerOf(0)).to.be.equal(bob.address);
         expect(await part.balanceOf(alice.address, 0)).to.be.gte(1);
         expect(await part.balanceOf(bob.address, 0)).to.be.gte(1);
@@ -256,7 +286,7 @@ describe("NurseRaid", () => {
         expect(await lgirls.ownerOf(0)).to.be.equal(carol.address);
         expect(await sgirls.ownerOf(0)).to.be.equal(dan.address);
 
-        await raid.create(10000, 0, 5, 100, 10000);
+        await raid.create([10000], [0], [5], [100], [10000]);
 
         await coin.transfer(alice.address, 10000);
         await coin.transfer(bob.address, 10000);
@@ -292,7 +322,7 @@ describe("NurseRaid", () => {
         await maids.mint(1);
         await maids.transferFrom(deployer.address, bob.address, 0);
 
-        await raid.create(10000, 0, 5, 50, 100);
+        await raid.create([10000], [0], [5], [50], [100]);
 
         {
             await coin.transfer(alice.address, 100000);
@@ -334,7 +364,7 @@ describe("NurseRaid", () => {
         expect(await sgirls.powerOf(0)).to.be.equal(30);
         expect(await maids.powerOf(1)).to.be.equal(40);
 
-        await raid.create(10000, 0, 5, 5000, 10000);
+        await raid.create([10000], [0], [5], [5000], [10000]);
 
         {
             await coin.transfer(alice.address, 10000);
@@ -424,5 +454,107 @@ describe("NurseRaid", () => {
         expect(await raid.connect(carol).checkDone(0)).to.be.true;
         expect(await raid.connect(dan).checkDone(0)).to.be.true;
         expect(await raid.connect(erin).checkDone(0)).to.be.true;
+    });
+
+    it("should be that users can exit from several raids at the same time", async () => {
+        const { raid, maids, coin, part, deployer, alice, bob } = await setupTest();
+
+        await raid.approveMaids([maids.address]);
+        expect(await raid.isMaidsApproved(maids.address)).to.be.true;
+        await maids.mint(1);
+        await maids.transferFrom(deployer.address, bob.address, 0);
+
+        await raid.create([10000, 10000], [0, 1], [5, 5], [50, 50], [1000, 1000]);
+
+        {
+            await coin.transfer(alice.address, 100000);
+            await coin.transfer(bob.address, 100000);
+
+            await coin.connect(alice).approve(raid.address, 100000);
+            await coin.connect(bob).approve(raid.address, 100000);
+
+            await maids.connect(bob).setApprovalForAll(raid.address, true);
+        }
+
+        await raid.connect(alice).enter(0, AddressZero, 0);
+        await raid.connect(bob).enter(0, maids.address, 0);
+        expect(await maids.ownerOf(0)).to.be.equal(raid.address);
+
+        await raid.connect(alice).enter(1, AddressZero, 0);
+        await raid.connect(bob).enter(1, AddressZero, 0);
+
+        await mine(50);
+
+        {
+            expect(await raid.connect(alice).checkDone(0)).to.be.true;
+            expect(await raid.connect(alice).checkDone(1)).to.be.true;
+            expect(await raid.connect(bob).checkDone(0)).to.be.true;
+            expect(await raid.connect(bob).checkDone(1)).to.be.true;
+        }
+
+        await raid.connect(alice).exit([0, 1]);
+        let events: any = await raid.queryFilter(raid.filters.Exit(), "latest");
+        expect(events.length).to.be.equal(2);
+        expect(events[0].args[0]).to.be.equal(alice.address);
+        expect(events[1].args[0]).to.be.equal(alice.address);
+        expect(events[0].args[1]).to.be.equal(0);
+        expect(events[1].args[1]).to.be.equal(1);
+
+        await raid.connect(bob).exit([0, 1]);
+        events = await raid.queryFilter(raid.filters.Exit(), "latest");
+        expect(events.length).to.be.equal(2);
+        expect(events[0].args[0]).to.be.equal(bob.address);
+        expect(events[1].args[0]).to.be.equal(bob.address);
+        expect(events[0].args[1]).to.be.equal(0);
+        expect(events[1].args[1]).to.be.equal(1);
+
+        const part0_alice = await part.balanceOf(alice.address, 0);
+        const part1_alice = await part.balanceOf(alice.address, 1);
+        const part0_bob = await part.balanceOf(bob.address, 0);
+        const part1_bob = await part.balanceOf(bob.address, 1);
+
+        expect(part0_alice).to.be.gt(0);
+        expect(part1_alice).to.be.gt(0);
+        expect(part0_bob).to.be.gt(0);
+        expect(part1_bob).to.be.gt(0);
+        expect(await maids.ownerOf(0)).to.be.equal(bob.address);
+
+        await raid.connect(alice).enter(0, AddressZero, 0);
+        await raid.connect(bob).enter(0, maids.address, 0);
+        expect(await maids.ownerOf(0)).to.be.equal(raid.address);
+
+        await mine(30);
+        await raid.connect(alice).enter(1, AddressZero, 0);
+        await raid.connect(bob).enter(1, AddressZero, 0);
+
+        await mine(30);
+        {
+            expect(await raid.connect(alice).checkDone(0)).to.be.true;
+            expect(await raid.connect(alice).checkDone(1)).to.be.false;
+            expect(await raid.connect(bob).checkDone(0)).to.be.true;
+            expect(await raid.connect(bob).checkDone(1)).to.be.false;
+        }
+
+        await raid.connect(alice).exit([0, 1]);
+        events = await raid.queryFilter(raid.filters.Exit(), "latest");
+        expect(events.length).to.be.equal(2);
+        expect(events[0].args[0]).to.be.equal(alice.address);
+        expect(events[1].args[0]).to.be.equal(alice.address);
+        expect(events[0].args[1]).to.be.equal(0);
+        expect(events[1].args[1]).to.be.equal(1);
+
+        await raid.connect(bob).exit([0, 1]);
+        events = await raid.queryFilter(raid.filters.Exit(), "latest");
+        expect(events.length).to.be.equal(2);
+        expect(events[0].args[0]).to.be.equal(bob.address);
+        expect(events[1].args[0]).to.be.equal(bob.address);
+        expect(events[0].args[1]).to.be.equal(0);
+        expect(events[1].args[1]).to.be.equal(1);
+
+        expect(await part.balanceOf(alice.address, 0)).to.be.gt(part0_alice);
+        expect(await part.balanceOf(alice.address, 1)).to.be.equal(part1_alice);
+        expect(await part.balanceOf(bob.address, 0)).to.be.gt(part0_bob);
+        expect(await part.balanceOf(bob.address, 1)).to.be.equal(part1_bob);
+        expect(await maids.ownerOf(0)).to.be.equal(bob.address);
     });
 });
