@@ -15,3 +15,7 @@ export const mine = async (count = 1): Promise<void> => {
 export const autoMining = async (setting: boolean) => {
     await network.provider.send("evm_setAutomine", [setting]);
 };
+
+export const mineTo = async (block: number) => {
+    await mine(block - (await ethers.provider.getBlockNumber()) - 1);
+};
