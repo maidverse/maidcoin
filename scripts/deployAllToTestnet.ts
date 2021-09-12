@@ -89,20 +89,24 @@ async function main() {
     await theMaster.add(masterCoin.address, false, false, ethers.constants.AddressZero, 0, 10, {
         gasLimit: 200000,
     });
+    console.log("Added MasterCoin Pool");
 
     // Maid Corp
     await theMaster.add(LP_TOKEN_ADDRESS, false, false, ethers.constants.AddressZero, 0, 9, {
         gasLimit: 200000,
     });
+    console.log("Added MaidCorp Pool");
 
     await theMaster.add(cloneNurses.address, true, true, ethers.constants.AddressZero, 0, 30, {
         gasLimit: 200000,
     });
+    console.log("Added CloneNurse Pool");
 
     // Supporter
     await theMaster.add(LP_TOKEN_ADDRESS, false, false, cloneNurses.address, 10, 51, {
         gasLimit: 200000,
     });
+    console.log("Added Supporter Pool");
 
     showAddressesForJSON();
 }
