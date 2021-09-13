@@ -77,7 +77,7 @@ interface ITheMaster is IMasterChefModule {
         uint256 allocPoint
     ) external;
 
-    function set(uint256 pid, uint256 allocPoint) external;
+    function set(uint256[] calldata pid, uint256[] calldata allocPoint) external;
 
     function deposit(
         uint256 pid,

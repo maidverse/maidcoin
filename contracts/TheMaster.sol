@@ -20,7 +20,7 @@ contract TheMaster is Ownable, MasterChefModule, ITheMaster {
         address addr;
         bool delegate;
         ISupportable supportable;
-        uint8 supportingRatio;
+        uint8 supportingRatio; //out of 100
         uint256 allocPoint;
         uint256 lastRewardBlock;
         uint256 accRewardPerShare;
@@ -117,11 +117,13 @@ contract TheMaster is Ownable, MasterChefModule, ITheMaster {
         emit Add(pid, addr, delegate, mintableByAddr[addr], supportable, supportingRatio, allocPoint);
     }
 
-    function set(uint256 pid, uint256 allocPoint) external override onlyOwner {
+    function set(uint256[] calldata pids, uint256[] calldata allocPoints) external override onlyOwner {
         massUpdatePools();
-        totalAllocPoint = totalAllocPoint - poolInfo[pid].allocPoint + allocPoint;
-        poolInfo[pid].allocPoint = allocPoint;
-        emit Set(pid, allocPoint);
+        for (uint256 i = 0; i < pids.length; i += 1) {
+            totalAllocPoint = totalAllocPoint - poolInfo[pids[i]].allocPoint + allocPoints[i];
+            poolInfo[pids[i]].allocPoint = allocPoints[i];
+            emit Set(pids[i], allocPoints[i]);
+        }
     }
 
     function updatePool(PoolInfo storage pool) internal {
