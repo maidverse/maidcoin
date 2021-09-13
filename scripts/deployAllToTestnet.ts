@@ -86,27 +86,47 @@ async function main() {
     ) as CloneNurses
     displayAddress("CloneNurses", cloneNurses.address)
 
-    await theMaster.add(masterCoin.address, false, false, ethers.constants.AddressZero, 0, 10, {
-        gasLimit: 200000,
-    });
-    console.log("Added MasterCoin Pool");
+    let run = async () => {
+        await theMaster.add(masterCoin.address, false, false, ethers.constants.AddressZero, 0, 10);
+        if ((await theMaster.poolCount()).toNumber() < 1) {
+            await run();
+        } else {
+            console.log("Added MasterCoin Pool");
+        }
+    };
+    await run();
 
     // Maid Corp
-    await theMaster.add(LP_TOKEN_ADDRESS, false, false, ethers.constants.AddressZero, 0, 9, {
-        gasLimit: 200000,
-    });
-    console.log("Added MaidCorp Pool");
+    run = async () => {
+        await theMaster.add(LP_TOKEN_ADDRESS, false, false, ethers.constants.AddressZero, 0, 9);
+        if ((await theMaster.poolCount()).toNumber() < 2) {
+            await run();
+        } else {
+            console.log("Added MaidCorp Pool");
+        }
+    };
+    await run();
 
-    await theMaster.add(cloneNurses.address, true, true, ethers.constants.AddressZero, 0, 30, {
-        gasLimit: 200000,
-    });
-    console.log("Added CloneNurse Pool");
+    run = async () => {
+        await theMaster.add(cloneNurses.address, true, true, ethers.constants.AddressZero, 0, 30);
+        if ((await theMaster.poolCount()).toNumber() < 3) {
+            await run();
+        } else {
+            console.log("Added CloneNurse Pool");
+        }
+    };
+    await run();
 
     // Supporter
-    await theMaster.add(LP_TOKEN_ADDRESS, false, false, cloneNurses.address, 10, 51, {
-        gasLimit: 200000,
-    });
-    console.log("Added Supporter Pool");
+    run = async () => {
+        await theMaster.add(LP_TOKEN_ADDRESS, false, false, cloneNurses.address, 10, 51);
+        if ((await theMaster.poolCount()).toNumber() < 4) {
+            await run();
+        } else {
+            console.log("Added Supporter Pool");
+        }
+    };
+    await run();
 
     showAddressesForJSON();
 }
