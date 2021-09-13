@@ -106,23 +106,6 @@ contract NurseRaid is Ownable, INurseRaid {
         }
     }
 
-    function enterWithPermitAll(
-        uint256 id,
-        IMaids maids,
-        uint256 maidId,
-        uint256 deadline,
-        uint8 v1,
-        bytes32 r1,
-        bytes32 s1,
-        uint8 v2,
-        bytes32 r2,
-        bytes32 s2
-    ) external override {
-        maidCoin.permit(msg.sender, address(this), type(uint256).max, deadline, v1, r1, s1);
-        maids.permitAll(msg.sender, address(this), deadline, v2, r2, s2);
-        enter(id, maids, maidId);
-    }
-
     function enter(
         uint256 id,
         IMaids maids,
@@ -141,6 +124,44 @@ contract NurseRaid is Ownable, INurseRaid {
         _feeTransfer(feeToCafe);
         maidCoin.burn(_entranceFee - feeToCafe);
         emit Enter(msg.sender, id, maids, maidId);
+    }
+
+    function enterWithPermit(
+        uint256 id,
+        IMaids maids,
+        uint256 maidId,
+        uint256 deadline,
+        uint8 v1,
+        bytes32 r1,
+        bytes32 s1,
+        uint8 v2,
+        bytes32 r2,
+        bytes32 s2
+    ) external override {
+        maidCoin.permit(msg.sender, address(this), raids[id].entranceFee, deadline, v1, r1, s1);
+        if (address(maids) != address(0)) {
+            maids.permit(msg.sender, maidId, deadline, v2, r2, s2);
+        }
+        enter(id, maids, maidId);
+    }
+
+    function enterWithPermitAll(
+        uint256 id,
+        IMaids maids,
+        uint256 maidId,
+        uint256 deadline,
+        uint8 v1,
+        bytes32 r1,
+        bytes32 s1,
+        uint8 v2,
+        bytes32 r2,
+        bytes32 s2
+    ) external override {
+        maidCoin.permit(msg.sender, address(this), type(uint256).max, deadline, v1, r1, s1);
+        if (address(maids) != address(0)) {
+            maids.permitAll(msg.sender, address(this), deadline, v2, r2, s2);
+        }
+        enter(id, maids, maidId);
     }
 
     function checkDone(uint256 id) public view override returns (bool) {

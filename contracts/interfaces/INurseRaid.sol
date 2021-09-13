@@ -42,7 +42,13 @@ interface INurseRaid {
         uint256[] calldata endBlock
     ) external returns (uint256 id);
 
-    function enterWithPermitAll(
+    function enter(
+        uint256 id,
+        IMaids maids,
+        uint256 maidId
+    ) external;
+
+    function enterWithPermit(
         uint256 id,
         IMaids maids,
         uint256 maidId,
@@ -55,10 +61,17 @@ interface INurseRaid {
         bytes32 s2
     ) external;
 
-    function enter(
+    function enterWithPermitAll(
         uint256 id,
         IMaids maids,
-        uint256 maidId
+        uint256 maidId,
+        uint256 deadline,
+        uint8 v1,
+        bytes32 r1,
+        bytes32 s1,
+        uint8 v2,
+        bytes32 r2,
+        bytes32 s2
     ) external;
 
     function checkDone(uint256 id) external view returns (bool);
