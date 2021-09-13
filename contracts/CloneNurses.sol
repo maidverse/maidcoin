@@ -75,6 +75,7 @@ contract CloneNurses is
         uint256 startId = nurseTypes.length;
         uint256[] memory nurseType = new uint256[](partCounts.length);
         for (uint256 i = 0; i < partCounts.length; i += 1) {
+            require(partCounts[i] > 1, "CloneNurses: Invalid partCount");
             nurseTypes.push(
                 NurseType({
                     partCount: partCounts[i],
