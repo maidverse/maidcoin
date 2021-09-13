@@ -8,12 +8,16 @@ import { TestSushiToken } from "../typechain/TestSushiToken";
 //const LP_TOKEN_ADDRESS = "0xF43df1bC8DD096F5f9dF1fB4d676D2ab38592020";
 //const WETH = "";
 //const SUSHI = "";
+//const SUSHU_GIRLS = "";
+//const LINGERIE_GIRLS = "";
 
 // Kovan
 const RNG_ADDRESS = "0x7DB3218Cc8ecAe49fFA8FF3923e90BEE72cbF7Cc";
 const LP_TOKEN_ADDRESS = "0x56ac87553c4dBcd877cA7E4fba54959f091CaEdE";
 const WETH = "0xd0a1e359811322d97991e03f863a0c30c2cf029c";
 const SUSHI = "0xcd280c22F70d6f58B34a1cCbd41780979BBC2F3B";
+const SUSHU_GIRLS = "0xd48ec06ee1e1016c159415262A2dFa233E325C2F";
+const LINGERIE_GIRLS = "0xB555cA9C88CeB8ece57b9223AA6D7407dD273656";
 
 const addresses: { [name: string]: string } = {};
 
@@ -68,13 +72,14 @@ async function main() {
 
     const NurseRaid = await hardhat.ethers.getContractFactory("NurseRaid")
     const nurseRaid = await NurseRaid.deploy(
-        maids.address,
         maidCoin.address,
+        maidCafe.address,
         nursePart.address,
         RNG_ADDRESS,
     ) as NurseRaid
     displayAddress("NurseRaid", nurseRaid.address)
 
+    await nurseRaid.approveMaids([maids.address, SUSHU_GIRLS, LINGERIE_GIRLS]);
     await nursePart.transferOwnership(nurseRaid.address)
 
     const CloneNurses = await hardhat.ethers.getContractFactory("CloneNurses")
