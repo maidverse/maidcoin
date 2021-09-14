@@ -51,14 +51,13 @@ abstract contract MasterChefModule is Ownable, IMasterChefModule {
     {
         uint256 _pid = masterChefPid;
         require(_pid > 0, "MasterChefModule: Unclaimable");
-        uint256 _supportedLPTokenAmount = supportedLPTokenAmount;
 
         uint256 _totalSupportedLPTokenAmount = sushiMasterChef.userInfo(_pid, address(this)).amount;
         uint256 _accSushiPerShare = _depositToSushiMasterChef(_pid, 0, _totalSupportedLPTokenAmount);
-        uint256 pending = (_supportedLPTokenAmount * _accSushiPerShare) / 1e18 - sushiRewardDebt;
+        uint256 pending = (supportedLPTokenAmount * _accSushiPerShare) / 1e18 - sushiRewardDebt;
         require(pending > 0, "MasterChefModule: Nothing can be claimed");
         safeSushiTransfer(msg.sender, pending);
-        return (_supportedLPTokenAmount * _accSushiPerShare) / 1e18;
+        return (supportedLPTokenAmount * _accSushiPerShare) / 1e18;
     }
 
     function _pendingSushiReward(uint256 supportedLPTokenAmount, uint256 sushiRewardDebt)
@@ -68,7 +67,6 @@ abstract contract MasterChefModule is Ownable, IMasterChefModule {
     {
         uint256 _pid = masterChefPid;
         if (_pid == 0) return 0;
-        uint256 _supportedLPTokenAmount = supportedLPTokenAmount;
         uint256 _totalSupportedLPTokenAmount = sushiMasterChef.userInfo(_pid, address(this)).amount;
 
         uint256 _accSushiPerShare = accSushiPerShare;
@@ -77,7 +75,7 @@ abstract contract MasterChefModule is Ownable, IMasterChefModule {
             _accSushiPerShare += ((reward * 1e18) / _totalSupportedLPTokenAmount);
         }
 
-        return (_supportedLPTokenAmount * _accSushiPerShare) / 1e18 - sushiRewardDebt;
+        return (supportedLPTokenAmount * _accSushiPerShare) / 1e18 - sushiRewardDebt;
     }
 
     function setSushiMasterChef(IMasterChef _masterChef, uint256 _pid) external onlyOwner {
