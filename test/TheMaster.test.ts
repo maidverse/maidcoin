@@ -1612,10 +1612,19 @@ describe("TheMaster", function () {
         //desupport works well
     });
 
-    it.only("should be that deposit/withdraw/emergencyWithdraw/claim function with sushiMasterChef distribute Sushi rewards properly", async function () {
+    it("should be that deposit/withdraw/emergencyWithdraw/claim function with sushiMasterChef distribute Sushi rewards properly", async function () {
         const { alice, bob, carol, theMaster, sushi, sushiMC } = await setupTest();
+        const e18 = BigNumber.from(10).pow(18);
 
-        class UserSushiInfo extends UserInfo {}
+        class UserSushiInfo {
+            pid:number;
+            userInfo:UserInfo;
+
+            constructor(pid:number, amount: BigNumberish, rewardDebt: BigNumberish) {
+                this.pid = pid;
+                this.userInfo = new UserInfo(amount, rewardDebt);
+            }
+        }
 
         class PoolSushiInfo {
             allocPoint: number;
@@ -1642,22 +1651,26 @@ describe("TheMaster", function () {
             }
         }
 
-        const sushiPool = new PoolSushiInfo(10, 0); //TODO
+        const sushiPool = new PoolSushiInfo(10, 305);
 
         async function updateInfo(
             poolInfo: PoolSushiInfo,
-            userInfo: UserSushiInfo,
+            userInfo: UserInfo,
             sushiPid: number,
-            amount: BigNumberish
+            amount: BigNumberish,
+            rewardOn: boolean
         ) {
-            const reward = tokenAmount(100)
-                .mul((await getBlock()) + 1 - poolInfo.lastRewardBlock)
-                .mul((await sushiMC.poolInfo(sushiPid))[1])
-                .div(await sushiMC.totalAllocPoint());
+            const reward =
+                rewardOn === true
+                    ? tokenAmount(100)
+                          .mul((await getBlock()) + 1 - poolInfo.lastRewardBlock)
+                          .mul((await sushiMC.poolInfo(sushiPid))[1])
+                          .div(await sushiMC.totalAllocPoint())
+                    : Zero;
             assert.isFalse(reward.isNegative());
-            const accInc = !poolInfo.totalSupply.isZero() ? reward.mul(PRECISION).div(poolInfo.totalSupply) : 0;
+            const accInc = !poolInfo.totalSupply.isZero() ? reward.mul(e18).div(poolInfo.totalSupply) : 0;
             poolInfo.update((await getBlock()) + 1, amount, accInc);
-            const newRewardDebt = userInfo.amount.add(amount).mul(poolInfo.accSushiPerShare).div(PRECISION);
+            const newRewardDebt = userInfo.amount.add(amount).mul(poolInfo.accSushiPerShare).div(e18);
             userInfo.update(amount, newRewardDebt);
             return { poolInfo, userInfo };
         }
@@ -1667,22 +1680,23 @@ describe("TheMaster", function () {
             expect((await sushiMC.poolInfo(sushiPid))[2]).to.be.equal(poolInfo.lastRewardBlock);
 
             //allow a difference within 0.001%
-            expect((await sushiMC.poolInfo(sushiPid))[3]).to.be.lte(poolInfo.accSushiPerShare.mul(100001).div(100000));
+            const acc = poolInfo.accSushiPerShare.div(1000000); //unify precision
+            expect((await sushiMC.poolInfo(sushiPid))[3]).to.be.lte(acc.mul(100001).div(100000));
+            expect((await sushiMC.poolInfo(sushiPid))[3]).to.be.gte(acc.mul(99999).div(100000));
             expect(await theMaster.accSushiPerShare()).to.be.lte(poolInfo.accSushiPerShare.mul(100001).div(100000));
-            expect((await sushiMC.poolInfo(sushiPid))[3]).to.be.gte(poolInfo.accSushiPerShare.mul(99999).div(100000));
             expect(await theMaster.accSushiPerShare()).to.be.gte(poolInfo.accSushiPerShare.mul(99999).div(100000));
 
             expect((await sushiMC.userInfo(sushiPid, theMaster.address))[0]).to.be.equal(poolInfo.totalSupply);
         }
 
-        async function balanceInc(poolInfo: PoolSushiInfo, userInfo: UserSushiInfo, sushiPid: number) {
+        async function balanceInc(poolInfo: PoolSushiInfo, userInfo: UserInfo, sushiPid: number) {
             const reward = tokenAmount(100)
                 .mul((await getBlock()) + 1 - poolInfo.lastRewardBlock)
                 .mul((await sushiMC.poolInfo(sushiPid))[1])
                 .div(await sushiMC.totalAllocPoint());
-            const accInc = !poolInfo.totalSupply.isZero() ? reward.mul(PRECISION).div(poolInfo.totalSupply) : 0;
+            const accInc = !poolInfo.totalSupply.isZero() ? reward.mul(e18).div(poolInfo.totalSupply) : 0;
 
-            return userInfo.amount.mul(poolInfo.accSushiPerShare.add(accInc)).div(PRECISION).sub(userInfo.rewardDebt);
+            return userInfo.amount.mul(poolInfo.accSushiPerShare.add(accInc)).div(e18).sub(userInfo.rewardDebt);
         }
 
         async function checkSushiReward(user: SignerWithAddress, balanceInc: BigNumber) {
@@ -1697,12 +1711,137 @@ describe("TheMaster", function () {
             expect(balanceInc).to.be.gte(transferedReward.mul(99999).div(100000));
         }
 
-        const aliceInfo = new UserSushiInfo(0, 0);
-        const bobInfo = new UserSushiInfo(0, 0);
-        const carolInfo = new UserSushiInfo(0, 0);
+        const alice1Info = new UserSushiInfo(1, 0, 0);
+        const bob1Info = new UserSushiInfo(1, 0, 0);
+        const carol1Info = new UserSushiInfo(1, 0, 0);
+
+        await updateInfo(sushiPool, alice1Info.userInfo, 3, 100, false);
+        await theMaster.connect(alice).deposit(1, 100, alice.address);
+
+        await updateInfo(sushiPool, bob1Info.userInfo, 3, 900, false);
+        await theMaster.connect(bob).deposit(1, 900, bob.address);
+
+        await updateInfo(sushiPool, alice1Info.userInfo, 3, 100, false);
+        await theMaster.connect(alice).deposit(1, 100, alice.address);
+
+        await updateInfo(sushiPool, bob1Info.userInfo, 3, -100, false);
+        await theMaster.connect(bob).withdraw(1, 100, bob.address);
+
+        expect(await sushi.balanceOf(alice.address)).to.be.equal(0);
+        expect(await sushi.balanceOf(bob.address)).to.be.equal(0);
+
+        await updateInfo(sushiPool, bob1Info.userInfo, 3, -800, false);
+        await theMaster.connect(bob).withdraw(1, 800, bob.address);
+
+        await updateInfo(sushiPool, bob1Info.userInfo, 3, 700, false);
+        await theMaster.connect(bob).deposit(1, 700, bob.address);
+
+        await mineTo(START_BLOCK);
+        await autoMining(false);
+        await updateInfo(sushiPool, carol1Info.userInfo, 3, 1000, false);
+        await theMaster.connect(carol).deposit(1, 1000, carol.address);
+        await updateInfo(sushiPool, alice1Info.userInfo, 3, 100, false);
+        await theMaster.connect(alice).deposit(1, 100, alice.address);
+        await updateInfo(sushiPool, bob1Info.userInfo, 3, 900, false);
+        await theMaster.connect(bob).deposit(1, 900, bob.address);
+        await mine();
+        await autoMining(true);
+
+        expect(await sushi.balanceOf(alice.address)).to.be.equal(0);
+        expect(await sushi.balanceOf(bob.address)).to.be.equal(0);
+        expect(await sushi.balanceOf(carol.address)).to.be.equal(0);
+
+        await sushi.transferOwnership(sushiMC.address);
+
+        await mineTo(305);
+
+        sushiPool.update((await getBlock()) + 1, Zero, 0);
+        await theMaster.setSushiMasterChef(sushiMC.address, 3);
+        expect((await sushiMC.userInfo(3, theMaster.address))[0]).to.be.equal(sushiPool.totalSupply);
+
+        // console.log(sushiPool);  2900
+        // console.log(alice1Info.userInfo);  300
+        // console.log(bob1Info.userInfo);    1600
+        // console.log(carol1Info.userInfo);  1000
+
+        let incA = await balanceInc(sushiPool, alice1Info.userInfo, 3);
+        await updateInfo(sushiPool, alice1Info.userInfo, 3, 100, true);
+        await theMaster.connect(alice).deposit(1, 100, alice.address);
+        await checkUpdating(sushiPool, 3);
+        await checkSushiReward(alice, incA);
+
+        await mineTo(500);
+        incA = await balanceInc(sushiPool, alice1Info.userInfo, 3);
+        let incB = await balanceInc(sushiPool, bob1Info.userInfo, 3);
+        let incC = await balanceInc(sushiPool, carol1Info.userInfo, 3);
+        await autoMining(false);
+        await updateInfo(sushiPool, alice1Info.userInfo, 3, -200, true);
+        await theMaster.connect(alice).withdraw(1, 200, alice.address);
+        await updateInfo(sushiPool, bob1Info.userInfo, 3, -100, true);
+        await theMaster.connect(bob).withdraw(1, 100, bob.address);
+        await updateInfo(sushiPool, carol1Info.userInfo, 3, 3000, true);
+        await theMaster.connect(carol).deposit(1, 3000, carol.address);
+        await mine();
+        await autoMining(true);
+        await checkUpdating(sushiPool, 3);
+        await checkSushiReward(alice, incA);
+        await checkSushiReward(bob, incB);
+        await checkSushiReward(carol, incC);
+
+        incC = await balanceInc(sushiPool, carol1Info.userInfo, 3);
+        let amountC = carol1Info.userInfo.amount;
+        await updateInfo(sushiPool, carol1Info.userInfo, 3, amountC.mul(-1), true);
+        await expect(theMaster.connect(carol).emergencyWithdraw(1))
+            .to.emit(theMaster, "EmergencyWithdraw")
+            .withArgs(carol.address, 1, amountC);
+        await checkUpdating(sushiPool, 3);
+        await checkSushiReward(carol, incC);
+
+        // console.log((await sushi.balanceOf(alice.address)).toString());
+        // console.log((await sushi.balanceOf(bob.address)).toString());
+        // console.log((await sushi.balanceOf(carol.address)).toString());
+        // console.log((await sushi.balanceOf(theMaster.address)).toString());
+
+        // 5200
+        await mineTo(START_BLOCK + 5190);
+
+        let pendingIncA = await balanceInc(sushiPool, alice1Info.userInfo, 3);
+        await updateInfo(sushiPool, alice1Info.userInfo, 3, 0, true);
+        await theMaster.connect(alice).deposit(1, 0, alice.address);    //deposit0 doesn't transfer sushi.
+
+        let pendingIncB = await balanceInc(sushiPool, bob1Info.userInfo, 3);
+        await updateInfo(sushiPool, bob1Info.userInfo, 3, 0, true);
+        await theMaster.connect(bob).withdraw(1, 0, bob.address);        //withdraw0 doesn't transfer sushi.
+
+        //5500
+        await mine(10);
+        incA = await balanceInc(sushiPool, alice1Info.userInfo, 3);
+        await updateInfo(sushiPool, alice1Info.userInfo, 3, 0, true);
+        await theMaster.connect(alice).claimAllReward(1);
+        await checkUpdating(sushiPool, 3);
+        await checkSushiReward(alice, incA.add(pendingIncA));
+
+        incB = await balanceInc(sushiPool, bob1Info.userInfo, 3);
+        await updateInfo(sushiPool, bob1Info.userInfo, 3, 0, true);
+        await theMaster.connect(bob).claimAllReward(1);
+        await checkUpdating(sushiPool, 3);
+        await checkSushiReward(bob, incB.add(pendingIncB));
+
+        await mine(123);
+        incA = await balanceInc(sushiPool, alice1Info.userInfo, 3);
+        await updateInfo(sushiPool, alice1Info.userInfo, 3, 0, true);
+        await theMaster.connect(alice).claimSushiReward(1);
+        await checkUpdating(sushiPool, 3);
+        await checkSushiReward(alice, incA);
+
+        incB = await balanceInc(sushiPool, bob1Info.userInfo, 3);
+        await updateInfo(sushiPool, bob1Info.userInfo, 3, 0, true);
+        await theMaster.connect(bob).claimSushiReward(1);
+        await checkUpdating(sushiPool, 3);
+        await checkSushiReward(bob, incB);
     });
 
-    // it("should be that support/desupport/emergencyDesupport/claim function with sushiMasterChef distribute Sushi rewards properly", async function () {
+    // it("should be that support/desupport/emergencyDesupport/claim function with sushiMasterChef distribute Sushi rewards properly", async function () { });
 
-    // });
+    // it("should be pass testing overall functions with sushiMasterChef", async function () { });
 });
