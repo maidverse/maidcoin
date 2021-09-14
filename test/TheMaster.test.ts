@@ -340,10 +340,10 @@ describe("TheMaster", function () {
             set(_allocPoint: number) {
                 this.allocPoint = _allocPoint;
             }
-            update(block: number, amount: BigNumberish, _accSushiPerShare: BigNumberish) {
+            update(block: number, amount: BigNumberish, _accRewardPerShare: BigNumberish) {
                 if (this.lastRewardBlock < block) {
                     this.lastRewardBlock = block;
-                    this.accRewardPerShare = BigNumber.from(this.accRewardPerShare).add(_accSushiPerShare);
+                    this.accRewardPerShare = BigNumber.from(this.accRewardPerShare).add(_accRewardPerShare);
                 }
                 this.totalSupply = BigNumber.from(this.totalSupply).add(amount);
                 if (this.totalSupply.lt(0)) throw "totalSupply < 0";
@@ -562,7 +562,7 @@ describe("TheMaster", function () {
         await checkUpdating(pool1, bobInfo, 1, bob);
     });
 
-    it.only("should be that support/desupport/emergencyDesupport function works well without sushiMasterChef", async function () {
+    it("should be that support/desupport/emergencyDesupport function works well without sushiMasterChef", async function () {
         const { alice, bob, carol, dan, erin, frank, lpToken, coin, part, theMaster, nurses } = await setupTest();
 
         class PoolInfo {
@@ -580,10 +580,10 @@ describe("TheMaster", function () {
             set(_allocPoint: number) {
                 this.allocPoint = _allocPoint;
             }
-            update(block: number, amount: BigNumberish, _accSushiPerShare: BigNumberish) {
+            update(block: number, amount: BigNumberish, _accRewardPerShare: BigNumberish) {
                 if (this.lastRewardBlock < block) {
                     this.lastRewardBlock = block;
-                    this.accRewardPerShare = BigNumber.from(this.accRewardPerShare).add(_accSushiPerShare);
+                    this.accRewardPerShare = BigNumber.from(this.accRewardPerShare).add(_accRewardPerShare);
                 }
                 this.totalSupply = BigNumber.from(this.totalSupply).add(amount);
                 if (this.totalSupply.lt(0)) throw "totalSupply < 0";
