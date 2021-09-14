@@ -562,8 +562,7 @@ describe("TheMaster", function () {
         await checkUpdating(pool1, bobInfo, 1, bob);
     });
 
-    it.only("should be that support/desupport/emergencyDesupport function works well without sushiMasterChef", async function () 
-    {
+    it.only("should be that support/desupport/emergencyDesupport function works well without sushiMasterChef", async function () {
         const { alice, bob, carol, dan, erin, frank, lpToken, coin, part, theMaster, nurses } = await setupTest();
 
         class PoolInfo {
@@ -645,7 +644,7 @@ describe("TheMaster", function () {
         ) {
             const rpb = rewardPerBlock === 0 ? INITIAL_REWARD_PER_BLOCK : BigNumber.from(rewardPerBlock);
             let rewardBlock;
-            if ((await getBlock()) < START_BLOCK) return 0;
+            if ((await getBlock()) < START_BLOCK) return Zero;
             else rewardBlock = (await getBlock()) + 1;
             const reward = rpb
                 .mul(rewardBlock - poolInfo.lastRewardBlock)
@@ -656,48 +655,48 @@ describe("TheMaster", function () {
             return userInfo.amount.mul(poolInfo.accRewardPerShare.add(accInc)).div(PRECISION).sub(userInfo.rewardDebt);
         }
 
-        await nurses.addNurseType([5,5,5,5],[1000,2000,3000,4000],[5,10,15,20],[100,100,100,100]);
-        await nurses.connect(alice).assemble(0,10);     //nurse0
-        await nurses.connect(dan).assemble(1,10);       //nurse1
-        await nurses.connect(erin).assemble(2,10);      //nurse2
-        await nurses.connect(erin).assemble(0,10);      //nurse3
-        await nurses.connect(erin).assemble(1,10);      //nurse4
+        await nurses.addNurseType([5, 5, 5, 5], [1000, 2000, 3000, 4000], [5, 10, 15, 20], [100, 100, 100, 100]);
+        await nurses.connect(alice).assemble(0, 10); //nurse0-alice
+        await nurses.connect(dan).assemble(1, 10); //nurse1-dan
+        await nurses.connect(erin).assemble(2, 10); //nurse2-erin
+        await nurses.connect(erin).assemble(0, 10); //nurse3-erin
+        await nurses.connect(erin).assemble(1, 10); //nurse4-erin
 
-        await expect(theMaster.connect(alice).support(1, 100, 0)).to.be.revertedWith(
-            "TheMaster: Use deposit func"
-        );
-        await expect(theMaster.connect(alice).support(2, 100, 0)).to.be.revertedWith(
-            "TheMaster: Use deposit func"
-        );
-        await expect(theMaster.connect(alice).support(3, 100, 5)).to.be.revertedWith(
-            "CloneNurses: Invalid target"
-        );
+        await expect(theMaster.connect(alice).support(1, 100, 0)).to.be.revertedWith("TheMaster: Use deposit func");
+        await expect(theMaster.connect(alice).support(2, 100, 0)).to.be.revertedWith("TheMaster: Use deposit func");
+        await expect(theMaster.connect(alice).support(3, 100, 5)).to.be.revertedWith("CloneNurses: Invalid target");
 
         const aliceInfo = new UserInfo(0, 0);
         const bobInfo = new UserInfo(0, 0);
         const carolInfo = new UserInfo(0, 0);
 
-        await theMaster.set([1,3], [60,0]);
+        await theMaster.set([1, 3], [60, 0]);
         pool3.set(0);
 
         await updateInfo(3, pool3, aliceInfo, 100, 0);
-        await theMaster.connect(alice).support(3, 100, 0);
+        await expect(theMaster.connect(alice).support(3, 100, 0))
+            .to.emit(nurses, "SupportTo")
+            .withArgs(alice.address, 0);
         await checkUpdating(pool3, aliceInfo, 3, alice);
         expect(await nurses.supportingTo(alice.address)).to.be.equal(0);
-        
+
         await updateInfo(3, pool3, bobInfo, 900, 0);
-        await theMaster.connect(bob).support(3, 900, 1);
+        await expect(theMaster.connect(bob).support(3, 900, 1)).to.emit(nurses, "SupportTo").withArgs(bob.address, 1);
         await checkUpdating(pool3, bobInfo, 3, bob);
         expect(await nurses.supportingTo(bob.address)).to.be.equal(1);
         expect(await getBlock()).to.be.lt(START_BLOCK);
 
         await updateInfo(3, pool3, aliceInfo, 100, 0);
-        await theMaster.connect(alice).support(3, 100, 2);
+        await expect(theMaster.connect(alice).support(3, 100, 2))
+            .to.emit(nurses, "ChangeSupportedPower")
+            .withArgs(0, 100);
         await checkUpdating(pool3, aliceInfo, 3, alice);
         expect(await nurses.supportingTo(alice.address)).to.be.equal(0);
 
         await updateInfo(3, pool3, bobInfo, -100, 0);
-        await theMaster.connect(bob).desupport(3, 100);
+        await expect(theMaster.connect(bob).desupport(3, 100))
+            .to.emit(nurses, "ChangeSupportedPower")
+            .withArgs(1, -100);
         await checkUpdating(pool3, bobInfo, 3, bob);
         expect(await nurses.supportingTo(bob.address)).to.be.equal(1);
 
@@ -705,119 +704,245 @@ describe("TheMaster", function () {
         expect(await coin.balanceOf(bob.address)).to.be.equal(0);
 
         await updateInfo(3, pool3, bobInfo, -800, 0);
-        await theMaster.connect(bob).desupport(3, 800);
+        await expect(theMaster.connect(bob).desupport(3, 800))
+            .to.emit(nurses, "ChangeSupportedPower")
+            .withArgs(1, -800);
         await checkUpdating(pool3, bobInfo, 3, bob);
         expect(await nurses.supportingTo(bob.address)).to.be.equal(1);
 
         await updateInfo(3, pool3, bobInfo, 700, 0);
-        await theMaster.connect(bob).support(3, 700, 2);
+        await expect(theMaster.connect(bob).support(3, 700, 2)).to.emit(nurses, "SupportTo").withArgs(bob.address, 2);
         await checkUpdating(pool3, bobInfo, 3, bob);
         expect(await nurses.supportingTo(bob.address)).to.be.equal(2);
+        //alice - n0(A) - 200
+        //bob - n2(E) - 700
 
-        // await mineTo(START_BLOCK);
-        // await autoMining(false);
-        // await updateInfo(3, pool3, carolInfo, 1000, 0);
-        // await theMaster.connect(carol).support(3, 1000, carol.address);
-        // await updateInfo(3, pool3, aliceInfo, 100, 0);
-        // await theMaster.connect(alice).support(3, 100, alice.address);
-        // await updateInfo(3, pool3, bobInfo, 900, 0);
-        // await theMaster.connect(bob).support(3, 900, bob.address);
-        // await mine();
-        // await autoMining(true);
-        // await checkUpdating(pool3, aliceInfo, 1, alice);
-        // await checkUpdating(pool3, bobInfo, 1, bob);
-        // await checkUpdating(pool3, carolInfo, 1, carol);
+        await mineTo(START_BLOCK);
+        await autoMining(false);
+        await updateInfo(3, pool3, carolInfo, 1000, 0);
+        await theMaster.connect(carol).support(3, 1000, 0);
+        await updateInfo(3, pool3, aliceInfo, 100, 0);
+        await theMaster.connect(alice).support(3, 100, 0);
+        await updateInfo(3, pool3, bobInfo, 900, 0);
+        await theMaster.connect(bob).support(3, 900, 2);
+        await mine();
+        await autoMining(true);
+        await checkUpdating(pool3, aliceInfo, 3, alice);
+        await checkUpdating(pool3, bobInfo, 3, bob);
+        await checkUpdating(pool3, carolInfo, 3, carol);
+        //carol - n0(A)
 
-        // expect(await coin.balanceOf(alice.address)).to.be.equal(0);
-        // expect(await coin.balanceOf(bob.address)).to.be.equal(0);
-        // expect(await coin.balanceOf(carol.address)).to.be.equal(0);
+        expect(await coin.balanceOf(alice.address)).to.be.equal(0);
+        expect(await coin.balanceOf(bob.address)).to.be.equal(0);
+        expect(await coin.balanceOf(carol.address)).to.be.equal(0);
 
-        // let incA = await balanceInc(3, pool3, aliceInfo, 0);
-        // await updateInfo(3, pool3, aliceInfo, 100, 0);
-        // await expect(() => theMaster.connect(alice).support(3, 100, alice.address)).to.changeTokenBalance(
-        //     coin,
-        //     alice,
-        //     incA
-        // );
-        // await checkUpdating(pool3, aliceInfo, 1, alice);
+        await updateInfo(3, pool3, aliceInfo, 100, 0);
+        await expect(() => theMaster.connect(alice).support(3, 100, 0)).to.changeTokenBalance(coin, alice, Zero);
+        await checkUpdating(pool3, aliceInfo, 3, alice);
 
-        // await expect(theMaster.connect(alice).desupport(1, 1000, alice.address)).to.be.revertedWith(
-        //     "TheMaster: Insufficient amount"
-        // );
-        // await expect(theMaster.connect(alice).desupport(3, 100, alice.address)).to.be.revertedWith(
-        //     "TheMaster: Use desupport func"
-        // );
-        // await expect(theMaster.connect(alice).desupport(2, 100, alice.address)).to.be.revertedWith(
-        //     "TheMaster: Not called by delegate"
-        // );
-        // await expect(theMaster.connect(alice).desupport(1, 100, bob.address)).to.be.revertedWith(
-        //     "TheMaster: Not called by user"
-        // );
+        await expect(theMaster.connect(alice).desupport(1, 100)).to.be.revertedWith("TheMaster: Use withdraw func");
+        await expect(theMaster.connect(alice).desupport(2, 100)).to.be.revertedWith("TheMaster: Use withdraw func");
+        await expect(theMaster.connect(alice).desupport(3, 1000)).to.be.revertedWith("TheMaster: Insufficient amount");
 
-        // await mineTo(500);
-        // incA = await balanceInc(1, pool3, aliceInfo, 0);
-        // let incB = await balanceInc(1, pool3, bobInfo, 0);
-        // let incC = await balanceInc(1, pool3, carolInfo, 0);
-        // await autoMining(false);
-        // await updateInfo(1, pool3, aliceInfo, -200, 0);
-        // await theMaster.connect(alice).desupport(1, 200, alice.address);
-        // await updateInfo(1, pool3, bobInfo, -100, 0);
-        // await theMaster.connect(bob).desupport(1, 100, bob.address);
-        // await updateInfo(1, pool3, carolInfo, 3000, 0);
-        // await theMaster.connect(carol).support(1, 3000, carol.address);
-        // await expect(() => mine()).to.changeTokenBalances(coin, [alice, bob, carol], [incA, incB, incC]);
-        // await autoMining(true);
-        // await checkUpdating(pool3, aliceInfo, 1, alice);
-        // await checkUpdating(pool3, bobInfo, 1, bob);
-        // await checkUpdating(pool3, carolInfo, 1, carol);
+        await mineTo(400);
+        await theMaster.set([1, 3], [9, 51]);
+        pool3.update(400, 0, 0);
 
-        // await expect(theMaster.connect(carol).emergencyDesupport(2)).to.be.revertedWith(
-        //     "TheMaster: Pool should be non-delegate"
-        // );
-        // await expect(theMaster.connect(carol).emergencyDesupport(3)).to.be.revertedWith("TheMaster: Use desupport func");
+        await mineTo(500);
+        let incA = await balanceInc(3, pool3, aliceInfo, 0);
+        let incB = await balanceInc(3, pool3, bobInfo, 0);
+        let incC = await balanceInc(3, pool3, carolInfo, 0);
+        let supFromA = incA.div(10);
+        let supFromB = incB.div(10);
+        let supFromC = incC.div(10);
 
-        // let balC = await coin.balanceOf(carol.address);
-        // let amountC = carolInfo.amount;
-        // await expect(theMaster.connect(carol).emergencyDesupport(1))
-        //     .to.emit(theMaster, "EmergencyWithdraw")
-        //     .withArgs(carol.address, 1, amountC);
-        // carolInfo.update(amountC.mul(-1), Zero);
-        // pool3.update(0, amountC.mul(-1), 0);
-        // await checkUpdating(pool3, carolInfo, 1, carol);
-        // expect(await coin.balanceOf(carol.address)).to.be.equal(balC);
+        await autoMining(false);
+        await updateInfo(3, pool3, aliceInfo, -200, 0);
+        await theMaster.connect(alice).desupport(3, 200);
+        await updateInfo(3, pool3, bobInfo, -100, 0);
+        await theMaster.connect(bob).desupport(3, 100);
+        await updateInfo(3, pool3, carolInfo, 3000, 0);
+        await theMaster.connect(carol).support(3, 3000, 0);
+        await expect(() => mine()).to.changeTokenBalances(
+            coin,
+            [alice, bob, carol, erin],
+            [incA.sub(supFromA).add(supFromA.add(supFromC)), incB.sub(supFromB), incC.sub(supFromC), supFromB]
+        );
+        await autoMining(true);
+        await checkUpdating(pool3, aliceInfo, 3, alice);
+        await checkUpdating(pool3, bobInfo, 3, bob);
+        await checkUpdating(pool3, carolInfo, 3, carol);
 
-        // // 5200
-        // await mineTo(START_BLOCK + 5190);
+        let totalR0 = supFromA.add(supFromC);
+        let totalR1 = Zero;
+        let totalR2 = supFromB;
+        let totalR3 = Zero;
+        let totalR4 = Zero;
 
-        // incA = await balanceInc(1, pool3, aliceInfo, 0);
-        // await updateInfo(1, pool3, aliceInfo, 0, 0);
-        // await expect(() => theMaster.connect(alice).support(1, 0, alice.address)).to.changeTokenBalance(
-        //     coin,
-        //     alice,
-        //     incA
-        // );
-        // await checkUpdating(pool3, aliceInfo, 1, alice);
+        expect(await nurses.totalRewardsFromSupporters(0)).to.be.equal(totalR0);
+        expect(await nurses.totalRewardsFromSupporters(1)).to.be.equal(totalR1);
+        expect(await nurses.totalRewardsFromSupporters(2)).to.be.equal(totalR2);
+        expect(await nurses.totalRewardsFromSupporters(3)).to.be.equal(totalR3);
+        expect(await nurses.totalRewardsFromSupporters(4)).to.be.equal(totalR4);
 
-        // incB = await balanceInc(1, pool3, bobInfo, 0);
-        // await updateInfo(1, pool3, bobInfo, 0, 0);
-        // await expect(() => theMaster.connect(bob).support(1, 0, bob.address)).to.changeTokenBalance(coin, bob, incB);
-        // await checkUpdating(pool3, bobInfo, 1, bob);
+        await expect(theMaster.connect(carol).emergencyDesupport(1)).to.be.revertedWith(
+            "TheMaster: Use emergencyWithdraw func"
+        );
+        await expect(theMaster.connect(carol).emergencyDesupport(2)).to.be.revertedWith(
+            "TheMaster: Use emergencyWithdraw func"
+        );
 
-        // await mine(10);
-        // const newRewardPerBlock = INITIAL_REWARD_PER_BLOCK.div(2);
-        // incA = await balanceInc(1, pool3, aliceInfo, newRewardPerBlock);
-        // await updateInfo(1, pool3, aliceInfo, 0, newRewardPerBlock);
-        // await expect(() => theMaster.connect(alice).support(1, 0, alice.address)).to.changeTokenBalance(
-        //     coin,
-        //     alice,
-        //     incA
-        // );
-        // await checkUpdating(pool3, aliceInfo, 1, alice);
+        expect(await nurses.supportedPower(0)).to.be.equal(aliceInfo.amount.add(carolInfo.amount));
 
-        // incB = await balanceInc(1, pool3, bobInfo, newRewardPerBlock);
-        // await updateInfo(1, pool3, bobInfo, 0, newRewardPerBlock);
-        // await expect(() => theMaster.connect(bob).support(1, 0, bob.address)).to.changeTokenBalance(coin, bob, incB);
-        // await checkUpdating(pool3, bobInfo, 1, bob);
+        let balC = await coin.balanceOf(carol.address);
+        let amountC = carolInfo.amount;
+        await expect(theMaster.connect(carol).emergencyDesupport(3))
+            .to.emit(theMaster, "EmergencyDesupport")
+            .withArgs(carol.address, 3, amountC);
+        carolInfo.update(amountC.mul(-1), Zero);
+        pool3.update(0, amountC.mul(-1), 0);
+        await checkUpdating(pool3, carolInfo, 3, carol);
+        expect(await coin.balanceOf(carol.address)).to.be.equal(balC);
+
+        await mine(10);
+
+        await updateInfo(3, pool3, carolInfo, 12340, 0);
+        await expect(theMaster.connect(carol).support(3, 12340, 4))
+            .to.emit(nurses, "SupportTo")
+            .withArgs(carol.address, 4);
+        await checkUpdating(pool3, carolInfo, 3, carol);
+        expect(await coin.balanceOf(carol.address)).to.be.equal(balC);
+        //carol - n4(E)
+
+        expect(await nurses.supportedPower(0)).to.be.equal(aliceInfo.amount);
+        expect(await nurses.supportedPower(1)).to.be.equal(0);
+        expect(await nurses.supportedPower(2)).to.be.equal(bobInfo.amount);
+        expect(await nurses.supportedPower(3)).to.be.equal(0);
+        expect(await nurses.supportedPower(4)).to.be.equal(carolInfo.amount);
+
+        // 5200
+        await mineTo(START_BLOCK + 5190);
+
+        incA = await balanceInc(3, pool3, aliceInfo, 0);
+        supFromA = incA.div(10);
+        await updateInfo(3, pool3, aliceInfo, 0, 0);
+        await expect(() => theMaster.connect(alice).support(3, 0, alice.address)).to.changeTokenBalance(
+            coin,
+            alice,
+            incA.sub(supFromA).add(supFromA)
+        );
+        await checkUpdating(pool3, aliceInfo, 3, alice);
+
+        incB = await balanceInc(3, pool3, bobInfo, 0);
+        supFromB = incB.div(10);
+        await updateInfo(3, pool3, bobInfo, 0, 0);
+        await expect(() => theMaster.connect(bob).support(3, 0, bob.address)).to.changeTokenBalances(
+            coin,
+            [bob, erin],
+            [incB.sub(supFromB), supFromB]
+        );
+        await checkUpdating(pool3, bobInfo, 3, bob);
+
+        totalR0 = totalR0.add(supFromA);
+        totalR1 = Zero;
+        totalR2 = totalR2.add(supFromB);
+        totalR3 = Zero;
+        totalR4 = Zero;
+        expect(await nurses.totalRewardsFromSupporters(0)).to.be.equal(totalR0);
+        expect(await nurses.totalRewardsFromSupporters(1)).to.be.equal(totalR1);
+        expect(await nurses.totalRewardsFromSupporters(2)).to.be.equal(totalR2);
+        expect(await nurses.totalRewardsFromSupporters(3)).to.be.equal(totalR3);
+        expect(await nurses.totalRewardsFromSupporters(4)).to.be.equal(totalR4);
+
+        await mine(10);
+        const newRewardPerBlock = INITIAL_REWARD_PER_BLOCK.div(2);
+        incA = await balanceInc(3, pool3, aliceInfo, newRewardPerBlock);
+        supFromA = incA.div(10);
+        await updateInfo(3, pool3, aliceInfo, 0, newRewardPerBlock);
+        await expect(() => theMaster.connect(alice).support(3, 0, alice.address)).to.changeTokenBalance(
+            coin,
+            alice,
+            incA.sub(supFromA).add(supFromA)
+        );
+        await checkUpdating(pool3, aliceInfo, 3, alice);
+
+        {
+            totalR0 = totalR0.add(supFromA);
+            totalR1 = Zero;
+            totalR2 = totalR2;
+            totalR3 = Zero;
+            totalR4 = Zero;
+            expect(await nurses.totalRewardsFromSupporters(0)).to.be.equal(totalR0);
+            expect(await nurses.totalRewardsFromSupporters(1)).to.be.equal(totalR1);
+            expect(await nurses.totalRewardsFromSupporters(2)).to.be.equal(totalR2);
+            expect(await nurses.totalRewardsFromSupporters(3)).to.be.equal(totalR3);
+            expect(await nurses.totalRewardsFromSupporters(4)).to.be.equal(totalR4);
+
+            expect(await nurses.supportedPower(0)).to.be.equal(aliceInfo.amount);
+            expect(await nurses.supportedPower(1)).to.be.equal(0);
+            expect(await nurses.supportedPower(2)).to.be.equal(bobInfo.amount);
+            expect(await nurses.supportedPower(3)).to.be.equal(0);
+            expect(await nurses.supportedPower(4)).to.be.equal(carolInfo.amount);
+            
+            expect(await nurses.supportingRoute(0)).to.be.equal(0);
+            expect(await nurses.supportingRoute(1)).to.be.equal(1);
+            expect(await nurses.supportingRoute(2)).to.be.equal(2);
+            expect(await nurses.supportingRoute(3)).to.be.equal(3);
+            expect(await nurses.supportingRoute(4)).to.be.equal(4);
+            
+            expect(await nurses.supportingTo(alice.address)).to.be.equal(0);
+            expect(await nurses.supportingTo(bob.address)).to.be.equal(2);
+            expect(await nurses.supportingTo(carol.address)).to.be.equal(4);
+        }
+
+        await nurses.connect(erin).destroy([4, 3, 2], [3, 1, 1]);
+
+        {
+            totalR0 = totalR0;
+            totalR1 = Zero;
+            totalR2 = totalR2;
+            totalR3 = Zero;
+            totalR4 = Zero;
+            expect(await nurses.totalRewardsFromSupporters(0)).to.be.equal(totalR0);
+            expect(await nurses.totalRewardsFromSupporters(1)).to.be.equal(Zero);       //totalReward is not changed with destruction
+            expect(await nurses.totalRewardsFromSupporters(2)).to.be.equal(totalR2);    //totalReward is not changed with destruction
+            expect(await nurses.totalRewardsFromSupporters(3)).to.be.equal(Zero);
+            expect(await nurses.totalRewardsFromSupporters(4)).to.be.equal(Zero);
+
+            expect(await nurses.supportedPower(0)).to.be.equal(aliceInfo.amount);
+            expect(await nurses.supportedPower(1)).to.be.equal(bobInfo.amount.add(carolInfo.amount));
+            expect(await nurses.supportedPower(2)).to.be.equal(0);
+            expect(await nurses.supportedPower(3)).to.be.equal(0);
+            expect(await nurses.supportedPower(4)).to.be.equal(0);
+
+            expect(await nurses.supportingRoute(0)).to.be.equal(0);
+            expect(await nurses.supportingRoute(1)).to.be.equal(1);
+            expect(await nurses.supportingRoute(2)).to.be.equal(1);
+            expect(await nurses.supportingRoute(3)).to.be.equal(1);
+            expect(await nurses.supportingRoute(4)).to.be.equal(3);         //route is not changed consecutively with serial destruction
+
+            expect(await nurses.supportingTo(alice.address)).to.be.equal(0);
+            expect(await nurses.supportingTo(bob.address)).to.be.equal(2);      //supportingTo is not changed by itself
+            expect(await nurses.supportingTo(carol.address)).to.be.equal(4);    //supportingTo is not changed by itself
+        }
+
+        incB = await balanceInc(3, pool3, bobInfo, newRewardPerBlock);
+        supFromB = incB.div(10);
+        await updateInfo(3, pool3, bobInfo, 0, newRewardPerBlock);
+        await expect(() => theMaster.connect(bob).support(3, 0, bob.address)).to.changeTokenBalances(
+            coin,
+            [bob, dan],
+            [incB.sub(supFromB), supFromB]
+        );
+        await checkUpdating(pool3, bobInfo, 3, bob);
+        expect(await nurses.totalRewardsFromSupporters(1)).to.be.equal(supFromB);   //totalReward is not changed with destruction
+        expect(await nurses.totalRewardsFromSupporters(2)).to.be.equal(totalR2);    //totalReward is not changed with destruction
+        expect(await nurses.supportedPower(1)).to.be.equal(bobInfo.amount.add(carolInfo.amount));
+        expect(await nurses.supportingTo(bob.address)).to.be.equal(1);      //it's changed now
+
+        await nurses.connect(alice).checkSupportingRoute(carol.address);
+        expect(await nurses.supportingRoute(4)).to.be.equal(1);    //route is changed when checkSupportingRoute function is called
+        expect(await nurses.supportingTo(carol.address)).to.be.equal(1);    //it's changed now
     });
 
     // it("should be that deposit/withdraw/emergencyWithdraw/claim function works well with sushiMasterChef", async function () {
