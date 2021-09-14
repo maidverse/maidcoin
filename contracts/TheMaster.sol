@@ -159,15 +159,16 @@ contract TheMaster is Ownable, MasterChefModule, ITheMaster {
         UserInfo storage user = userInfo[pid][userId];
         if (pool.delegate) {
             require(pool.addr == msg.sender, "TheMaster: Not called by delegate");
-            _deposit(pool, user, amount, false);
+            _deposit(pid, pool, user, amount, false);
         } else {
             require(address(uint160(userId)) == msg.sender, "TheMaster: Deposit to your address");
-            _deposit(pool, user, amount, true);
+            _deposit(pid, pool, user, amount, true);
         }
         emit Deposit(userId, pid, amount);
     }
 
     function _deposit(
+        uint256 pid,
         PoolInfo storage pool,
         UserInfo storage user,
         uint256 amount,
@@ -183,13 +184,13 @@ contract TheMaster is Ownable, MasterChefModule, ITheMaster {
         if (amount > 0) {
             if (tokenTransfer) {
                 IERC20(pool.addr).safeTransferFrom(msg.sender, address(this), amount);
-                uint256 _pid = masterChefPid;
-                if (_pid > 0 && pool.addr == address(lpToken)) {
-                    sushiRewardDebt[_pid][msg.sender] = _depositModule(
-                        _pid,
+                uint256 _mcPid = masterChefPid;
+                if (_mcPid > 0 && pool.addr == address(lpToken)) {
+                    sushiRewardDebt[pid][msg.sender] = _depositModule(
+                        _mcPid,
                         amount,
                         _amount,
-                        sushiRewardDebt[_pid][msg.sender]
+                        sushiRewardDebt[pid][msg.sender]
                     );
                 }
             }
@@ -236,15 +237,16 @@ contract TheMaster is Ownable, MasterChefModule, ITheMaster {
         UserInfo storage user = userInfo[pid][userId];
         if (pool.delegate) {
             require(pool.addr == msg.sender, "TheMaster: Not called by delegate");
-            _withdraw(pool, user, amount, false);
+            _withdraw(pid, pool, user, amount, false);
         } else {
             require(address(uint160(userId)) == msg.sender, "TheMaster: Not called by user");
-            _withdraw(pool, user, amount, true);
+            _withdraw(pid, pool, user, amount, true);
         }
         emit Withdraw(userId, pid, amount);
     }
 
     function _withdraw(
+        uint256 pid,
         PoolInfo storage pool,
         UserInfo storage user,
         uint256 amount,
@@ -261,13 +263,13 @@ contract TheMaster is Ownable, MasterChefModule, ITheMaster {
             _amount -= amount;
             user.amount = _amount;
             if (tokenTransfer) {
-                uint256 _pid = masterChefPid;
-                if (_pid > 0 && pool.addr == address(lpToken)) {
-                    sushiRewardDebt[_pid][msg.sender] = _withdrawModule(
-                        _pid,
+                uint256 _mcPid = masterChefPid;
+                if (_mcPid > 0 && pool.addr == address(lpToken)) {
+                    sushiRewardDebt[pid][msg.sender] = _withdrawModule(
+                        _mcPid,
                         amount,
                         _amount + amount,
-                        sushiRewardDebt[_pid][msg.sender]
+                        sushiRewardDebt[pid][msg.sender]
                     );
                 }
 
@@ -287,13 +289,13 @@ contract TheMaster is Ownable, MasterChefModule, ITheMaster {
         user.rewardDebt = 0;
         pool.supply -= amounts;
 
-        uint256 _pid = masterChefPid;
-        if (_pid > 0 && pool.addr == address(lpToken)) {
-            sushiRewardDebt[_pid][msg.sender] = _withdrawModule(
-                _pid,
+        uint256 _mcPid = masterChefPid;
+        if (_mcPid > 0 && pool.addr == address(lpToken)) {
+            sushiRewardDebt[pid][msg.sender] = _withdrawModule(
+                _mcPid,
                 amounts,
                 amounts,
-                sushiRewardDebt[_pid][msg.sender]
+                sushiRewardDebt[pid][msg.sender]
             );
         }
 
@@ -329,13 +331,13 @@ contract TheMaster is Ownable, MasterChefModule, ITheMaster {
             }
             IERC20(pool.addr).safeTransferFrom(msg.sender, address(this), amount);
 
-            uint256 _pid = masterChefPid;
-            if (_pid > 0 && pool.addr == address(lpToken)) {
-                sushiRewardDebt[_pid][msg.sender] = _depositModule(
-                    _pid,
+            uint256 _mcPid = masterChefPid;
+            if (_mcPid > 0 && pool.addr == address(lpToken)) {
+                sushiRewardDebt[pid][msg.sender] = _depositModule(
+                    _mcPid,
                     amount,
                     _amount,
-                    sushiRewardDebt[_pid][msg.sender]
+                    sushiRewardDebt[pid][msg.sender]
                 );
             }
 
@@ -391,13 +393,13 @@ contract TheMaster is Ownable, MasterChefModule, ITheMaster {
         if (amount > 0) {
             supportable.changeSupportedPower(msg.sender, -int256(amount));
 
-            uint256 _pid = masterChefPid;
-            if (_pid > 0 && pool.addr == address(lpToken)) {
-                sushiRewardDebt[_pid][msg.sender] = _withdrawModule(
-                    _pid,
+            uint256 _mcPid = masterChefPid;
+            if (_mcPid > 0 && pool.addr == address(lpToken)) {
+                sushiRewardDebt[pid][msg.sender] = _withdrawModule(
+                    _mcPid,
                     amount,
                     _amount,
-                    sushiRewardDebt[_pid][msg.sender]
+                    sushiRewardDebt[pid][msg.sender]
                 );
             }
 
@@ -421,13 +423,13 @@ contract TheMaster is Ownable, MasterChefModule, ITheMaster {
         pool.supply -= amounts;
         supportable.changeSupportedPower(msg.sender, -int256(amounts));
 
-        uint256 _pid = masterChefPid;
-        if (_pid > 0 && pool.addr == address(lpToken)) {
-            sushiRewardDebt[_pid][msg.sender] = _withdrawModule(
-                _pid,
+        uint256 _mcPid = masterChefPid;
+        if (_mcPid > 0 && pool.addr == address(lpToken)) {
+            sushiRewardDebt[pid][msg.sender] = _withdrawModule(
+                _mcPid,
                 amounts,
                 amounts,
-                sushiRewardDebt[_pid][msg.sender]
+                sushiRewardDebt[pid][msg.sender]
             );
         }
 
