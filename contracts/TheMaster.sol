@@ -476,7 +476,7 @@ contract TheMaster is Ownable, MasterChefModule, ITheMaster {
         updatePool(pool);
         ISupportable supportable = pool.supportable;
 
-        if (address(supportable) != address(0)) {
+        if (address(supportable) == address(0)) {
             uint256 _accRewardPerShare = pool.accRewardPerShare;
             uint256 pending = ((amount * _accRewardPerShare) / PRECISION) - user.rewardDebt;
             if (pending > 0) safeRewardTransfer(msg.sender, pending);
