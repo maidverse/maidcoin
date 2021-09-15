@@ -8,6 +8,7 @@ import {
     TestLPToken,
     TestSushiToken,
     TestMasterChef,
+    MasterCoin
 } from "../typechain";
 
 import { ethers } from "hardhat";
@@ -47,6 +48,9 @@ const setupTest = async () => {
 
     const MaidCafe = await ethers.getContractFactory("MaidCafe");
     const cafe = (await MaidCafe.deploy(coin.address, weth.address)) as MaidCafe;
+
+    const MasterCoin = await ethers.getContractFactory("MasterCoin");
+    const master = (await MasterCoin.deploy()) as MasterCoin;
 
     const TestSushiToken = await ethers.getContractFactory("TestSushiToken");
     const sushi = (await TestSushiToken.deploy()) as TestSushiToken;
@@ -97,7 +101,7 @@ const setupTest = async () => {
 
     await coin.transferOwnership(theMaster.address);
 
-    await theMaster.add(coin.address, false, false, AddressZero, 0, 10);
+    await theMaster.add(master.address, false, false, AddressZero, 0, 10);
     await theMaster.add(lpToken.address, false, false, AddressZero, 0, 9);
     await theMaster.add(nurses.address, true, true, AddressZero, 0, 30);
     await theMaster.add(lpToken.address, false, false, nurses.address, 10, 51);
@@ -121,6 +125,7 @@ const setupTest = async () => {
         cafe,
         part,
         nurses,
+        master
     };
 };
 
@@ -2204,7 +2209,7 @@ describe("TheMaster", function () {
         await checkSushiReward(carol, incC);
     });
 
-    it.only("should be pass testing overall functions with sushiMasterChef", async function () {
+    it("should be pass testing overall functions with sushiMasterChef", async function () {
         const { alice, bob, carol, dan, erin, frank, coin, theMaster, sushi, sushiMC, nurses } = await setupTest();
         await nurses.addNurseType([5, 5, 5], [100, 200, 500], [10, 20, 50], [1000, 1000, 125]);
         await theMaster.set([1, 3], [60, 0]);
@@ -2465,5 +2470,52 @@ describe("TheMaster", function () {
         //     console.log("erin : ", (await sushi.balanceOf(erin.address)).toString());
         //     console.log("frank : ", (await sushi.balanceOf(frank.address)).toString());
         // }
+    });
+
+    it.only("should be that deposit/withdraw functions works well with mastercoin, pid0", async function () {
+        const { alice, bob, carol, dan, coin, master, theMaster } = await setupTest();
+        
+        await master.transfer(alice.address, tokenAmount(25));
+        await master.transfer(bob.address, tokenAmount(25));
+        await master.transfer(carol.address, tokenAmount(25));
+        await master.transfer(dan.address, tokenAmount(25));
+
+        await master.connect(alice).approve(theMaster.address, MaxUint256);
+        await master.connect(bob).approve(theMaster.address, MaxUint256);
+        await master.connect(carol).approve(theMaster.address, MaxUint256);
+        await master.connect(dan).approve(theMaster.address, MaxUint256);
+
+        await mineTo(250);
+        await theMaster.connect(alice).deposit(0, tokenAmount(25), alice.address);
+        await theMaster.connect(bob).deposit(0, tokenAmount(25), bob.address);
+        await theMaster.connect(carol).deposit(0, tokenAmount(25), carol.address);
+
+        await mineTo(350);
+        await autoMining(false);
+        await theMaster.connect(alice).deposit(0, 0, alice.address);
+        await theMaster.connect(bob).withdraw(0, 0, bob.address);
+        await theMaster.connect(carol).deposit(0, 0, carol.address);
+        const rb50 = tokenAmount(1).div(10).mul(50);
+        const r0 = rb50.div(3);
+        await expect(() => mine()).to.changeTokenBalances(coin, [alice,bob,carol,dan], [r0,r0,r0,0]);
+
+        await mineTo(400);
+        await theMaster.connect(alice).withdraw(0, 0, alice.address);
+        await theMaster.connect(bob).deposit(0, 0, bob.address);
+        await theMaster.connect(carol).withdraw(0, tokenAmount(25), carol.address);
+        const r1 = rb50.div(3).add(1);  //smath
+        await expect(() => mine()).to.changeTokenBalances(coin, [alice,bob,carol,dan], [r1,r1,r1,0]);
+
+        await mineTo(450);
+        await theMaster.connect(alice).withdraw(0, 0, alice.address);
+        await theMaster.connect(bob).deposit(0, 0, bob.address);
+        const r2 = rb50.div(2);
+        await expect(() => mine()).to.changeTokenBalances(coin, [alice,bob,carol,dan], [r2,r2,0,0]);
+
+        await autoMining(true);
+        await theMaster.connect(alice).withdraw(0, tokenAmount(25), alice.address);
+        await theMaster.connect(bob).withdraw(0, tokenAmount(25), bob.address);
+
+        expect((await theMaster.poolInfo(0))[7]).to.be.equal(0);
     });
 });
