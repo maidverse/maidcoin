@@ -450,12 +450,16 @@ describe("CloneNurse", () => {
         await autoMining(true);
 
         await mineTo(175);
-        await expect(() => nurses.connect(alice).claim([0,0])).to.changeTokenBalance(coin, alice, reward0.div(2).add(1));  //smath
-        
+        await expect(() => nurses.connect(alice).claim([0, 0])).to.changeTokenBalance(
+            coin,
+            alice,
+            reward0.div(2).add(1)
+        ); //smath
+
         await mineTo(180);
         const reward1 = reward0.div(2).add((await theMaster.pendingReward(2, 3)).mul(30).div(29));
-        await expect(() => nurses.connect(alice).claim([0,3])).to.changeTokenBalance(coin, alice, reward1.add(1)); //smath
-        
+        await expect(() => nurses.connect(alice).claim([0, 3])).to.changeTokenBalance(coin, alice, reward1.add(1)); //smath
+
         await mineTo(189);
         await nurses.connect(carol).assemble(2, 6);
         const rewardPerBlock = (await theMaster.initialRewardPerBlock())
@@ -463,19 +467,19 @@ describe("CloneNurse", () => {
             .div(await theMaster.totalAllocPoint());
         const reward2 = (await theMaster.pendingReward(2, 0)).add(rewardPerBlock.mul(10).div(100));
         await expect(() => nurses.connect(alice).claim([0])).to.changeTokenBalance(coin, alice, reward2);
-        
+
         await mineTo(300);
         const reward3Total = (await theMaster.pendingReward(2, 0)).add(rewardPerBlock.mul(10).div(100));
         const reward3 = reward3Total.mul(250 - 190).div(300 - 190);
         await expect(() => nurses.connect(alice).claim([0])).to.changeTokenBalance(coin, alice, reward3);
-        
+
         await mineTo(310);
         await expect(() => nurses.connect(alice).claim([0])).to.changeTokenBalance(coin, alice, 0);
-        
+
         await mineTo(320);
         await expect(() => nurses.connect(alice).elongateLifetime([0], [1])).to.changeTokenBalance(coin, alice, 0);
         expect((await nurses.nurses(0))[1]).to.be.equal(320 + 100);
-        
+
         await mineTo(450);
         const reward4_0 = (await theMaster.pendingReward(2, 0)).add(rewardPerBlock.mul(10).div(100));
         const reward4_1 = (await theMaster.pendingReward(2, 3)).add(rewardPerBlock.mul(10).div(100));
@@ -483,6 +487,6 @@ describe("CloneNurse", () => {
             .mul(420 - 320)
             .div(450 - 320)
             .add(reward4_1);
-        await expect(() => nurses.connect(alice).claim([0,3])).to.changeTokenBalance(coin, alice, reward4);
+        await expect(() => nurses.connect(alice).claim([0, 3])).to.changeTokenBalance(coin, alice, reward4);
     });
 });

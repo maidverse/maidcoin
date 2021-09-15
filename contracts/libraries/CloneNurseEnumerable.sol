@@ -30,11 +30,12 @@ abstract contract CloneNurseEnumerable is ERC721, ICloneNurseEnumerable {
 
     /**
      * @dev See {ICloneNurseEnumerable-totalSupply}.
-     */     //TODO
+     */
+    //TODO
     function totalSupply() public view virtual override returns (uint256) {
-        // return _allTokens.length;    
+        // return _allTokens.length;
     }
-    
+
     /**
      * @dev Hook that is called before any token transfer. This includes minting
      * and burning.

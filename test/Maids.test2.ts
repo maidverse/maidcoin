@@ -3,7 +3,9 @@ const { expect } = require("chai");
 const { BigNumber } = ethers;
 const { mine } = require("./shared/utils/blockchain");
 
-const tokenAmount = (value: number) => {return ethers.utils.parseEther(String(value))};
+const tokenAmount = (value: number) => {
+    return ethers.utils.parseEther(String(value));
+};
 
 /**
     await network.provider.send("evm_setAutomine", [true]);
@@ -309,14 +311,18 @@ describe("Maids interact with MasterChef", function () {
         expect(await maid.pendingSushiReward(0)).to.be.equal(0);
         expect(await maid.pendingSushiReward(1)).to.be.equal(0);
 
-        await expect(maid.connect(alice).claimSushiReward(0)).to.be.revertedWith("MasterChefModule: Nothing can be claimed");
-        await expect(maid.connect(bob).claimSushiReward(1)).to.be.revertedWith("MasterChefModule: Nothing can be claimed");
+        await expect(maid.connect(alice).claimSushiReward(0)).to.be.revertedWith(
+            "MasterChefModule: Nothing can be claimed"
+        );
+        await expect(maid.connect(bob).claimSushiReward(1)).to.be.revertedWith(
+            "MasterChefModule: Nothing can be claimed"
+        );
 
         expect((await mc.userInfo(2, maid.address)).amount).to.be.equal(1000);
         expect((await mc.userInfo(3, maid.address)).amount).to.be.equal(0);
-        
+
         await maid.setSushiMasterChef(mc.address, 3);
-        
+
         expect((await mc.userInfo(2, maid.address)).amount).to.be.equal(0);
         expect((await mc.userInfo(3, maid.address)).amount).to.be.equal(1000);
 
@@ -333,7 +339,7 @@ describe("Maids interact with MasterChef", function () {
 
         expect(r4).to.be.equal(tokenAmount(36));
         expect(r5).to.be.equal(tokenAmount(54));
-        expect(r6).to.be.equal(tokenAmount(90).add(tokenAmount(50)));    //+50 from 288 line
+        expect(r6).to.be.equal(tokenAmount(90).add(tokenAmount(50))); //+50 from 288 line
 
         await network.provider.send("evm_setAutomine", [true]);
         await expect(() => maid.connect(alice).claimSushiReward(0)).to.changeTokenBalance(sushi, alice, r4);

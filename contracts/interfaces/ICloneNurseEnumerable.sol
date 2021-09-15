@@ -9,7 +9,6 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
  * @dev See https://eips.ethereum.org/EIPS/eip-721
  */
 interface ICloneNurseEnumerable is IERC721 {
-
     /**
      * @dev Returns the total amount of tokens stored by the contract.
      */

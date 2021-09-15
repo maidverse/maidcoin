@@ -36,14 +36,16 @@ abstract contract ERC721Enumerable is ERC721, IERC721Enumerable {
 
     /**
      * @dev See {IERC721Enumerable-totalSupply}.
-     */     //TODO
+     */
+    //TODO
     function totalSupply() public view virtual override returns (uint256) {
-        // return _allTokens.length;    
+        // return _allTokens.length;
     }
 
     /**
      * @dev See {IERC721Enumerable-tokenByIndex}.
-     */     //TODO
+     */
+    //TODO
     function tokenByIndex(uint256 index) public view virtual override returns (uint256) {
         // require(index < ERC721Enumerable.totalSupply(), "ERC721Enumerable: global index out of bounds");
         // return _allTokens[index];

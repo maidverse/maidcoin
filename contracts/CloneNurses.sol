@@ -133,9 +133,6 @@ contract CloneNurses is
             uint256 _nurseType = nurse.nurseType;
             NurseType storage nurseType = nurseTypes[_nurseType];
 
-            // uint256[] memory arr = new uint256[](1);
-            // arr[0] = ids[i];
-            // claim(arr);
             nursePart.safeTransferFrom(msg.sender, address(this), _nurseType, parts[i], "");
             nursePart.burn(_nurseType, parts[i]);
 

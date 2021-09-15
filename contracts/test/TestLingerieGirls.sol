@@ -94,6 +94,7 @@ abstract contract Ownable is Context {
 // File: interfaces/IMasterChefModule.sol
 
 pragma solidity >=0.5.0;
+
 interface IMasterChefModule {
     function lpToken() external view returns (IUniswapV2Pair);
 
@@ -110,6 +111,7 @@ interface IMasterChefModule {
 // File: libraries/MasterChefModule.sol
 
 pragma solidity ^0.8.5;
+
 abstract contract MasterChefModule is Ownable, IMasterChefModule {
     IUniswapV2Pair public immutable override lpToken;
 
@@ -622,7 +624,6 @@ interface IERC721Enumerable is IERC721 {
     function tokenByIndex(uint256 index) external view returns (uint256);
 }
 
-
 // File: interfaces/ILingerieGirls.sol
 
 pragma solidity >=0.5.0;
@@ -833,7 +834,6 @@ abstract contract ERC165 is IERC165 {
         return interfaceId == type(IERC165).interfaceId;
     }
 }
-
 
 // File: libraries/ERC721.sol
 pragma solidity ^0.8.0;
@@ -1246,9 +1246,9 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
     ) internal virtual {}
 }
 
-
 // File: libraries/ERC721Enumerable.sol
 pragma solidity ^0.8.0;
+
 /**
  * @dev This implements an optional extension of {ERC721} defined in the EIP that adds
  * enumerability of all the token ids in the contract as well as all token ids owned by each
@@ -1716,7 +1716,6 @@ interface IERC721Receiver {
 // File: LingerieGirls.sol
 
 pragma solidity ^0.8.5;
-
 
 contract LingerieGirls is
     Ownable,
