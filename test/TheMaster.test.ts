@@ -2204,5 +2204,266 @@ describe("TheMaster", function () {
         await checkSushiReward(carol, incC);
     });
 
-    // it.only("should be pass testing overall functions with sushiMasterChef", async function () { });
+    it.only("should be pass testing overall functions with sushiMasterChef", async function () {
+        const { alice, bob, carol, dan, erin, frank, coin, theMaster, sushi, sushiMC, nurses } = await setupTest();
+        await nurses.addNurseType([5, 5, 5], [100, 200, 500], [10, 20, 50], [1000, 1000, 125]);
+        await theMaster.set([1, 3], [60, 0]);
+
+        await autoMining(false);
+
+        await mineTo(100);
+        await theMaster.connect(alice).deposit(1, 100, alice.address);
+        await theMaster.connect(bob).deposit(1, 200, bob.address);
+        await mine();
+
+        await mineTo(200);
+        await theMaster.connect(alice).deposit(1, 100, alice.address);
+        await nurses.connect(alice).assemble(0, 5);
+        await mine();
+
+        await mineTo(250);
+        await theMaster.connect(bob).withdraw(1, 100, bob.address);
+        await theMaster.connect(carol).deposit(1, 100, carol.address);
+        await nurses.connect(bob).assemble(0, 5);
+        await theMaster.connect(alice).support(3, 100, 0);
+        await mine();
+
+        await mineTo(300);
+        await theMaster.connect(dan).support(3, 400, 1);
+        await mine();
+
+        // {
+        //     console.log(await getBlock(), "th block mined");
+
+        //     console.log("MaidCoin Balance");
+        //     console.log("alice : ", (await coin.balanceOf(alice.address)).toString());
+        //     console.log("bob : ", (await coin.balanceOf(bob.address)).toString());
+        //     console.log("carol : ", (await coin.balanceOf(carol.address)).toString());
+        //     console.log("dan : ", (await coin.balanceOf(dan.address)).toString());
+        //     console.log("erin : ", (await coin.balanceOf(erin.address)).toString());
+        //     console.log("frank : ", (await coin.balanceOf(frank.address)).toString());
+            
+        //     console.log("Sushi Balance");
+        //     console.log("alice : ", (await sushi.balanceOf(alice.address)).toString());
+        //     console.log("bob : ", (await sushi.balanceOf(bob.address)).toString());
+        //     console.log("carol : ", (await sushi.balanceOf(carol.address)).toString());
+        //     console.log("dan : ", (await sushi.balanceOf(dan.address)).toString());
+        //     console.log("erin : ", (await sushi.balanceOf(erin.address)).toString());
+        //     console.log("frank : ", (await sushi.balanceOf(frank.address)).toString());
+        // }
+
+        await mineTo(350);
+        await theMaster.set([1, 3], [9, 51]);
+        await theMaster.connect(alice).deposit(1, 100, alice.address);
+        await theMaster.connect(carol).deposit(1, 100, carol.address);
+        await nurses.connect(alice).assemble(0, 5);
+        await nurses.connect(bob).assemble(1, 5);
+        await mine();
+
+        // {
+        //     console.log(await getBlock(), "th block mined");
+
+        //     console.log("MaidCoin Balance");
+        //     console.log("alice : ", (await coin.balanceOf(alice.address)).toString());
+        //     console.log("bob : ", (await coin.balanceOf(bob.address)).toString());
+        //     console.log("carol : ", (await coin.balanceOf(carol.address)).toString());
+        //     console.log("dan : ", (await coin.balanceOf(dan.address)).toString());
+        //     console.log("erin : ", (await coin.balanceOf(erin.address)).toString());
+        //     console.log("frank : ", (await coin.balanceOf(frank.address)).toString());
+            
+        //     console.log("Sushi Balance");
+        //     console.log("alice : ", (await sushi.balanceOf(alice.address)).toString());
+        //     console.log("bob : ", (await sushi.balanceOf(bob.address)).toString());
+        //     console.log("carol : ", (await sushi.balanceOf(carol.address)).toString());
+        //     console.log("dan : ", (await sushi.balanceOf(dan.address)).toString());
+        //     console.log("erin : ", (await sushi.balanceOf(erin.address)).toString());
+        //     console.log("frank : ", (await sushi.balanceOf(frank.address)).toString());
+        // }
+
+        await mineTo(400);
+        await theMaster.connect(alice).deposit(1, 0, alice.address);
+        await theMaster.connect(bob).withdraw(1, 0, bob.address);
+        await theMaster.connect(erin).support(3, 200, 3);
+        await mine();
+
+        // {
+        //     console.log(await getBlock(), "th block mined");
+
+        //     console.log("MaidCoin Balance");
+        //     console.log("alice : ", (await coin.balanceOf(alice.address)).toString());
+        //     console.log("bob : ", (await coin.balanceOf(bob.address)).toString());
+        //     console.log("carol : ", (await coin.balanceOf(carol.address)).toString());
+        //     console.log("dan : ", (await coin.balanceOf(dan.address)).toString());
+        //     console.log("erin : ", (await coin.balanceOf(erin.address)).toString());
+        //     console.log("frank : ", (await coin.balanceOf(frank.address)).toString());
+            
+        //     console.log("Sushi Balance");
+        //     console.log("alice : ", (await sushi.balanceOf(alice.address)).toString());
+        //     console.log("bob : ", (await sushi.balanceOf(bob.address)).toString());
+        //     console.log("carol : ", (await sushi.balanceOf(carol.address)).toString());
+        //     console.log("dan : ", (await sushi.balanceOf(dan.address)).toString());
+        //     console.log("erin : ", (await sushi.balanceOf(erin.address)).toString());
+        //     console.log("frank : ", (await sushi.balanceOf(frank.address)).toString());
+        // }
+
+        await mineTo(450);
+        await nurses.connect(alice).claim([0, 2]);
+        await nurses.connect(frank).assemble(2, 5);
+        await theMaster.connect(alice).support(3, 100, 0);
+        await mine();
+
+        // {
+        //     console.log(await getBlock(), "th block mined");
+
+        //     console.log("MaidCoin Balance");
+        //     console.log("alice : ", (await coin.balanceOf(alice.address)).toString());
+        //     console.log("bob : ", (await coin.balanceOf(bob.address)).toString());
+        //     console.log("carol : ", (await coin.balanceOf(carol.address)).toString());
+        //     console.log("dan : ", (await coin.balanceOf(dan.address)).toString());
+        //     console.log("erin : ", (await coin.balanceOf(erin.address)).toString());
+        //     console.log("frank : ", (await coin.balanceOf(frank.address)).toString());
+            
+        //     console.log("Sushi Balance");
+        //     console.log("alice : ", (await sushi.balanceOf(alice.address)).toString());
+        //     console.log("bob : ", (await sushi.balanceOf(bob.address)).toString());
+        //     console.log("carol : ", (await sushi.balanceOf(carol.address)).toString());
+        //     console.log("dan : ", (await sushi.balanceOf(dan.address)).toString());
+        //     console.log("erin : ", (await sushi.balanceOf(erin.address)).toString());
+        //     console.log("frank : ", (await sushi.balanceOf(frank.address)).toString());
+        // }
+
+        await mineTo(500);
+        await sushi.transferOwnership(sushiMC.address);
+        await theMaster.setSushiMasterChef(sushiMC.address, 3);
+        await theMaster.connect(dan).desupport(3, 400);
+        await mine();
+
+        // {
+        //     console.log(await getBlock(), "th block mined");
+
+        //     console.log("MaidCoin Balance");
+        //     console.log("alice : ", (await coin.balanceOf(alice.address)).toString());
+        //     console.log("bob : ", (await coin.balanceOf(bob.address)).toString());
+        //     console.log("carol : ", (await coin.balanceOf(carol.address)).toString());
+        //     console.log("dan : ", (await coin.balanceOf(dan.address)).toString());
+        //     console.log("erin : ", (await coin.balanceOf(erin.address)).toString());
+        //     console.log("frank : ", (await coin.balanceOf(frank.address)).toString());
+            
+        //     console.log("Sushi Balance");
+        //     console.log("alice : ", (await sushi.balanceOf(alice.address)).toString());
+        //     console.log("bob : ", (await sushi.balanceOf(bob.address)).toString());
+        //     console.log("carol : ", (await sushi.balanceOf(carol.address)).toString());
+        //     console.log("dan : ", (await sushi.balanceOf(dan.address)).toString());
+        //     console.log("erin : ", (await sushi.balanceOf(erin.address)).toString());
+        //     console.log("frank : ", (await sushi.balanceOf(frank.address)).toString());
+        // }
+
+        await mineTo(550);
+        await theMaster.connect(alice).deposit(1, 0, alice.address);
+        await nurses.connect(bob).claim([1]);
+        await theMaster.connect(dan).support(3, 1000, 4);
+        await mine();
+
+        // {
+        //     console.log(await getBlock(), "th block mined");
+
+        //     console.log("MaidCoin Balance");
+        //     console.log("alice : ", (await coin.balanceOf(alice.address)).toString());
+        //     console.log("bob : ", (await coin.balanceOf(bob.address)).toString());
+        //     console.log("carol : ", (await coin.balanceOf(carol.address)).toString());
+        //     console.log("dan : ", (await coin.balanceOf(dan.address)).toString());
+        //     console.log("erin : ", (await coin.balanceOf(erin.address)).toString());
+        //     console.log("frank : ", (await coin.balanceOf(frank.address)).toString());
+            
+        //     console.log("Sushi Balance");
+        //     console.log("alice : ", (await sushi.balanceOf(alice.address)).toString());
+        //     console.log("bob : ", (await sushi.balanceOf(bob.address)).toString());
+        //     console.log("carol : ", (await sushi.balanceOf(carol.address)).toString());
+        //     console.log("dan : ", (await sushi.balanceOf(dan.address)).toString());
+        //     console.log("erin : ", (await sushi.balanceOf(erin.address)).toString());
+        //     console.log("frank : ", (await sushi.balanceOf(frank.address)).toString());
+        // }
+
+        await mineTo(600);
+        await theMaster.connect(alice).claimAllReward(1);
+        await theMaster.connect(carol).claimSushiReward(1);
+        await nurses.connect(alice).claim([0,2]);
+        await nurses.connect(bob).claim([3]);
+        await mine();
+
+        // {
+        //     console.log(await getBlock(), "th block mined");
+
+        //     console.log("MaidCoin Balance");
+        //     console.log("alice : ", (await coin.balanceOf(alice.address)).toString());
+        //     console.log("bob : ", (await coin.balanceOf(bob.address)).toString());
+        //     console.log("carol : ", (await coin.balanceOf(carol.address)).toString());
+        //     console.log("dan : ", (await coin.balanceOf(dan.address)).toString());
+        //     console.log("erin : ", (await coin.balanceOf(erin.address)).toString());
+        //     console.log("frank : ", (await coin.balanceOf(frank.address)).toString());
+            
+        //     console.log("Sushi Balance");
+        //     console.log("alice : ", (await sushi.balanceOf(alice.address)).toString());
+        //     console.log("bob : ", (await sushi.balanceOf(bob.address)).toString());
+        //     console.log("carol : ", (await sushi.balanceOf(carol.address)).toString());
+        //     console.log("dan : ", (await sushi.balanceOf(dan.address)).toString());
+        //     console.log("erin : ", (await sushi.balanceOf(erin.address)).toString());
+        //     console.log("frank : ", (await sushi.balanceOf(frank.address)).toString());
+        // }
+
+        await mineTo(650);
+        await nurses.connect(bob).claim([1,3]);
+        await theMaster.connect(alice).support(3, 0, 0);
+        await mine();
+
+        // {
+        //     console.log(await getBlock(), "th block mined");
+
+        //     console.log("MaidCoin Balance");
+        //     console.log("alice : ", (await coin.balanceOf(alice.address)).toString());
+        //     console.log("bob : ", (await coin.balanceOf(bob.address)).toString());
+        //     console.log("carol : ", (await coin.balanceOf(carol.address)).toString());
+        //     console.log("dan : ", (await coin.balanceOf(dan.address)).toString());
+        //     console.log("erin : ", (await coin.balanceOf(erin.address)).toString());
+        //     console.log("frank : ", (await coin.balanceOf(frank.address)).toString());
+            
+        //     console.log("Sushi Balance");
+        //     console.log("alice : ", (await sushi.balanceOf(alice.address)).toString());
+        //     console.log("bob : ", (await sushi.balanceOf(bob.address)).toString());
+        //     console.log("carol : ", (await sushi.balanceOf(carol.address)).toString());
+        //     console.log("dan : ", (await sushi.balanceOf(dan.address)).toString());
+        //     console.log("erin : ", (await sushi.balanceOf(erin.address)).toString());
+        //     console.log("frank : ", (await sushi.balanceOf(frank.address)).toString());
+        // }
+
+        await mineTo(700);
+        await theMaster.connect(alice).deposit(1, 100, alice.address);
+        await theMaster.connect(bob).claimAllReward(1);
+        await theMaster.connect(carol).deposit(1, 100, carol.address);
+        await nurses.connect(frank).claim([4]);
+        await theMaster.connect(alice).claimAllReward(3);
+        await theMaster.connect(dan).claimAllReward(3);
+        // await theMaster.connect(erin).desupport(3, 0);
+        await mine();
+
+        // {
+        //     console.log(await getBlock(), "th block mined");
+
+        //     console.log("MaidCoin Balance");
+        //     console.log("alice : ", (await coin.balanceOf(alice.address)).toString());
+        //     console.log("bob : ", (await coin.balanceOf(bob.address)).toString());
+        //     console.log("carol : ", (await coin.balanceOf(carol.address)).toString());
+        //     console.log("dan : ", (await coin.balanceOf(dan.address)).toString());
+        //     console.log("erin : ", (await coin.balanceOf(erin.address)).toString());
+        //     console.log("frank : ", (await coin.balanceOf(frank.address)).toString());
+            
+        //     console.log("Sushi Balance");
+        //     console.log("alice : ", (await sushi.balanceOf(alice.address)).toString());
+        //     console.log("bob : ", (await sushi.balanceOf(bob.address)).toString());
+        //     console.log("carol : ", (await sushi.balanceOf(carol.address)).toString());
+        //     console.log("dan : ", (await sushi.balanceOf(dan.address)).toString());
+        //     console.log("erin : ", (await sushi.balanceOf(erin.address)).toString());
+        //     console.log("frank : ", (await sushi.balanceOf(frank.address)).toString());
+        // }
+    });
 });
