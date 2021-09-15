@@ -7,14 +7,14 @@
 - MaidCoin: [0x4Af698B479D0098229DC715655c667Ceb6cd8433](https://ropsten.etherscan.io/address/0x4Af698B479D0098229DC715655c667Ceb6cd8433)
 
 ## Kovan
-- MaidCoin: [0x356Dc3fE14028D63c5384CD5c45B99fD67534Df1](https://kovan.etherscan.io/address/0x356Dc3fE14028D63c5384CD5c45B99fD67534Df1)
-- MaidCafe: [0x1269928086142754f11807E45C5046591eE61ddE](https://kovan.etherscan.io/address/0x1269928086142754f11807E45C5046591eE61ddE)
-- TheMaster: [0xe01974C8538a13E6158464FFA0d13aec35968bd3](https://kovan.etherscan.io/address/0xe01974C8538a13E6158464FFA0d13aec35968bd3)
-- Maids: [0x7845b05a896Cfd4Ce32eC27631B176D59425C063](https://kovan.etherscan.io/address/0x7845b05a896Cfd4Ce32eC27631B176D59425C063)
-- MasterCoin: [0x57A57cc911f8cE5e1F709A8183db5A26c51CCe89](https://kovan.etherscan.io/address/0x57A57cc911f8cE5e1F709A8183db5A26c51CCe89)
-- NursePart: [0x3Ef1374Edc0aD594657eFB94D6Fc31993FcE1aEf](https://kovan.etherscan.io/address/0x3Ef1374Edc0aD594657eFB94D6Fc31993FcE1aEf)
-- NurseRaid: [0xFcbceed7D1B0dEc07cE561F217290a1BD0D16d3b](https://kovan.etherscan.io/address/0xFcbceed7D1B0dEc07cE561F217290a1BD0D16d3b)
-- CloneNurses: [0xCCf5FAe6968ae71637225C783847eA07c1283e98](https://kovan.etherscan.io/address/0xCCf5FAe6968ae71637225C783847eA07c1283e98)
+- MaidCoin: [0xc3a7DC0D11909503aa0Ef1c7368B4EC7ac2e6E5C](https://kovan.etherscan.io/address/0xc3a7DC0D11909503aa0Ef1c7368B4EC7ac2e6E5C)
+- MaidCafe: [0x40f060711b3250559762A70EdBBcc3C79Ff80Aa9](https://kovan.etherscan.io/address/0x40f060711b3250559762A70EdBBcc3C79Ff80Aa9)
+- TheMaster: [0x25312764c5a74992b87Bf383981B6563e2090EC8](https://kovan.etherscan.io/address/0x25312764c5a74992b87Bf383981B6563e2090EC8)
+- Maids: [0x43B1D98478F355ddb0A2c44b89EB4e886C8327f9](https://kovan.etherscan.io/address/0x43B1D98478F355ddb0A2c44b89EB4e886C8327f9)
+- MasterCoin: [0xfcd6c88109c487a1644aDCBE9F080210606eFAA7](https://kovan.etherscan.io/address/0xfcd6c88109c487a1644aDCBE9F080210606eFAA7)
+- NursePart: [0xC3B6eeb2c635126D211FfE7F6598b3808c36BdfA](https://kovan.etherscan.io/address/0xC3B6eeb2c635126D211FfE7F6598b3808c36BdfA)
+- NurseRaid: [0xf72ccEFE49d2E3F966bEacd2bC38617Cc4911518](https://kovan.etherscan.io/address/0xf72ccEFE49d2E3F966bEacd2bC38617Cc4911518)
+- CloneNurses: [0xc6FE9c4A0497d993B9b52c3024D9be466A993e1b](https://kovan.etherscan.io/address/0xc6FE9c4A0497d993B9b52c3024D9be466A993e1b)
 
 ## License
 [MIT](LICENSE)
