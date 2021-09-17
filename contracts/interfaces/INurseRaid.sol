@@ -5,6 +5,7 @@ import "./IMaids.sol";
 import "./IMaidCoin.sol";
 import "./IMaidCafe.sol";
 import "./INursePart.sol";
+import "./ICloneNurses.sol";
 import "./IRNG.sol";
 
 interface INurseRaid {
@@ -29,6 +30,8 @@ interface INurseRaid {
     function nursePart() external view returns (INursePart);
 
     function rng() external view returns (IRNG);
+
+    function cloneNurses() external view returns (ICloneNurses);
 
     function maidEfficacy() external view returns (uint256, uint256);
 

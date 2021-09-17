@@ -32,6 +32,7 @@ contract NurseRaid is Ownable, INurseRaid {
     IMaidCoin public immutable override maidCoin;
     IMaidCafe public override maidCafe;
     INursePart public immutable override nursePart;
+    ICloneNurses public immutable override cloneNurses;
     IRNG public override rng;
 
     MaidEfficacy public override maidEfficacy = MaidEfficacy({numerator: 1, denominator: 1000});
@@ -40,11 +41,13 @@ contract NurseRaid is Ownable, INurseRaid {
         IMaidCoin _maidCoin,
         IMaidCafe _maidCafe,
         INursePart _nursePart,
+        ICloneNurses _cloneNurses,
         IRNG _rng
     ) {
         maidCoin = _maidCoin;
         maidCafe = _maidCafe;
         nursePart = _nursePart;
+        cloneNurses = _cloneNurses;
         rng = _rng;
     }
 
@@ -92,6 +95,12 @@ contract NurseRaid is Ownable, INurseRaid {
         uint256 length = entranceFees.length;
         for (uint256 i = 0; i < length; i++) {
             require(maxRewardCounts[i] < 255, "NurseRaid: Invalid number");
+            (uint256 nursePartCount, uint256 nurseDestroyReturn, , ) = cloneNurses.nurseTypes(_nurseParts[i]);
+
+            require(
+                entranceFees[i] >= (nurseDestroyReturn * maxRewardCounts[i]) / nursePartCount,
+                "NurseRaid: Fee should be higher"
+            );
             id = raids.length;
             raids.push(
                 Raid({
