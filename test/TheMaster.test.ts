@@ -2472,7 +2472,7 @@ describe("TheMaster", function () {
         // }
     });
 
-    it.only("should be that deposit/withdraw functions works well with mastercoin, pid0", async function () {
+    it("should be that deposit/withdraw functions works well with mastercoin, pid0", async function () {
         const { alice, bob, carol, dan, coin, master, theMaster } = await setupTest();
         
         await master.transfer(alice.address, tokenAmount(25));

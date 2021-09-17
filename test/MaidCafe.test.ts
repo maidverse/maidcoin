@@ -5,7 +5,8 @@ import { defaultAbiCoder, hexlify, keccak256, toUtf8Bytes } from "ethers/lib/uti
 import { waffle, ethers } from "hardhat";
 import MaidCoinArtifact from "../artifacts/contracts/MaidCoin.sol/MaidCoin.json";
 import MaidCafeArtifact from "../artifacts/contracts/MaidCafe.sol/MaidCafe.json";
-import { MaidCoin, MaidCafe } from "../typechain";
+import WETHArtifact from "../artifacts/contracts/test/TestWETH.sol/WETH.json";
+import { MaidCoin, MaidCafe, WETH } from "../typechain";
 import { expandTo18Decimals } from "./shared/utils/number";
 import { getERC20ApprovalDigest } from "./shared/utils/standard";
 
@@ -13,6 +14,7 @@ const { deployContract } = waffle;
 
 describe("MaidCafe", () => {
     let maidCafe: MaidCafe;
+    let weth: WETH;
     let maidCoin: MaidCoin;
 
     const provider = waffle.provider;
@@ -20,14 +22,14 @@ describe("MaidCafe", () => {
 
     beforeEach(async () => {
         maidCoin = (await deployContract(admin, MaidCoinArtifact, [])) as MaidCoin;
-
-        maidCafe = (await deployContract(admin, MaidCafeArtifact, [maidCoin.address])) as MaidCafe;
+        weth = (await deployContract(admin, WETHArtifact, [])) as WETH;
+        maidCafe = (await deployContract(admin, MaidCafeArtifact, [maidCoin.address, weth.address])) as MaidCafe;
     });
 
     context("new MaidCafe", async () => {
         it("has given data", async () => {
             expect(await maidCafe.name()).to.be.equal("Maid Cafe");
-            expect(await maidCafe.symbol()).to.be.equal("OMU");
+            expect(await maidCafe.symbol()).to.be.equal("$OMU");
             expect(await maidCafe.decimals()).to.be.equal(18);
         });
 

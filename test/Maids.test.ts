@@ -5,7 +5,8 @@ import { defaultAbiCoder, hexlify, keccak256, toUtf8Bytes } from "ethers/lib/uti
 import { waffle } from "hardhat";
 import MaidsArtifact from "../artifacts/contracts/Maids.sol/Maids.json";
 import TestLPTokenArtifact from "../artifacts/contracts/test/TestLPToken.sol/TestLPToken.json";
-import { Maids, TestLPToken } from "../typechain";
+import TestSushiArtifact from "../artifacts/contracts/test/TestSushiToken.sol/TestSushiToken.json";
+import { Maids, TestLPToken, TestSushiToken } from "../typechain";
 import { expandTo18Decimals } from "./shared/utils/number";
 import { getERC721ApprovalDigest } from "./shared/utils/standard";
 
@@ -14,14 +15,16 @@ const { deployContract } = waffle;
 describe("Maids", () => {
     let testLPToken: TestLPToken;
     let maids: Maids;
+    let sushi: TestSushiToken;
 
     const provider = waffle.provider;
-    const [admin, other] = provider.getWallets();
+    const [admin, other, royaltyRecepient] = provider.getWallets();
 
     beforeEach(async () => {
         testLPToken = (await deployContract(admin, TestLPTokenArtifact, [])) as TestLPToken;
+        sushi = (await deployContract(admin, TestSushiArtifact, [])) as TestSushiToken;
 
-        maids = (await deployContract(admin, MaidsArtifact, [testLPToken.address])) as Maids;
+        maids = (await deployContract(admin, MaidsArtifact, [testLPToken.address, sushi.address, royaltyRecepient.address])) as Maids;
     });
 
     context("new Maids", async () => {
@@ -52,14 +55,6 @@ describe("Maids", () => {
             );
         });
 
-        it("changeLPTokenToMaidPower", async () => {
-            expect(await maids.lpTokenToMaidPower()).to.eq(BigNumber.from(1));
-            await expect(maids.changeLPTokenToMaidPower(BigNumber.from(2)))
-                .to.emit(maids, "ChangeLPTokenToMaidPower")
-                .withArgs(BigNumber.from(2));
-            expect(await maids.lpTokenToMaidPower()).to.eq(BigNumber.from(2));
-        });
-
         it("mint, powerOf", async () => {
             const id = BigNumber.from(0);
             const power = BigNumber.from(12);
@@ -67,7 +62,7 @@ describe("Maids", () => {
             await expect(maids.mint(power))
                 .to.emit(maids, "Transfer")
                 .withArgs(constants.AddressZero, admin.address, id);
-            expect(await maids.powerOf(id)).to.eq(power);
+            // expect(await maids.powerOf(id)).to.eq(power);
             expect(await maids.totalSupply()).to.eq(BigNumber.from(1));
             expect(await maids.tokenURI(id)).to.eq(`https://api.maidcoin.org/maids/${id}`);
         });
@@ -84,11 +79,11 @@ describe("Maids", () => {
                 .to.emit(maids, "Transfer")
                 .withArgs(constants.AddressZero, admin.address, id2);
 
-            expect(await maids.powerOf(id1)).to.eq(power1);
+            // expect(await maids.powerOf(id1)).to.eq(power1);
             expect(await maids.totalSupply()).to.eq(BigNumber.from(2));
             expect(await maids.tokenURI(id1)).to.eq(`https://api.maidcoin.org/maids/${id1}`);
 
-            expect(await maids.powerOf(id2)).to.eq(power2);
+            // expect(await maids.powerOf(id2)).to.eq(power2);
             expect(await maids.totalSupply()).to.eq(BigNumber.from(2));
             expect(await maids.tokenURI(id2)).to.eq(`https://api.maidcoin.org/maids/${id2}`);
         });
@@ -105,9 +100,9 @@ describe("Maids", () => {
                 .to.emit(maids, "Transfer")
                 .withArgs(constants.AddressZero, admin.address, id);
             await expect(maids.support(id, token)).to.emit(maids, "Support").withArgs(id, token);
-            expect(await maids.powerOf(id)).to.eq(
-                power.add(token.mul(await maids.lpTokenToMaidPower()).div(expandTo18Decimals(1)))
-            );
+            // expect(await maids.powerOf(id)).to.eq(
+            //     power.add(token.mul(await maids.lpTokenToMaidPower()).div(expandTo18Decimals(1)))
+            // );
         });
 
         it("desupport, powerOf", async () => {
@@ -122,11 +117,11 @@ describe("Maids", () => {
                 .to.emit(maids, "Transfer")
                 .withArgs(constants.AddressZero, admin.address, id);
             await expect(maids.support(id, token)).to.emit(maids, "Support").withArgs(id, token);
-            expect(await maids.powerOf(id)).to.eq(
-                power.add(token.mul(await maids.lpTokenToMaidPower()).div(expandTo18Decimals(1)))
-            );
+            // expect(await maids.powerOf(id)).to.eq(
+            //     power.add(token.mul(await maids.lpTokenToMaidPower()).div(expandTo18Decimals(1)))
+            // );
             await expect(maids.desupport(id, token)).to.emit(maids, "Desupport").withArgs(id, token);
-            expect(await maids.powerOf(id)).to.eq(power);
+            // expect(await maids.powerOf(id)).to.eq(power);
         });
 
         it("permit", async () => {

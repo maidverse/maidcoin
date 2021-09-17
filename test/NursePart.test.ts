@@ -13,10 +13,10 @@ describe("NursePart", () => {
     let nursePart: NursePart;
 
     const provider = waffle.provider;
-    const [admin, other] = provider.getWallets();
+    const [admin, other, royaltyRecepient] = provider.getWallets();
 
     beforeEach(async () => {
-        nursePart = (await deployContract(admin, NursePartArtifact, [])) as NursePart;
+        nursePart = (await deployContract(admin, NursePartArtifact, [royaltyRecepient.address])) as NursePart;
     });
 
     context("new NursePart", async () => {

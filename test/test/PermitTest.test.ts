@@ -22,7 +22,7 @@ describe("PermitTest", () => {
     let permitTest: PermitTest;
 
     const provider = waffle.provider;
-    const [admin] = provider.getWallets();
+    const [admin, sushi, royaltyRecepient] = provider.getWallets();
     const testAmount = expandTo18Decimals(10);
 
     beforeEach(async () => {
@@ -30,7 +30,11 @@ describe("PermitTest", () => {
 
         maidCoin = (await deployContract(admin, MaidCoinArtifact, [])) as MaidCoin;
 
-        maids = (await deployContract(admin, MaidsArtifact, [testLPToken.address])) as Maids;
+        maids = (await deployContract(admin, MaidsArtifact, [
+            testLPToken.address,
+            sushi.address,
+            royaltyRecepient.address,
+        ])) as Maids;
 
         nursePart = (await deployContract(admin, NursePartArtifact, [])) as NursePart;
 
