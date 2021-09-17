@@ -95,12 +95,14 @@ contract NurseRaid is Ownable, INurseRaid {
         uint256 length = entranceFees.length;
         for (uint256 i = 0; i < length; i++) {
             require(maxRewardCounts[i] < 255, "NurseRaid: Invalid number");
-            (uint256 nursePartCount, uint256 nurseDestroyReturn, , ) = cloneNurses.nurseTypes(_nurseParts[i]);
+            {   // scope to avoid stack too deep errors
+                (uint256 nursePartCount, uint256 nurseDestroyReturn, , ) = cloneNurses.nurseTypes(_nurseParts[i]);
 
-            require(
-                entranceFees[i] >= (nurseDestroyReturn * maxRewardCounts[i]) / nursePartCount,
-                "NurseRaid: Fee should be higher"
-            );
+                require(
+                    entranceFees[i] >= (nurseDestroyReturn * maxRewardCounts[i]) / nursePartCount,
+                    "NurseRaid: Fee should be higher"
+                );
+            }
             id = raids.length;
             raids.push(
                 Raid({
