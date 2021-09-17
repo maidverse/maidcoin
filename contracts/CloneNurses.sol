@@ -153,7 +153,7 @@ contract CloneNurses is
         for (uint256 i = 0; i < ids.length; i += 1) {
             require(msg.sender == ownerOf(ids[i]), "CloneNurses: Forbidden");
             uint256 power = supportedPower[ids[i]];
-            if(power == 0) {
+            if (power == 0) {
                 supportingRoute[ids[i]] = type(uint256).max;
                 emit ChangeSupportingRoute(ids[i], type(uint256).max);
             } else {
