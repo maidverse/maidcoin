@@ -151,10 +151,21 @@ contract CloneNurses is
     function destroy(uint256[] calldata ids, uint256[] calldata toIds) external override {
         require(ids.length == toIds.length, "CloneNurses: Invalid parameters");
         for (uint256 i = 0; i < ids.length; i += 1) {
-            require(toIds[i] != ids[i], "CloneNurses: Invalid id, toId");
             require(msg.sender == ownerOf(ids[i]), "CloneNurses: Forbidden");
-            require(_exists(toIds[i]), "CloneNurses: Invalid toId");
+            uint256 power = supportedPower[ids[i]];
+            if(power == 0) {
+                supportingRoute[ids[i]] = type(uint256).max;
+                emit ChangeSupportingRoute(ids[i], type(uint256).max);
+            } else {
+                require(toIds[i] != ids[i], "CloneNurses: Invalid id, toId");
+                require(_exists(toIds[i]), "CloneNurses: Invalid toId");
 
+                supportingRoute[ids[i]] = toIds[i];
+                emit ChangeSupportingRoute(ids[i], toIds[i]);
+                supportedPower[toIds[i]] += power;
+                supportedPower[ids[i]] = 0;
+                emit ChangeSupportedPower(toIds[i], int256(power));
+            }
             NurseType storage nurseType = nurseTypes[nurses[ids[i]].nurseType];
 
             uint256 balanceBefore = maidCoin.balanceOf(address(this));
@@ -163,14 +174,9 @@ contract CloneNurses is
             uint256 reward = balanceAfter - balanceBefore;
             _claim(ids[i], reward);
 
-            supportingRoute[ids[i]] = toIds[i];
-            emit ChangeSupportingRoute(ids[i], toIds[i]);
-            uint256 power = supportedPower[ids[i]];
-            supportedPower[toIds[i]] += power;
-            supportedPower[ids[i]] = 0;
-            emit ChangeSupportedPower(toIds[i], int256(power));
             theMaster.mint(msg.sender, nurseType.destroyReturn);
             _burn(ids[i]);
+            delete nurses[ids[i]];
         }
     }
 
