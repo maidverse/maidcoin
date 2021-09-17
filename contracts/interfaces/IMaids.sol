@@ -8,7 +8,6 @@ import "../uniswapv2/interfaces/IUniswapV2Pair.sol";
 import "./IMasterChefModule.sol";
 
 interface IMaids is IERC721, IERC721Metadata, IERC721Enumerable, IMasterChefModule {
-    event ChangeLPTokenToMaidPower(uint256 value);
     event Support(uint256 indexed id, uint256 lpTokenAmount);
     event Desupport(uint256 indexed id, uint256 lpTokenAmount);
 
@@ -24,8 +23,6 @@ interface IMaids is IERC721, IERC721Metadata, IERC721Enumerable, IMasterChefModu
 
     function noncesForAll(address owner) external view returns (uint256);
 
-    function lpTokenToMaidPower() external view returns (uint256);
-
     function maids(uint256 id)
         external
         view
@@ -35,7 +32,7 @@ interface IMaids is IERC721, IERC721Metadata, IERC721Enumerable, IMasterChefModu
             uint256 sushiRewardDebt
         );
 
-    function powerOf(uint256 id) external view returns (uint256);
+    function powerAndLP(uint256 id) external view returns (uint256, uint256);
 
     function support(uint256 id, uint256 lpTokenAmount) external;
 

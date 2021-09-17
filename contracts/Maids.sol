@@ -37,7 +37,6 @@ contract Maids is Ownable, ERC721("MaidCoin Maids", "MAIDS"), ERC721Enumerable, 
     mapping(uint256 => uint256) public override nonces;
     mapping(address => uint256) public override noncesForAll;
 
-    uint256 public override lpTokenToMaidPower = 1;
     MaidInfo[] public override maids;
 
     uint256 private royaltyFee = 25; // out of 1000
@@ -93,11 +92,6 @@ contract Maids is Ownable, ERC721("MaidCoin Maids", "MAIDS"), ERC721Enumerable, 
         return index;
     }
 
-    function changeLPTokenToMaidPower(uint256 value) external onlyOwner {
-        lpTokenToMaidPower = value;
-        emit ChangeLPTokenToMaidPower(value);
-    }
-
     function mint(uint256 power) public onlyOwner returns (uint256 id) {
         id = maids.length;
         require(id < MAX_MAID_COUNT, "Maids: Maximum Maids");
@@ -114,9 +108,9 @@ contract Maids is Ownable, ERC721("MaidCoin Maids", "MAIDS"), ERC721Enumerable, 
         }
     }
 
-    function powerOf(uint256 id) external view override returns (uint256) {
+    function powerAndLP(uint256 id) external view override returns (uint256, uint256) {
         MaidInfo storage maid = maids[id];
-        return maid.originPower + (maid.supportedLPTokenAmount * lpTokenToMaidPower) / 1e18;
+        return (maid.originPower, maid.supportedLPTokenAmount);
     }
 
     function support(uint256 id, uint256 lpTokenAmount) public override {

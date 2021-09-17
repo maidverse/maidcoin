@@ -3,8 +3,9 @@ pragma solidity ^0.8.5;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/INurseRaid.sol";
+import "./libraries/MaidPower.sol";
 
-contract NurseRaid is Ownable, INurseRaid {
+contract NurseRaid is Ownable, MaidPower, INurseRaid {
     struct Raid {
         uint256 entranceFee;
         uint256 nursePart;
@@ -42,8 +43,10 @@ contract NurseRaid is Ownable, INurseRaid {
         IMaidCafe _maidCafe,
         INursePart _nursePart,
         ICloneNurses _cloneNurses,
-        IRNG _rng
-    ) {
+        IRNG _rng,
+        address _sushiGirls,
+        address _lingerieGirls
+    ) MaidPower(_sushiGirls, _lingerieGirls) {
         maidCoin = _maidCoin;
         maidCafe = _maidCafe;
         nursePart = _nursePart;
@@ -189,7 +192,7 @@ contract NurseRaid is Ownable, INurseRaid {
             return
                 block.number - challenger.enterBlock >=
                 duration -
-                    ((duration * challenger.maids.powerOf(challenger.maidId) * maidEfficacy.numerator) /
+                    ((duration * powerOfMaids(challenger.maids, challenger.maidId) * maidEfficacy.numerator) /
                         maidEfficacy.denominator);
         }
     }
