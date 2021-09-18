@@ -70,18 +70,6 @@ async function main() {
     const nursePart = await NursePart.deploy(maidCafe.address) as NursePart
     displayAddress("NursePart", nursePart.address)
 
-    const NurseRaid = await hardhat.ethers.getContractFactory("NurseRaid")
-    const nurseRaid = await NurseRaid.deploy(
-        maidCoin.address,
-        maidCafe.address,
-        nursePart.address,
-        RNG_ADDRESS,
-    ) as NurseRaid
-    displayAddress("NurseRaid", nurseRaid.address)
-
-    await nurseRaid.approveMaids([maids.address, SUSHU_GIRLS, LINGERIE_GIRLS]);
-    await nursePart.transferOwnership(nurseRaid.address)
-
     const CloneNurses = await hardhat.ethers.getContractFactory("CloneNurses")
     const cloneNurses = await CloneNurses.deploy(
         nursePart.address,
@@ -90,6 +78,21 @@ async function main() {
         maidCafe.address,
     ) as CloneNurses
     displayAddress("CloneNurses", cloneNurses.address)
+
+    const NurseRaid = await hardhat.ethers.getContractFactory("NurseRaid")
+    const nurseRaid = await NurseRaid.deploy(
+        maidCoin.address,
+        maidCafe.address,
+        nursePart.address,
+        cloneNurses.address,
+        RNG_ADDRESS,
+        SUSHU_GIRLS,
+        LINGERIE_GIRLS,
+    ) as NurseRaid
+    displayAddress("NurseRaid", nurseRaid.address)
+
+    await nurseRaid.approveMaids([maids.address, SUSHU_GIRLS, LINGERIE_GIRLS]);
+    await nursePart.transferOwnership(nurseRaid.address)
 
     let run = async () => {
         await theMaster.add(masterCoin.address, false, false, ethers.constants.AddressZero, 0, 10);
