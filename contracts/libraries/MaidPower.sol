@@ -26,9 +26,9 @@ abstract contract MaidPower is Ownable {
         uint256 originPower;
         uint256 supportedLPAmount;
 
-        if(address(maids) == sushiGirls) {
+        if (address(maids) == sushiGirls) {
             (originPower, supportedLPAmount,) = ISushiGirls(sushiGirls).sushiGirls(id);
-        } else if(address(maids) == lingerieGirls) {
+        } else if (address(maids) == lingerieGirls) {
             (originPower, supportedLPAmount,) = ILingerieGirls(lingerieGirls).lingerieGirls(id);
         } else {
             (originPower, supportedLPAmount) = maids.powerAndLP(id);
