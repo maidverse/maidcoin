@@ -39,56 +39,56 @@ async function main() {
     console.log("deploy start")
 
     const MaidCoin = await hardhat.ethers.getContractFactory("TestMaidCoin")
-    const maidCoin = await MaidCoin.deploy() as TestMaidCoin
-    //const maidCoin = MaidCoin.attach("0xFb6A8713Df021c7FFf8ac1bA3dF7e56dDdBc555B") as MaidCoin
+    //const maidCoin = await MaidCoin.deploy() as TestMaidCoin
+    const maidCoin = MaidCoin.attach("0xBFE99524A68DBa35C092733aD4d2F3924cf355a6") as MaidCoin
     displayAddress("MaidCoin", maidCoin.address)
 
     const MaidCafe = await hardhat.ethers.getContractFactory("MaidCafe")
-    const maidCafe = await MaidCafe.deploy(maidCoin.address, WETH) as MaidCafe
-    //const maidCafe = MaidCafe.attach("0x1eC7EFACf8DBC651F484e5eD6c2D656eA2269273") as MaidCafe
+    //const maidCafe = await MaidCafe.deploy(maidCoin.address, WETH) as MaidCafe
+    const maidCafe = MaidCafe.attach("0xD7C87cC885170a2F8b57df41eEC4Bb8e30B03A4A") as MaidCafe
     displayAddress("MaidCafe", maidCafe.address)
 
     const TheMaster = await hardhat.ethers.getContractFactory("TheMaster")
-    const theMaster = await TheMaster.deploy(
+    /*const theMaster = await TheMaster.deploy(
         expandTo18Decimals(50), // initialRewardPerBlock
         100, // decreasingInterval
         await ethers.provider.getBlockNumber() + 10, // startBlock
         maidCoin.address,
         LP_TOKEN_ADDRESS,
         SUSHI
-    ) as TheMaster
-    //const theMaster = TheMaster.attach("0xc8DA549E25Fd6d067b3eec1d4c73fCeDf7e791EF") as TheMaster
+    ) as TheMaster*/
+    const theMaster = TheMaster.attach("0xaA14f1118B7799976D6B7b9a9443315fEa634C10") as TheMaster
     displayAddress("TheMaster", theMaster.address)
 
-    await maidCoin.transferOwnership(theMaster.address);
+    //await maidCoin.transferOwnership(theMaster.address);
 
     const Maids = await hardhat.ethers.getContractFactory("Maids")
-    const maids = await Maids.deploy(LP_TOKEN_ADDRESS, SUSHI, maidCafe.address) as Maids
-    //const maids = Maids.attach("0x65A8D91AD493E9f65505BaC137eD94a06A46A34a") as Maids
+    //const maids = await Maids.deploy(LP_TOKEN_ADDRESS, SUSHI, maidCafe.address) as Maids
+    const maids = Maids.attach("0xBF9749052d98192672fcF710e77d6C81893d69b7") as Maids
     displayAddress("Maids", maids.address)
 
     const MasterCoin = await hardhat.ethers.getContractFactory("MasterCoin")
-    const masterCoin = await MasterCoin.deploy() as MasterCoin
-    //const masterCoin = MasterCoin.attach("0x14f5ce165e5CEf8d48d024CbCF77ABFD65a3e581") as MasterCoin
+    //const masterCoin = await MasterCoin.deploy() as MasterCoin
+    const masterCoin = MasterCoin.attach("0x9d8a6A6B5430A2e5B2b1Bf538b5d5E43eE2439dF") as MasterCoin
     displayAddress("MasterCoin", masterCoin.address)
 
     const NursePart = await hardhat.ethers.getContractFactory("NursePart")
-    const nursePart = await NursePart.deploy(maidCafe.address) as NursePart
-    //const nursePart = NursePart.attach("0x2282853357Dca1985B3198865B3271B8F2b833dF") as NursePart
+    //const nursePart = await NursePart.deploy(maidCafe.address) as NursePart
+    const nursePart = NursePart.attach("0x22a9edfAe63303CA9cC6536880204b831aF916a9") as NursePart
     displayAddress("NursePart", nursePart.address)
 
     const CloneNurses = await hardhat.ethers.getContractFactory("CloneNurses")
-    const cloneNurses = await CloneNurses.deploy(
+    /*const cloneNurses = await CloneNurses.deploy(
         nursePart.address,
         maidCoin.address,
         theMaster.address,
         maidCafe.address,
-    ) as CloneNurses
-    //const cloneNurses = CloneNurses.attach("0xb4F4c1d5Cf438D1a94752ff9Cc9413DA5A1e9711") as CloneNurses
+    ) as CloneNurses*/
+    const cloneNurses = CloneNurses.attach("0x94c5783AFA16e8a830b5084683D1c23b9EbFA339") as CloneNurses
     displayAddress("CloneNurses", cloneNurses.address)
 
     const NurseRaid = await hardhat.ethers.getContractFactory("NurseRaid")
-    const nurseRaid = await NurseRaid.deploy(
+    /*const nurseRaid = await NurseRaid.deploy(
         maidCoin.address,
         maidCafe.address,
         nursePart.address,
@@ -96,11 +96,11 @@ async function main() {
         RNG_ADDRESS,
         SUSHU_GIRLS,
         LINGERIE_GIRLS,
-    ) as NurseRaid
-    //const nurseRaid = NurseRaid.attach("0x468765383d80f19C478919D641501312bf666aE7") as NurseRaid
+    ) as NurseRaid*/
+    const nurseRaid = NurseRaid.attach("0xCA10c109684db65Ced13B09598652558c1056a0C") as NurseRaid
     displayAddress("NurseRaid", nurseRaid.address)
 
-    await nurseRaid.approveMaids([maids.address, SUSHU_GIRLS, LINGERIE_GIRLS]);
+    /*await nurseRaid.approveMaids([maids.address, SUSHU_GIRLS, LINGERIE_GIRLS]);
     await nursePart.transferOwnership(nurseRaid.address)
 
     let run = async () => {
@@ -124,9 +124,9 @@ async function main() {
             console.log("Added MaidCorp Pool");
         }
     };
-    await run();
+    await run();*/
 
-    run = async () => {
+    let run = async () => {
         await theMaster.add(cloneNurses.address, true, true, ethers.constants.AddressZero, 0, 30);
         await new Promise((resolve) => setTimeout(resolve, 30000));
         if ((await theMaster.poolCount()).toNumber() < 3) {
@@ -136,9 +136,6 @@ async function main() {
         }
     };
     await run();
-
-    //console.log((await theMaster.poolCount()).toNumber());
-    //return;
 
     // Supporter
     run = async () => {
@@ -151,6 +148,12 @@ async function main() {
         }
     };
     await run();
+
+    console.log((await theMaster.poolInfo(0))[4].toNumber());
+    console.log((await theMaster.poolInfo(1))[4].toNumber());
+    console.log((await theMaster.poolInfo(2))[4].toNumber());
+    console.log((await theMaster.poolInfo(3))[4].toNumber());
+    //return;
 
     showAddressesForJSON();
 }
