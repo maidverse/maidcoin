@@ -1,6 +1,7 @@
 import hardhat, { ethers } from "hardhat";
 import { expandTo18Decimals } from "../test/shared/utils/number";
 import { CloneNurses, MaidCafe, MaidCoin, Maids, MasterCoin, NursePart, NurseRaid, TheMaster } from "../typechain";
+import { TestMaidCoin } from "../typechain/TestMaidCoin";
 import { TestSushiToken } from "../typechain/TestSushiToken";
 
 // Ropsten
@@ -37,8 +38,8 @@ function showAddressesForJSON() {
 async function main() {
     console.log("deploy start")
 
-    const MaidCoin = await hardhat.ethers.getContractFactory("MaidCoin")
-    const maidCoin = await MaidCoin.deploy() as MaidCoin
+    const MaidCoin = await hardhat.ethers.getContractFactory("TestMaidCoin")
+    const maidCoin = await MaidCoin.deploy() as TestMaidCoin
     //const maidCoin = MaidCoin.attach("0xFb6A8713Df021c7FFf8ac1bA3dF7e56dDdBc555B") as MaidCoin
     displayAddress("MaidCoin", maidCoin.address)
 
