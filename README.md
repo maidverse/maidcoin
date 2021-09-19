@@ -4,14 +4,14 @@
 - MaidCoin: [0x4Af698B479D0098229DC715655c667Ceb6cd8433](https://etherscan.io/address/0x4Af698B479D0098229DC715655c667Ceb6cd8433)
 
 ## Ropsten
-- MaidCoin: [0x4a13A8a1646029B9d08e6b2a1C5b1f97b78926cf](https://ropsten.etherscan.io/address/0x4a13A8a1646029B9d08e6b2a1C5b1f97b78926cf)
-- MaidCafe: [0xAe080415d34155eE6CfF37e1a5dFea997E3Acb1c](https://ropsten.etherscan.io/address/0xAe080415d34155eE6CfF37e1a5dFea997E3Acb1c)
-- TheMaster: [0x10b8Fe9248b771eEBE46ea9eBAD7A4D59be714cE](https://ropsten.etherscan.io/address/0x10b8Fe9248b771eEBE46ea9eBAD7A4D59be714cE)
-- Maids: [0x449E9AcEDC00dE3De74C547a130C76Aa62d75cf2](https://ropsten.etherscan.io/address/0x449E9AcEDC00dE3De74C547a130C76Aa62d75cf2)
-- MasterCoin: [0x28212f2D8987fF7590eaC26384c1cE93C4F8071E](https://ropsten.etherscan.io/address/0x28212f2D8987fF7590eaC26384c1cE93C4F8071E)
-- NursePart: [0x664Bf421C9ce702905202972145F881DB4b140ad](https://ropsten.etherscan.io/address/0x664Bf421C9ce702905202972145F881DB4b140ad)
-- CloneNurses: [0xa59EE8162C7195DB34A81b8bee679654fDc3c37C](https://ropsten.etherscan.io/address/0xa59EE8162C7195DB34A81b8bee679654fDc3c37C)
-- NurseRaid: [0xaCA9C5e4E2E2b8f34AC8EcafAb7F2990ec02C0dd](https://ropsten.etherscan.io/address/0xaCA9C5e4E2E2b8f34AC8EcafAb7F2990ec02C0dd)
+- MaidCoin: [0xFb6A8713Df021c7FFf8ac1bA3dF7e56dDdBc555B](https://ropsten.etherscan.io/address/0xFb6A8713Df021c7FFf8ac1bA3dF7e56dDdBc555B)
+- MaidCafe: [0x1eC7EFACf8DBC651F484e5eD6c2D656eA2269273](https://ropsten.etherscan.io/address/0x1eC7EFACf8DBC651F484e5eD6c2D656eA2269273)
+- TheMaster: [0xc8DA549E25Fd6d067b3eec1d4c73fCeDf7e791EF](https://ropsten.etherscan.io/address/0xc8DA549E25Fd6d067b3eec1d4c73fCeDf7e791EF)
+- Maids: [0x65A8D91AD493E9f65505BaC137eD94a06A46A34a](https://ropsten.etherscan.io/address/0x65A8D91AD493E9f65505BaC137eD94a06A46A34a)
+- MasterCoin: [0x14f5ce165e5CEf8d48d024CbCF77ABFD65a3e581](https://ropsten.etherscan.io/address/0x14f5ce165e5CEf8d48d024CbCF77ABFD65a3e581)
+- NursePart: [0x2282853357Dca1985B3198865B3271B8F2b833dF](https://ropsten.etherscan.io/address/0x2282853357Dca1985B3198865B3271B8F2b833dF)
+- CloneNurses: [0xb4F4c1d5Cf438D1a94752ff9Cc9413DA5A1e9711](https://ropsten.etherscan.io/address/0xb4F4c1d5Cf438D1a94752ff9Cc9413DA5A1e9711)
+- NurseRaid: [0x468765383d80f19C478919D641501312bf666aE7](https://ropsten.etherscan.io/address/0x468765383d80f19C478919D641501312bf666aE7)
 
 ## Kovan
 - MaidCoin: [0xc3a7DC0D11909503aa0Ef1c7368B4EC7ac2e6E5C](https://kovan.etherscan.io/address/0xc3a7DC0D11909503aa0Ef1c7368B4EC7ac2e6E5C)
