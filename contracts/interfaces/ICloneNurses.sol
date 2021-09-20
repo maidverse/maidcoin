@@ -57,4 +57,6 @@ interface ICloneNurses is IERC721, IERC721Metadata, ICloneNurseEnumerable, ISupp
     function claim(uint256[] calldata ids) external;
 
     function pendingReward(uint256 id) external view returns (uint256);
+
+    function exists(uint256 id) external view returns (bool);
 }

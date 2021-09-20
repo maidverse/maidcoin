@@ -318,4 +318,8 @@ contract CloneNurses is
         royaltyReceiver = _receiver;
         royaltyFee = _royaltyFee;
     }
+    
+    function exists(uint256 id) external view override returns (bool) {
+        return _exists(id);
+    }
 }
