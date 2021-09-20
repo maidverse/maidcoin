@@ -58,5 +58,7 @@ interface ICloneNurses is IERC721, IERC721Metadata, ICloneNurseEnumerable, ISupp
 
     function pendingReward(uint256 id) external view returns (uint256);
 
+    function findSupportingTo(address supporter) external view returns (address, uint256);
+
     function exists(uint256 id) external view returns (bool);
 }

@@ -244,6 +244,18 @@ contract CloneNurses is
         }
     }
 
+    function findSupportingTo(address supporter) external view override returns (address, uint256) {
+        uint256 _supportingTo = supportingTo[supporter];
+        uint256 _route = supportingRoute[_supportingTo];
+        if (_route == _supportingTo) return (ownerOf(_supportingTo), _supportingTo);
+        uint256 initialSupportTo = _supportingTo;
+        while (_route != _supportingTo) {
+            _supportingTo = _route;
+            _route = supportingRoute[_supportingTo];
+        }
+        return (ownerOf(_supportingTo), _supportingTo);
+    }
+
     function checkSupportingRoute(address supporter) public override returns (address, uint256) {
         uint256 _supportingTo = supportingTo[supporter];
         uint256 _route = supportingRoute[_supportingTo];
