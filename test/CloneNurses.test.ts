@@ -281,7 +281,7 @@ describe("CloneNurse", () => {
     });
 
     it("should be that destroy function works well", async () => {
-        const { coin, nurses, part, theMaster, alice, bob, carol } = await setupTest();
+        const { coin, nurses, part, theMaster, lpToken, alice, bob, carol } = await setupTest();
 
         await part.mint(alice.address, 0, 30);
         await part.mint(bob.address, 1, 30);
@@ -329,6 +329,11 @@ describe("CloneNurse", () => {
         }
 
         await expect(nurses.connect(carol).destroy([0], [5])).to.be.revertedWith("CloneNurses: Forbidden");
+
+        await lpToken.mint(alice.address, 123);
+        await lpToken.connect(alice).approve(theMaster.address, 123);
+        await theMaster.connect(alice).support(3, 123, 5);
+        expect(await nurses.supportedPower(5)).to.be.equal(123);
         await expect(nurses.connect(carol).destroy([5], [5])).to.be.revertedWith("CloneNurses: Invalid id, toId");
         await expect(nurses.connect(carol).destroy([5], [6])).to.be.revertedWith("CloneNurses: Invalid toId");
 
@@ -394,6 +399,19 @@ describe("CloneNurse", () => {
         );
         await autoMining(true);
         expect(await burnAmount(coin)).to.be.equal(n2burn);
+
+        await expect(nurses.connect(carol).assemble(2, 6))
+            .to.emit(nurses, "Transfer")
+            .withArgs(AddressZero, carol.address, 6);
+        await expect(nurses.connect(carol).assemble(2, 7))
+            .to.emit(nurses, "Transfer")
+            .withArgs(AddressZero, carol.address, 7);
+
+        expect(await nurses.supportedPower(6)).to.be.equal(0);
+        await nurses.connect(carol).destroy([6], [6]);
+
+        expect(await nurses.supportedPower(7)).to.be.equal(0);
+        await nurses.connect(carol).destroy([7], [10]);
     });
 
     it("should be that claim function works well", async () => {
