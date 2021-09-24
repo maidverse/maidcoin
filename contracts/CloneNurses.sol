@@ -248,7 +248,6 @@ contract CloneNurses is
         uint256 _supportingTo = supportingTo[supporter];
         uint256 _route = supportingRoute[_supportingTo];
         if (_route == _supportingTo) return (ownerOf(_supportingTo), _supportingTo);
-        uint256 initialSupportTo = _supportingTo;
         while (_route != _supportingTo) {
             _supportingTo = _route;
             _route = supportingRoute[_supportingTo];
