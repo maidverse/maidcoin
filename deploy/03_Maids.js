@@ -1,8 +1,8 @@
-const { getPairAddress, getWethAddress, getSushiAddress } = require("../scripts/utils");
+const { getPairAddress, getWethAddress, getSushiAddress, multiSigWallet } = require("../scripts/utils");
 
 module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     const { deployer } = await getNamedAccounts();
-    const { deploy, get } = deployments;
+    const { deploy, get, read, execute } = deployments;
 
     const chainId = await getChainId();
     const maidCoin = (await get("MaidCoin")).address;
@@ -15,4 +15,9 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
         args: [pair, sushi, maidCafe],
         log: true,
     });
+
+    if ((await read("Maids", {log: true}, "owner")) !== multiSigWallet) {
+        console.log("Transfer Maids Ownership to the multi-sig wallet");
+        await execute("Maids", { from: deployer }, "transferOwnership", multiSigWallet);
+    }
 };

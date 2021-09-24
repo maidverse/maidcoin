@@ -32,10 +32,52 @@ const getFactoryAddress = chainId => {
     }
 };
 
+const multiSigWallet = "0x30080df30F21a710B31F5fC7FA149a5c452eABFa";
+
+const getSushiGirlsAddress = chainId => {
+    if(chainId === "1") {
+        return "0xEB3b418e4A4430392Cd57b1356c5B1d2205A56d9";
+    } else if(chainId === "3") {
+        return "0x9fF326fecc05A5560Eea1A66C6c62a93a64afaFb";
+    } else if(chainId === "42") {
+        return "0xC85A160adbb5E7D22E0d764f03207090ae72197F";
+    } else {
+        throw new Error("Network not supported");
+    }
+};
+
+const getLingerieGirlsAddress = chainId => {
+    if(chainId === "1") {
+        return "0x579a60fbc649d3398f13e0385dbe79b3ffad757c";
+    } else if(chainId === "3") {
+        return "0xf35f860762540929B3157765B82E6616664f7e97";
+    } else if(chainId === "42") {
+        return "0xB555cA9C88CeB8ece57b9223AA6D7407dD273656";
+    } else {
+        throw new Error("Network not supported");
+    }
+};
+
+const getRNGAddress = chainId => {
+    if(chainId === "1") {
+        return "";  //TODO: mainnet address
+    } else if(chainId === "3") {
+        return "0x188d3C00FEC2e410DFDca7aaF0e0D386B0419603";
+    } else if(chainId === "42") {
+        return "0x965B1c306b7AFc8C680185D72B26a32520B971b8";
+    } else {
+        throw new Error("Network not supported");
+    }
+};
+
 module.exports = {
     INIT_CODE_HASH,
     getSushiAddress,
     getWethAddress,
     getPairAddress,
     getFactoryAddress,
+    multiSigWallet,
+    getSushiGirlsAddress,
+    getLingerieGirlsAddress,
+    getRNGAddress,
 };
