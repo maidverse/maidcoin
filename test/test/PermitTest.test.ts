@@ -36,7 +36,7 @@ describe("PermitTest", () => {
             royaltyRecepient.address,
         ])) as Maids;
 
-        nursePart = (await deployContract(admin, NursePartArtifact, [])) as NursePart;
+        nursePart = (await deployContract(admin, NursePartArtifact, [royaltyRecepient.address])) as NursePart;
 
         permitTest = (await deployContract(admin, PermitTestArtifact, [
             maidCoin.address,
