@@ -1,6 +1,6 @@
 const { pack, keccak256 } = require("@ethersproject/solidity");
 const { getCreate2Address } = require("@ethersproject/address");
-const { constants } = require("ethers");
+const { constants, utils } = require("ethers");
 const { WETH } = require("@sushiswap/sdk");
 
 const INIT_CODE_HASH = "0xe18a34eb0e04b04f7a0ac29a6e80748dca96319b42c54d679cb821dca90c6303";
@@ -60,7 +60,7 @@ const getLingerieGirlsAddress = chainId => {
 
 const getRNGAddress = chainId => {
     if(chainId === "1") {
-        return "";  //TODO: mainnet address
+        return "0xb0c63655bB4d89a1392F2cEedf0C9c4f3efEb0F7";
     } else if(chainId === "3") {
         return "0x188d3C00FEC2e410DFDca7aaF0e0D386B0419603";
     } else if(chainId === "42") {
@@ -69,6 +69,11 @@ const getRNGAddress = chainId => {
         throw new Error("Network not supported");
     }
 };
+
+const gasOptions = {
+    maxFeePerGas: utils.parseUnits("120", 9),
+    maxPriorityFeePerGas: utils.parseUnits("1.1", 9),
+}
 
 module.exports = {
     INIT_CODE_HASH,
@@ -80,4 +85,5 @@ module.exports = {
     getSushiGirlsAddress,
     getLingerieGirlsAddress,
     getRNGAddress,
+    gasOptions,
 };

@@ -10,6 +10,10 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     const pair = getPairAddress(chainId, maidCoin, getWethAddress(chainId));
     const sushi = getSushiAddress(chainId);
 
+    if(maidCoin !== "0x4Af698B479D0098229DC715655c667Ceb6cd8433") {
+        throw new Error("Wrong MaidCoin");
+    }
+    
     await deploy("Maids", {
         from: deployer,
         args: [pair, sushi, maidCafe],

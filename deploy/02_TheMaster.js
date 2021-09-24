@@ -14,16 +14,20 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     const pair = getPairAddress(chainId, maidCoin, getWethAddress(chainId));
     const sushi = getSushiAddress(chainId);
 
+    if(maidCoin !== "0x4Af698B479D0098229DC715655c667Ceb6cd8433") {
+        throw new Error("Wrong MaidCoin");
+    }
+
     const theMaster = await deploy("TheMaster", {
         from: deployer,
         args: [initialRewardPerBlock, decreasingInterval, startBlock, maidCoin, pair, sushi],
         log: true,
     });
 
-    if (network.name !== "mainnet") {
-        const owner = await read("MaidCoin", {}, "owner");
-        if (owner !== theMaster.address) {
-            await execute("MaidCoin", { from: deployer }, "transferOwnership", theMaster.address);
-        }
-    }
+    // if (network.name !== "mainnet") {
+    //     const owner = await read("MaidCoin", {}, "owner");
+    //     if (owner !== theMaster.address) {
+    //         await execute("MaidCoin", { from: deployer }, "transferOwnership", theMaster.address);
+    //     }
+    // }
 };

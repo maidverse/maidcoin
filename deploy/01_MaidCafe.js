@@ -8,6 +8,10 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     const maidCoin = (await get("MaidCoin")).address;
     const weth = getWethAddress(chainId);
 
+    if(maidCoin !== "0x4Af698B479D0098229DC715655c667Ceb6cd8433") {
+        throw new Error("Wrong MaidCoin");
+    }
+
     await deploy("MaidCafe", {
         from: deployer,
         args: [maidCoin, weth],
