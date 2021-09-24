@@ -21,6 +21,7 @@ module.exports = async ({ ethers, getNamedAccounts, deployments }) => {
 
     if (result.newlyDeployed) {
         const chainId = await getChainId();
+        const maidCoin = (await get("MaidCoin")).address;
         const pair = getPairAddress(chainId, maidCoin, getWethAddress(chainId));
         const nurses = (await get("CloneNurses")).address;
         const masterCoin = result.address;

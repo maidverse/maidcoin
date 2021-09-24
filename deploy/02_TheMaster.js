@@ -4,7 +4,7 @@ const { getPairAddress, getWethAddress, getSushiAddress } = require("../scripts/
 
 module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     const { deployer } = await getNamedAccounts();
-    const { deploy, get } = deployments;
+    const { deploy, get, read, execute } = deployments;
 
     const chainId = await getChainId();
     const initialRewardPerBlock = constants.WeiPerEther;

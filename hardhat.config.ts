@@ -77,6 +77,12 @@ const config: HardhatUserConfig = {
       accounts,
       chainId: 42,
       tags: ["staging"],
+    },    
+    rinkeby: {
+      url: `https://rinkeby.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      accounts,
+      chainId: 4,
+      tags: ["staging"],
     },
   },
   etherscan: {
