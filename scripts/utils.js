@@ -32,7 +32,15 @@ const getFactoryAddress = chainId => {
     }
 };
 
-const multiSigWallet = "0x30080df30F21a710B31F5fC7FA149a5c452eABFa";
+const multiSigWallet= chainId => {
+    if(chainId === "1") {
+        return "0x30080df30F21a710B31F5fC7FA149a5c452eABFa";
+    } else if(chainId === "4") {
+        return "0xF9428B27bf0C1EC14b7d52224bF92CCa755dA445";
+    } else {
+        throw new Error("Network not supported");
+    }
+};
 
 const getSushiGirlsAddress = chainId => {
     if(chainId === "1") {
