@@ -4,7 +4,7 @@ pragma solidity ^0.8.5;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
-import "./interfaces/ICloneNurses.sol";
+import "../interfaces/ICloneNurses.sol";
 
 interface INurseRaid {
     function powerOfMaids(IERC721Enumerable maids, uint256 id) external view returns (uint256);
@@ -25,8 +25,8 @@ contract MAIDPAWAH is Ownable {
     uint256 public nurseWeight;
     uint256 public omuWeight;
 
-    event AddHouseKeepers(uint256 indexed id, IERC721Enumerable indexed newHousekeeper);
-    event SetHouseKeepers(uint256 indexed id, IERC721Enumerable indexed newHousekeeper);
+    event AddHousekeepers(uint256 indexed id, IERC721Enumerable indexed newHousekeeper);
+    event SetHousekeepers(uint256 indexed id, IERC721Enumerable indexed newHousekeeper);
     event SetWeight(uint256 maidLikeWeight, uint256 nurseWeight, uint256 omuWeight);
 
     constructor(
@@ -43,12 +43,12 @@ contract MAIDPAWAH is Ownable {
     function addHousekeeper(IERC721Enumerable newHousekeeper) external onlyOwner {
         uint256 id = housekeepers.length;
         housekeepers.push(newHousekeeper);
-        emit AddHouseKeepers(id, newHousekeeper);
+        emit AddHousekeepers(id, newHousekeeper);
     }
 
     function setHousekeeper(uint256 id, IERC721Enumerable newHousekeeper) external onlyOwner {
         housekeepers[id] = newHousekeeper;
-        emit SetHouseKeepers(id, newHousekeeper);
+        emit SetHousekeepers(id, newHousekeeper);
     }
 
     function setWeight(
