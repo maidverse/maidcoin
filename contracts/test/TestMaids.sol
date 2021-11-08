@@ -2494,7 +2494,6 @@ contract NFT721V0 is BaseNFT721, BaseExchange, IERC2981, INFT721 {
     ) external override initializer {
         __BaseNFTExchange_init();
         initialize(_name, _symbol, _owner);
-        _MAX_ROYALTY_FEE = ITokenFactory(_factory).MAX_ROYALTY_FEE();
 
         _parkTokenIds(toTokenId);
 

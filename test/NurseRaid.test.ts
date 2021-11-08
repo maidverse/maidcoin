@@ -1,5 +1,6 @@
 import {
-    Maids,
+    NFT721V2,
+    MaidData,
     MaidCoin,
     NursePart,
     NurseRaid,
@@ -57,8 +58,18 @@ const setupTest = async () => {
     const MaidCafe = await ethers.getContractFactory("MaidCafe");
     const cafe = (await MaidCafe.deploy(coin.address, weth.address)) as MaidCafe;
 
-    const Maids = await ethers.getContractFactory("Maids");
-    const maids = (await Maids.deploy(lpToken.address, sushi.address, cafe.address)) as Maids;
+    const Maids = await ethers.getContractFactory("NFT721V2");
+    const maids = await Maids.deploy() as NFT721V2;
+    await maids["initialize(address,string,string,uint256[],address,uint8)"](deployer.address, "MAID", "MAID", [], cafe.address, 0);
+    await mine();
+
+    const MaidData = await ethers.getContractFactory("MaidData");
+    const maidData = await MaidData.deploy(lpToken.address, sushi.address, maids.address) as MaidData;
+    await mine();
+
+    await maids.setTarget(maidData.address);
+    const maidWithData = MaidData.attach(maids.address) as MaidData;
+    await mine();
 
     const lpowers: number[] = [];
     for (let i = 0; i < 30; i++) {
@@ -123,6 +134,8 @@ const setupTest = async () => {
         lpToken,
         cafe,
         maids,
+        maidData,
+        maidWithData,
         lgirls,
         sgirls,
         part,
@@ -138,11 +151,10 @@ describe("NurseRaid", () => {
     });
 
     it("should be that users can participate in several raids at the same time", async () => {
-        const { raid, maids, coin, deployer, alice, nurses } = await setupTest();
-
+        const { raid, maids, coin, deployer, alice, nurses, maidData } = await setupTest();
         await raid.approveMaids([maids.address]);
-        await maids.mint(1);
-        await maids.transferFrom(deployer.address, alice.address, 0);
+        await maids.mint(alice.address, 0, []);
+        await maidData.setPowers([0], [1]);
 
         await nurses.addNurseType([5, 5, 5], [10000, 10000, 10000], [10, 20, 30], [2000, 1000, 3000]);
 
@@ -190,11 +202,11 @@ describe("NurseRaid", () => {
     });
 
     it("should be that users who alreay participated in a raid with a Maids or Maids-like can not enter other raids with her", async () => {
-        const { raid, maids, coin, deployer, alice, nurses } = await setupTest();
+        const { raid, maids, coin, deployer, alice, nurses, maidData } = await setupTest();
 
         await raid.approveMaids([maids.address]);
-        await maids.mint(1);
-        await maids.transferFrom(deployer.address, alice.address, 0);
+        await maids.mint(alice.address, 0, []);
+        await maidData.setPowers([0], [1]);
 
         await nurses.addNurseType([5, 5, 5], [5000, 7000, 10000], [10, 20, 30], [2000, 1000, 3000]);
         await raid.create([10000, 10000], [0, 0], [5, 5], [50, 50], [100, 100]);
@@ -209,18 +221,16 @@ describe("NurseRaid", () => {
         await raid.connect(alice).enter(0, maids.address, 0);
         expect(await maids.ownerOf(0)).to.be.equal(raid.address);
 
-        await expect(raid.connect(alice).enter(1, maids.address, 0)).to.be.revertedWith(
-            "ERC721: transfer of token that is not own"
-        );
+        await expect(raid.connect(alice).enter(1, maids.address, 0)).to.be.reverted;
     });
 
     it("should be that users who exit from raids before duration is not over can't receive any parts", async () => {
-        const { raid, maids, coin, part, deployer, alice, bob, nurses } = await setupTest();
+        const { raid, maids, coin, part, deployer, alice, bob, nurses, maidData } = await setupTest();
 
         await raid.approveMaids([maids.address]);
         expect(await raid.isMaidsApproved(maids.address)).to.be.true;
-        await maids.mint(1);
-        await maids.transferFrom(deployer.address, bob.address, 0);
+        await maids.mint(bob.address, 0, []);
+        await maidData.setPowers([0], [1]);
 
         await nurses.addNurseType([5], [9999], [10], [2000]);
         await expect(raid.create([5994], [0], [3], [50], [100])).to.be.revertedWith("NurseRaid: Fee should be higher");
@@ -256,12 +266,12 @@ describe("NurseRaid", () => {
     });
 
     it("should be that an user who alreay participated in a raid can not re-enter the raid before exiting", async () => {
-        const { raid, maids, coin, part, deployer, alice, bob, nurses } = await setupTest();
+        const { raid, maids, coin, part, deployer, alice, bob, nurses, maidData } = await setupTest();
 
         await raid.approveMaids([maids.address]);
         expect(await raid.isMaidsApproved(maids.address)).to.be.true;
-        await maids.mint(1);
-        await maids.transferFrom(deployer.address, bob.address, 0);
+        await maids.mint(bob.address, 0, []);
+        await maidData.setPowers([0], [1]);
 
         await nurses.addNurseType([5, 5, 5], [10000, 10000, 10000], [10, 20, 30], [2000, 1000, 3000]);
         await raid.create([10000], [0], [5], [50], [100]);
@@ -302,7 +312,7 @@ describe("NurseRaid", () => {
     });
 
     it("should be that only approved Maids can participate in raids", async () => {
-        const { raid, maids, lgirls, sgirls, coin, deployer, alice, bob, carol, dan, nurses } = await setupTest();
+        const { raid, maids, lgirls, sgirls, coin, deployer, alice, bob, carol, dan, nurses, maidData } = await setupTest();
 
         await raid.approveMaids([maids.address, lgirls.address]);
 
@@ -315,8 +325,8 @@ describe("NurseRaid", () => {
         await raid.disapproveMaids([sgirls.address]);
         expect(await raid.isMaidsApproved(sgirls.address)).to.be.false;
 
-        await maids.mint(1);
-        await maids.transferFrom(deployer.address, bob.address, 0);
+        await maids.mint(bob.address, 0, []);
+        await maidData.setPowers([0], [1]);
         await lgirls.transferFrom(deployer.address, carol.address, 0);
         await sgirls.mint(2);
         await sgirls.transferFrom(deployer.address, dan.address, 0);
@@ -356,12 +366,12 @@ describe("NurseRaid", () => {
     });
 
     it("should be that 0.3% of raid entrance fee go to Maid Cafe", async () => {
-        const { raid, maids, coin, cafe, deployer, alice, bob, nurses } = await setupTest();
+        const { raid, maids, coin, cafe, deployer, alice, bob, nurses, maidData } = await setupTest();
 
         await raid.approveMaids([maids.address]);
         expect(await raid.isMaidsApproved(maids.address)).to.be.true;
-        await maids.mint(1);
-        await maids.transferFrom(deployer.address, bob.address, 0);
+        await maids.mint(bob.address, 0, []);
+        await maidData.setPowers([0], [1]);
 
         await nurses.addNurseType([5, 5, 5], [10000, 10000, 10000], [10, 20, 30], [2000, 1000, 3000]);
 
@@ -385,27 +395,27 @@ describe("NurseRaid", () => {
     });
 
     it("should be that Maids and the like whose power is more than 0 help to lower the duration of raids", async () => {
-        const { raid, maids, lgirls, sgirls, coin, lpToken, deployer, alice, bob, carol, dan, erin, nurses } =
+        const { raid, maids, lgirls, sgirls, coin, lpToken, deployer, alice, bob, carol, dan, erin, nurses, maidData, maidWithData } =
             await setupTest();
 
         await raid.approveMaids([maids.address, lgirls.address, sgirls.address]);
 
-        await maids.mint(10);
-        await maids.transferFrom(deployer.address, bob.address, 0);
+        await maids.mint(bob.address, 0, []);
+        await maidData.setPowers([0], [10]);
         await lgirls.transferFrom(deployer.address, carol.address, 20);
         await sgirls.mint(30);
         await sgirls.transferFrom(deployer.address, dan.address, 0);
 
-        await maids.mint(10);
-        await maids.transferFrom(deployer.address, erin.address, 1);
+        await maids.mint(erin.address, 1, []);
+        await maidData.setPowers([1], [10]);
         await lpToken.mint(erin.address, tokenAmount(30));
-        await lpToken.connect(erin).approve(maids.address, tokenAmount(30));
-        await maids.connect(erin).support(1, tokenAmount(30));
+        await lpToken.connect(erin).approve(maidData.address, tokenAmount(30));
+        await maidData.connect(erin).support(1, tokenAmount(30));
 
-        expect(await raid.powerOfMaids(maids.address, 0)).to.be.equal(10);
+        expect(await raid.powerOfMaids(maidWithData.address, 0)).to.be.equal(10);
         expect(await raid.powerOfMaids(lgirls.address, 20)).to.be.equal(20);
         expect(await raid.powerOfMaids(sgirls.address, 0)).to.be.equal(30);
-        expect(await raid.powerOfMaids(maids.address, 1)).to.be.equal(40);
+        expect(await raid.powerOfMaids(maidWithData.address, 1)).to.be.equal(40);
 
         await nurses.addNurseType([5, 5, 5], [10000, 10000, 10000], [10, 20, 30], [2000, 1000, 3000]);
 
@@ -502,12 +512,12 @@ describe("NurseRaid", () => {
     });
 
     it("should be that users can exit from several raids at the same time", async () => {
-        const { raid, maids, coin, part, deployer, alice, bob, nurses } = await setupTest();
+        const { raid, maids, coin, part, deployer, alice, bob, nurses, maidData } = await setupTest();
 
         await raid.approveMaids([maids.address]);
         expect(await raid.isMaidsApproved(maids.address)).to.be.true;
-        await maids.mint(1);
-        await maids.transferFrom(deployer.address, bob.address, 0);
+        await maids.mint(bob.address, 0, []);
+        await maidData.setPowers([0], [1]);
 
         await nurses.addNurseType([5, 5, 5], [10000, 10000, 10000], [10, 20, 30], [2000, 1000, 3000]);
 
@@ -606,10 +616,11 @@ describe("NurseRaid", () => {
     });
 
     it("should be that supporting Maids and the like with LP tokens can change the power of them", async () => {
-        const { raid, maids, lgirls, sgirls, lpToken, deployer, alice, bob, carol, dan, erin } = await setupTest();
+        const { raid, maids, lgirls, sgirls, lpToken, deployer, alice, bob, carol, dan, erin, maidData, maidWithData } = await setupTest();
 
-        await maids.mint(10);
-        expect((await maids.maids(0)).originPower).to.be.equal(10);
+        await maids.mint(deployer.address, 0, []);
+        await maidData.setPowers([0], [10]);
+        expect((await maidWithData.maidInfo(0)).originPower).to.be.equal(10);
         expect(await raid.powerOfMaids(maids.address, 0)).to.be.equal(10);
 
         expect((await lgirls.lingerieGirls(0)).originPower).to.be.equal(0);
@@ -620,19 +631,19 @@ describe("NurseRaid", () => {
         expect(await raid.powerOfMaids(sgirls.address, 0)).to.be.equal(30);
 
         await lpToken.mint(deployer.address, tokenAmount(10000));
-        await lpToken.approve(maids.address, tokenAmount(10000000));
+        await lpToken.approve(maidData.address, tokenAmount(10000000));
         await lpToken.approve(lgirls.address, tokenAmount(10000000));
         await lpToken.approve(sgirls.address, tokenAmount(10000000));
 
         expect(await raid.lpTokenToMaidPower()).to.be.equal(1000);
-        await maids.support(0, tokenAmount(1));
+        await maidData.support(0, tokenAmount(1));
         await lgirls.support(0, tokenAmount(2));
         await sgirls.support(0, tokenAmount(0.99));
         expect(await raid.powerOfMaids(maids.address, 0)).to.be.equal(10 + 1);
         expect(await raid.powerOfMaids(lgirls.address, 0)).to.be.equal(0 + 2);
         expect(await raid.powerOfMaids(sgirls.address, 0)).to.be.equal(30 + 0);
 
-        await maids.support(0, tokenAmount(1.5)); //2.5
+        await maidData.support(0, tokenAmount(1.5)); //2.5
         await lgirls.support(0, tokenAmount(2.5)); //4.5
         await sgirls.support(0, tokenAmount(1.1)); //2.09
         expect(await raid.powerOfMaids(maids.address, 0)).to.be.equal(10 + 2);
